@@ -1,0 +1,43 @@
+---
+description: AI and Machine Learning coding standards and best practices
+globs: *.py,*.ts,*.js,*.tsx,*.jsx
+---
+
+# AI/ML Development Standards
+
+## AI Integration Best Practices
+
+### Model Usage
+- Always implement proper error handling for AI API calls
+- Include timeout configurations for AI requests
+- Implement retry logic with exponential backoff
+- Cache AI responses when appropriate to reduce costs
+- Log AI interactions for debugging and monitoring
+
+### Prompt Engineering
+- Store prompts in separate configuration files or constants
+- Use structured prompts with clear instructions
+- Include examples in prompts for better results
+- Version control prompt templates
+- Test prompts thoroughly before deployment
+
+### Data Handling
+- Validate all input data before sending to AI models
+- Sanitize student submissions to prevent prompt injection
+- Implement data privacy measures (anonymization when needed)
+- Store original submissions separately from processed data
+- Handle various file formats (PDF, DOCX, TXT, etc.)
+
+### Grading Logic
+- Implement rubric-based scoring systems
+- Provide detailed feedback explanations
+- Allow for manual review and grade adjustments
+- Track confidence scores from AI models
+- Implement bias detection and mitigation strategies
+
+### Performance Considerations
+- Batch process multiple submissions when possible
+- Implement queuing for large grading jobs
+- Use streaming responses for real-time feedback
+- Monitor token usage and costs
+- Optimize prompt length while maintaining quality

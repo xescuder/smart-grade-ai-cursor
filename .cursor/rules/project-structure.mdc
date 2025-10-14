@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+description: Project structure and architecture guidelines for Smart Grade AI
+---
+
+# Smart Grade AI - Project Structure
+
+This is an AI-powered grading system built with modern web technologies.
+
+## Core Architecture
+- **Frontend**: React/Next.js with TypeScript for the user interface
+- **Backend**: Node.js/Express API or Python FastAPI for AI processing
+- **AI/ML**: Integration with language models for automated grading
+- **Database**: Store assignments, submissions, and grading results
+- **Authentication**: User management for teachers and students
+
+## Directory Structure
+```
+src/
+├── components/     # Reusable UI components
+├── pages/         # Application pages/routes
+├── api/           # API endpoints and handlers
+├── lib/           # Utility functions and helpers
+├── types/         # TypeScript type definitions
+├── hooks/         # Custom React hooks
+├── services/      # External service integrations
+├── models/        # Data models and schemas
+└── utils/         # General utility functions
+```
+
+## Key Features to Implement
+- Assignment creation and management
+- Student submission interface
+- AI-powered grading engine
+- Grade review and feedback system
+- Analytics and reporting
+- User authentication and authorization

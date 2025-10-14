@@ -1,0 +1,48 @@
+---
+alwaysApply: true
+description: Code quality, testing, and documentation standards
+---
+
+# Code Quality Standards
+
+## General Coding Principles
+- Write self-documenting code with clear variable and function names
+- Keep functions small and focused on a single responsibility
+- Use consistent naming conventions throughout the project
+- Implement proper error handling and validation
+- Follow DRY (Don't Repeat Yourself) principles
+
+## Documentation Requirements
+- Add JSDoc comments for all public functions and classes
+- Include parameter types and return value descriptions
+- Document complex algorithms and business logic
+- Keep README files updated with setup and usage instructions
+- Document API endpoints with clear examples
+
+## Testing Standards
+- Write unit tests for all utility functions
+- Test API endpoints with various input scenarios
+- Include integration tests for AI grading workflows
+- Test error handling and edge cases
+- Maintain minimum 80% code coverage
+
+## Security Practices
+- Validate and sanitize all user inputs
+- Implement proper authentication and authorization
+- Use environment variables for sensitive configuration
+- Follow OWASP security guidelines
+- Regular security audits of dependencies
+
+## Performance Guidelines
+- Optimize database queries and API calls
+- Implement proper caching strategies
+- Monitor and log performance metrics
+- Use lazy loading for large datasets
+- Optimize bundle sizes for frontend applications
+
+## Code Review Process
+- All code changes require peer review
+- Check for adherence to coding standards
+- Verify test coverage and quality
+- Review security implications
+- Ensure documentation is updated

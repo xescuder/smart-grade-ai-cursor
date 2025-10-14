@@ -1,0 +1,60 @@
+---
+description: API design and database interaction guidelines
+globs: *.ts,*.js,*.py
+---
+
+# API and Database Standards
+
+## RESTful API Design
+- Use consistent URL patterns: `/api/v1/resource`
+- Follow HTTP method conventions (GET, POST, PUT, DELETE)
+- Return appropriate HTTP status codes
+- Use consistent response formats with proper error messages
+- Implement API versioning from the start
+- Document all endpoints with OpenAPI/Swagger
+
+## Request/Response Patterns
+```typescript
+// Standard API response format
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+```
+
+## Database Design Principles
+- Use meaningful table and column names
+- Implement proper indexing for query performance
+- Use foreign key constraints for data integrity
+- Follow normalization principles
+- Include audit fields (created_at, updated_at, created_by)
+
+## Data Validation
+- Validate input at API boundaries
+- Use schema validation libraries (Joi, Yup, Zod)
+- Implement proper sanitization for user inputs
+- Validate file uploads (type, size, content)
+- Use database constraints for data integrity
+
+## Authentication & Authorization
+- Implement JWT tokens for stateless authentication
+- Use role-based access control (RBAC)
+- Secure sensitive endpoints with proper middleware
+- Implement rate limiting for API protection
+- Log authentication attempts and failures
+
+## Grading System Specific
+- Store assignments with rubrics and criteria
+- Track submission history and versions
+- Implement grade calculation algorithms
+- Store AI model responses and confidence scores
+- Enable manual grade overrides with audit trails
+
+## Error Handling
+- Use consistent error response formats
+- Log errors with proper context and stack traces
+- Implement graceful degradation for AI service failures
+- Return user-friendly error messages
+- Set up proper monitoring and alerting

@@ -1,0 +1,55 @@
+---
+globs: *.ts,*.tsx,*.js,*.jsx
+description: TypeScript and JavaScript coding standards and conventions
+---
+
+# TypeScript/JavaScript Standards
+
+## TypeScript Configuration
+- Use strict mode with all strict flags enabled
+- Enable `noImplicitAny` and `strictNullChecks`
+- Use `exactOptionalPropertyTypes` for better type safety
+- Configure path mapping for clean imports
+- Use ESLint and Prettier for consistent formatting
+
+## Type Definitions
+- Define interfaces for all data structures
+- Use union types instead of any when possible
+- Create custom type guards for runtime type checking
+- Export types from a central types directory
+- Use generic types for reusable components
+
+## React/Next.js Conventions
+- Use functional components with TypeScript
+- Define proper prop types with interfaces
+- Use custom hooks for stateful logic
+- Implement proper error boundaries
+- Use Next.js App Router for new projects
+
+## Import/Export Standards
+- Use named exports over default exports
+- Group imports: external packages, internal modules, relative imports
+- Use absolute imports with path mapping
+- Avoid deep nesting in import paths
+- Export types and interfaces explicitly
+
+## Async/Await Patterns
+- Always handle promise rejections
+- Use proper error boundaries for async operations
+- Implement loading states for UI components
+- Use proper typing for async functions
+- Avoid nested promises in favor of async/await
+
+## State Management
+- Use React Context for global state
+- Consider Zustand or Redux Toolkit for complex state
+- Implement proper state immutability
+- Use proper typing for state actions and reducers
+- Keep state normalized and flat
+
+## API Integration
+- Define API response types
+- Use proper error handling for API calls
+- Implement request/response interceptors
+- Use proper loading and error states
+- Validate API responses at runtime

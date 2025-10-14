@@ -466,45 +466,535 @@ smart-grade-ai-cursor/
     └── rules/              # Development guidelines
 ```
 
-## 🛠️ Development Setup
+## 🚀 Local Deployment Guide
 
-### Prerequisites
-- Node.js 18+ and npm
-- Python 3.8+
-- PostgreSQL (optional, SQLite works for development)
-- Redis (optional, for caching)
+This guide will walk you through setting up Smart Grade AI on your local machine from scratch.
 
-### Frontend Setup
+### 📋 Prerequisites
+
+Before starting, ensure you have the following installed:
+
+| Software | Version | Purpose |
+|----------|---------|---------|
+| **Node.js** | 18+ | Frontend development |
+| **Python** | 3.8+ | Backend API |
+| **PostgreSQL** | 15+ | Database |
+| **Ollama** (Optional) | Latest | Local AI (free alternative to OpenAI) |
+| **Git** | Latest | Clone repository |
+
+### Step 1: Clone the Repository
 
 ```bash
-cd frontend
-npm install
-npm run dev
+# Clone the repository
+git clone https://github.com/your-username/smart-grade-ai-cursor.git
+cd smart-grade-ai-cursor
 ```
 
-The frontend will be available at `http://localhost:3000`
+### Step 2: Database Setup (PostgreSQL)
 
-### Backend Setup
+#### Install PostgreSQL
+
+**macOS (Homebrew)**:
+```bash
+brew install postgresql@15
+brew services start postgresql@15
+```
+
+**Ubuntu/Debian**:
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+**Windows**:
+Download and install from [postgresql.org](https://www.postgresql.org/download/)
+
+#### Create Database
+
+```bash
+# Connect to PostgreSQL
+psql postgres
+
+# Create database and user
+CREATE DATABASE smartgrade_db;
+CREATE USER smartgrade WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE smartgrade_db TO smartgrade;
+
+# Exit PostgreSQL
+\q
+```
+
+#### Verify Database Connection
+
+```bash
+psql -U smartgrade -d smartgrade_db -h localhost
+# If successful, you'll see the PostgreSQL prompt
+# Type \q to exit
+```
+
+### Step 3: Backend Setup
+
+#### Navigate to Backend Directory
 
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`
-
-### Environment Variables
-
-Copy `.env.example` to `.env` in the backend directory and configure:
+#### Create Python Virtual Environment
 
 ```bash
-# Backend/.env
-DATABASE_URL=postgresql://user:password@localhost/smartgrade_db
-OPENAI_API_KEY=your-openai-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
-SECRET_KEY=your-secret-key
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+# macOS/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
 ```
+
+#### Install Python Dependencies
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+#### Configure Environment Variables
+
+```bash
+# Copy the environment template
+cp env.example .env
+
+# Generate a secure secret key
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+#### Edit `.env` File
+
+Open `backend/.env` and configure:
+
+```env
+# ============================================================================
+# REQUIRED CONFIGURATION
+# ============================================================================
+
+# Server Configuration
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
+
+# Database (update with your password)
+DATABASE_URL=postgresql+asyncpg://smartgrade:your_password@localhost:5432/smartgrade_db
+
+# Security (paste the generated secret key)
+SECRET_KEY=<paste-generated-key-here>
+
+# ============================================================================
+# AI CONFIGURATION (Choose one)
+# ============================================================================
+
+# Option 1: Ollama (Local, Free) - Recommended for getting started
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama2
+DEFAULT_AI_PROVIDER=ollama
+
+# Option 2: OpenAI (Cloud, Paid)
+# OPENAI_API_KEY=sk-your-api-key-here
+# DEFAULT_AI_PROVIDER=openai
+
+# Option 3: Anthropic (Cloud, Paid)
+# ANTHROPIC_API_KEY=sk-ant-your-api-key-here
+# DEFAULT_AI_PROVIDER=anthropic
+```
+
+#### Initialize Database
+
+```bash
+# Run database initialization (creates tables)
+python3 init_db.py
+
+# Or start the server (it will auto-initialize)
+python3 db_server.py
+```
+
+The server will display:
+```
+🚀 Starting Smart Grade AI Backend
+   Backend:  http://0.0.0.0:8000
+   Frontend: http://localhost:3000
+   CORS Origins: 2 configured
+```
+
+#### Verify Backend is Running
+
+```bash
+# In a new terminal
+curl http://localhost:8000/health
+
+# Should return:
+# {"status":"healthy","timestamp":"...","database":"postgresql"}
+```
+
+### Step 4: Frontend Setup
+
+#### Open New Terminal
+
+```bash
+# Navigate to frontend directory (from project root)
+cd frontend
+```
+
+#### Install Node.js Dependencies
+
+```bash
+npm install
+```
+
+#### Configure Frontend Environment
+
+```bash
+# Copy environment template
+cp env.example.txt .env.local
+```
+
+#### Edit `.env.local`
+
+```env
+# Frontend Configuration
+PORT=3000
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+
+# Features
+NEXT_PUBLIC_ENABLE_AI_GRADING=true
+NEXT_PUBLIC_ENABLE_PDF_VIEWER=true
+```
+
+#### Start Frontend Development Server
+
+```bash
+npm run dev
+```
+
+The frontend will display:
+```
+- Local:        http://localhost:3000
+- Ready in XXXms
+```
+
+### Step 5: AI Service Setup (Optional but Recommended)
+
+#### Option A: Ollama (Local, Free) ⭐ Recommended
+
+**Install Ollama**:
+
+**macOS**:
+```bash
+brew install ollama
+```
+
+**Linux**:
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**Windows**:
+Download from [ollama.com](https://ollama.com)
+
+**Start Ollama Server**:
+```bash
+# In a new terminal
+ollama serve
+```
+
+**Pull AI Model**:
+```bash
+# Download llama2 model (default)
+ollama pull llama2
+
+# Or use a Catalan-optimized model
+ollama pull jobautomation/openeurollm-catalan:latest
+```
+
+**Verify Ollama**:
+```bash
+curl http://localhost:11434/api/tags
+
+# Should list available models
+```
+
+#### Option B: OpenAI (Cloud)
+
+1. Get API key from [platform.openai.com](https://platform.openai.com/api-keys)
+2. Add to `backend/.env`:
+```env
+OPENAI_API_KEY=sk-your-actual-api-key
+DEFAULT_AI_PROVIDER=openai
+```
+
+#### Option C: Anthropic Claude (Cloud)
+
+1. Get API key from [console.anthropic.com](https://console.anthropic.com/)
+2. Add to `backend/.env`:
+```env
+ANTHROPIC_API_KEY=sk-ant-your-actual-api-key
+DEFAULT_AI_PROVIDER=anthropic
+```
+
+### Step 6: Access the Application
+
+Open your browser and navigate to:
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs (Interactive Swagger UI)
+- **Health Check**: http://localhost:8000/health
+
+### Step 7: Verify Installation
+
+#### Test Backend API
+
+```bash
+# Check health
+curl http://localhost:8000/health
+
+# List assignments
+curl http://localhost:8000/api/v1/assignments
+
+# Check AI availability (if using Ollama)
+curl http://localhost:11434/api/tags
+```
+
+#### Test Frontend
+
+1. Open http://localhost:3000
+2. Navigate to "Assignment Management"
+3. Try creating a test assignment
+4. Upload a PDF
+5. Click "AI Extract" to test AI integration
+
+### 📁 Complete Directory Structure After Setup
+
+```
+smart-grade-ai-cursor/
+├── backend/
+│   ├── venv/              # Python virtual environment
+│   ├── .env               # ✅ Your configuration
+│   ├── uploads/           # PDF storage directory
+│   └── server.pid         # Running server PID
+├── frontend/
+│   ├── node_modules/      # Node dependencies
+│   ├── .env.local         # ✅ Your frontend config
+│   └── .next/             # Build artifacts
+└── README.md
+```
+
+### 🔧 Common Setup Issues & Solutions
+
+#### Issue: Database Connection Failed
+
+**Error**: `could not connect to server`
+
+**Solution**:
+```bash
+# Check if PostgreSQL is running
+pg_isready
+
+# Start PostgreSQL
+# macOS:
+brew services start postgresql@15
+# Linux:
+sudo systemctl start postgresql
+```
+
+#### Issue: Port Already in Use
+
+**Error**: `Address already in use`
+
+**Solution**:
+```bash
+# Find process using port 8000
+lsof -i :8000
+
+# Kill the process
+kill -9 <PID>
+
+# Or use different port in backend/.env
+BACKEND_PORT=8001
+```
+
+#### Issue: Ollama Not Available
+
+**Error**: `Ollama not available at http://localhost:11434`
+
+**Solution**:
+```bash
+# Start Ollama in separate terminal
+ollama serve
+
+# Pull required model
+ollama pull llama2
+
+# Verify
+curl http://localhost:11434/api/tags
+```
+
+#### Issue: Frontend Can't Connect to Backend
+
+**Error**: `Failed to fetch` or CORS errors
+
+**Solution**:
+1. Verify backend is running: `curl http://localhost:8000/health`
+2. Check `FRONTEND_PORT` in `backend/.env` matches frontend port
+3. Check `NEXT_PUBLIC_API_URL` in `frontend/.env.local`
+4. Restart both servers
+
+#### Issue: npm install Fails
+
+**Error**: Various npm errors
+
+**Solution**:
+```bash
+# Clear npm cache
+npm cache clean --force
+
+# Delete node_modules and lock file
+rm -rf node_modules package-lock.json
+
+# Reinstall
+npm install
+```
+
+#### Issue: Python Dependencies Conflict
+
+**Error**: Package version conflicts
+
+**Solution**:
+```bash
+# Update pip
+pip install --upgrade pip
+
+# Install with specific versions
+pip install -r requirements.txt --upgrade
+
+# If still issues, recreate virtual environment
+deactivate
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 🛑 Stopping the Application
+
+#### Stop All Services
+
+```bash
+# Stop backend
+kill $(cat backend/server.pid)
+# Or: pkill -f "python3 db_server.py"
+
+# Stop frontend (Ctrl+C in terminal)
+# Or: pkill -f "next-server"
+
+# Stop Ollama (if running)
+pkill -f ollama
+
+# Stop PostgreSQL (optional)
+# macOS:
+brew services stop postgresql@15
+# Linux:
+sudo systemctl stop postgresql
+```
+
+### 🔄 Restarting the Application
+
+```bash
+# Backend
+cd backend
+source venv/bin/activate  # Activate virtual environment
+python3 db_server.py
+
+# Frontend (new terminal)
+cd frontend
+npm run dev
+
+# Ollama (if using - new terminal)
+ollama serve
+```
+
+### 📊 Quick Start Summary
+
+```bash
+# One-time setup
+git clone <repository>
+cd smart-grade-ai-cursor
+
+# Database
+createdb smartgrade_db
+
+# Backend
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp env.example .env
+# Edit .env with your settings
+python3 db_server.py
+
+# Frontend (new terminal)
+cd frontend
+npm install
+cp env.example.txt .env.local
+npm run dev
+
+# Ollama (new terminal - optional)
+ollama serve
+ollama pull llama2
+
+# Access at http://localhost:3000
+```
+
+### 📚 Next Steps
+
+After successful installation:
+
+1. **Create Your First Assignment**
+   - Navigate to "Assignment Management"
+   - Click "Create Assignment"
+   - Fill in details and save
+
+2. **Upload PDF & Extract Exercises**
+   - Click on your assignment
+   - Upload PDF statement
+   - Click "AI Extract" to automatically extract exercises
+
+3. **Configure Classrooms**
+   - Go to "Course Management"
+   - Create courses and semesters
+   - Set up classrooms
+
+4. **Test AI Grading**
+   - Go to "Submission Management"
+   - Submit a test assignment
+   - Use AI grading features
+
+5. **Explore Admin Features**
+   - AI Settings: Configure AI prompts
+   - Section Config: Customize PDF extraction
+
+### 🔗 Additional Resources
+
+- **Configuration Guide**: `/backend/CONFIGURATION_GUIDE.md`
+- **Port Configuration**: `/PORT_CONFIGURATION.md`
+- **PDF Storage**: `/backend/PDF_DATABASE_STORAGE.md`
+- **AI Setup**: `/backend/AI_SETUP.md`
+- **API Documentation**: http://localhost:8000/docs (when running)
+
+---
+
+**Need Help?** Check the troubleshooting section above or review the documentation files in the `/backend/` directory.
 
 ## 🎨 UI Components
 
