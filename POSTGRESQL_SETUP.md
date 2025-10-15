@@ -65,12 +65,12 @@ CREATE TABLE exercises (
 
 All your existing endpoints now use PostgreSQL:
 
-- `GET /api/v1/assignments` - List assignments from DB
-- `POST /api/v1/assignments` - Create assignment in DB  
-- `PUT /api/v1/assignments/{id}` - Update assignment in DB
-- `DELETE /api/v1/assignments/{id}` - Delete from DB
-- `GET/PUT /api/v1/assignments/{id}/exercises` - Exercise CRUD
-- `POST/GET/DELETE /api/v1/assignments/{id}/upload-pdf` - PDF management
+- `GET /api/assignments` - List assignments from DB
+- `POST /api/assignments` - Create assignment in DB  
+- `PUT /api/assignments/{id}` - Update assignment in DB
+- `DELETE /api/assignments/{id}` - Delete from DB
+- `GET/PUT /api/assignments/{id}/exercises` - Exercise CRUD
+- `POST/GET/DELETE /api/assignments/{id}/upload-pdf` - PDF management
 
 ## 🚀 Benefits You Get
 

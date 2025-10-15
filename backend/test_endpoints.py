@@ -12,23 +12,23 @@ app = FastAPI(title="Test Course/Semester Endpoints")
 async def root():
     return {"message": "Test server is running"}
 
-@app.get("/api/v1/test-courses")
+@app.get("/api/test-courses")
 async def test_courses():
     return {"message": "Course test endpoint works!", "status": "success"}
 
-@app.get("/api/v1/courses")
+@app.get("/api/courses")
 async def get_courses():
     return {"message": "courses endpoint works", "courses": []}
 
-@app.post("/api/v1/courses")
+@app.post("/api/courses")
 async def create_course():
     return {"message": "course created", "id": 1}
 
-@app.get("/api/v1/semesters")
+@app.get("/api/semesters")
 async def get_semesters():
     return {"message": "semesters endpoint works", "semesters": []}
 
-@app.post("/api/v1/semesters")
+@app.post("/api/semesters")
 async def create_semester():
     return {"message": "semester created", "id": 1}
 

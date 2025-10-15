@@ -99,7 +99,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 @router.post("/login", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm)):
     """Login endpoint"""
     user = fake_users_db.get(form_data.username)
     if not user or user["hashed_password"] != "fakehashedpassword":

@@ -59,10 +59,30 @@ class AssignmentResponse(AssignmentBase):
     created_by: int
     created_at: datetime
     updated_at: datetime
+    classroom_ids: List[int] = []  # Add classroom IDs to response
     exercises: List[ExerciseResponse] = []
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        """Custom from_orm to extract classroom IDs from relationship"""
+        data = {
+            'id': obj.id,
+            'name': obj.name,
+            'description': obj.description,
+            'due_date': obj.due_date,
+            'language': obj.language,
+            'is_active': obj.is_active,
+            'pdf_file_path': obj.pdf_file_path,
+            'pdf_file_name': obj.pdf_file_name,
+            'created_by': obj.created_by,
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+            'classroom_ids': [c.id for c in obj.classrooms] if hasattr(obj, 'classrooms') and obj.classrooms else []
+        }
+        return cls(**data)
 
 # CRUD Operations for Assignments
 async def create_assignment(db: AsyncSession, assignment: AssignmentCreate, created_by: int) -> Assignment:

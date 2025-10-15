@@ -26,7 +26,7 @@ from crud import (
     SubmissionFile
 )
 
-router = APIRouter(prefix="/api/v1/submissions", tags=["submissions"])
+router = APIRouter(tags=["submissions"])
 
 # Ensure uploads directory exists (use centralized config)
 UPLOAD_DIR = os.path.join(settings.UPLOAD_DIR, "submissions")

@@ -43,13 +43,13 @@ pydantic>=2.10.0  # Updated to Python 3.13 compatible version
 ### **API Endpoints Working**
 ```bash
 GET    /health                                    # Health check
-GET    /api/v1/assignments                       # List assignments
-GET    /api/v1/assignments/{id}                  # Get assignment
-POST   /api/v1/assignments                       # Create assignment  
-PUT    /api/v1/assignments/{id}                  # Update assignment
-DELETE /api/v1/assignments/{id}                  # Delete assignment
-GET    /api/v1/assignments/{id}/exercises        # Get exercises
-PUT    /api/v1/assignments/{id}/exercises        # Update exercises
+GET    /api/assignments                       # List assignments
+GET    /api/assignments/{id}                  # Get assignment
+POST   /api/assignments                       # Create assignment  
+PUT    /api/assignments/{id}                  # Update assignment
+DELETE /api/assignments/{id}                  # Delete assignment
+GET    /api/assignments/{id}/exercises        # Get exercises
+PUT    /api/assignments/{id}/exercises        # Update exercises
 ```
 
 ## 🚀 How to Start the Fixed Backend
@@ -65,7 +65,7 @@ Server starts on `http://localhost:8000`
 
 The frontend should now work correctly:
 
-1. **Next.js Proxy**: Routes `/api/v1/*` → `http://localhost:8000/api/v1/*`
+1. **Next.js Proxy**: Routes `/api/*` → `http://localhost:8000/api/*`
 2. **CORS Configured**: Backend allows `localhost:3000` origins
 3. **Authentication**: Uses mock tokens (`fake-token-for-demo`)
 4. **Data Format**: Compatible with existing frontend types

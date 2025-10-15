@@ -6,7 +6,7 @@ The "Create Assignment" button was not working - clicking it had no effect and n
 ## 🔍 Root Causes Identified
 
 ### 1. **Missing API Routing**
-- Frontend (port 3000) was trying to call `/api/v1/assignments`
+- Frontend (port 3000) was trying to call `/api/assignments`
 - No proxy configured to route calls to backend (port 8000)
 - Requests were failing silently
 
@@ -28,8 +28,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/v1/:path*',
-        destination: 'http://localhost:8000/api/v1/:path*'
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/api/:path*'
       }
     ];
   },
@@ -121,11 +121,11 @@ npm run dev  # Port 3000
 ## 🔄 API Flow Now Working
 
 ```
-Frontend (3000) → API Call (/api/v1/assignments)
+Frontend (3000) → API Call (/api/assignments)
     ↓
 Next.js Proxy (rewrite rule)
     ↓  
-Backend (8000) → /api/v1/assignments
+Backend (8000) → /api/assignments
     ↓
 Mock Authentication (fake-token-for-demo)
     ↓

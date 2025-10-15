@@ -69,7 +69,89 @@ from crud import (
 )
 from ai_prompts import get_submission_evaluation_prompt
 
-app = FastAPI(title="Smart Grade AI API - PostgreSQL")
+# FastAPI app with comprehensive OpenAPI/Swagger configuration
+app = FastAPI(
+    title="Smart Grade AI API",
+    description="""
+## AI-Powered Grading System API
+
+Smart Grade AI automates assignment grading using advanced AI models, providing
+consistent, detailed feedback to students while saving teachers valuable time.
+
+### Key Features
+
+* 🎓 **Assignment Management**: Create, update, and organize assignments
+* 📄 **PDF Processing**: Upload and extract exercises from PDF statements
+* 🤖 **AI Grading**: Automatic submission evaluation with detailed feedback
+* 👥 **Group Management**: Organize students into groups and classrooms
+* 📊 **Analytics**: Track performance and grading statistics
+* 🔧 **Configuration**: Customize AI models and extraction settings
+
+### AI Providers Supported
+
+- **Ollama** (Local, Free): Privacy-focused, offline-capable
+- **OpenAI GPT-4**: Advanced cloud-based grading
+- **Anthropic Claude**: High-quality AI analysis
+
+### Database
+
+PostgreSQL with async support, storing PDFs directly in database for reliability.
+
+### Authentication
+
+JWT-based authentication with role-based access control (Teachers/Students).
+    """,
+    version="1.0.0",
+    contact={
+        "name": "Smart Grade AI Team",
+        "url": "https://github.com/your-repo/smart-grade-ai-cursor",
+        "email": "support@smartgrade.ai"
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+    },
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "assignments",
+            "description": "Assignment CRUD operations, PDF upload, and exercise extraction"
+        },
+        {
+            "name": "exercises",
+            "description": "Manage exercises within assignments"
+        },
+        {
+            "name": "submissions",
+            "description": "Student submission handling and grading"
+        },
+        {
+            "name": "courses",
+            "description": "Course and semester management"
+        },
+        {
+            "name": "classrooms",
+            "description": "Classroom and student group organization"
+        },
+        {
+            "name": "groups",
+            "description": "Student group management"
+        },
+        {
+            "name": "semesters",
+            "description": "Academic semester management"
+        },
+        {
+            "name": "admin",
+            "description": "Administrative settings and configuration"
+        },
+        {
+            "name": "health",
+            "description": "System health and status checks"
+        }
+    ]
+)
 
 # Mount static files for uploads
 import os
@@ -197,7 +279,7 @@ def debug_early():
 # === WORKING COURSE AND SEMESTER ENDPOINTS ===
 # Removed duplicate course endpoints - using the full CRUD versions with proper validation instead
 
-@app.get("/api/v1/semesters")
+@app.get("/api/semesters")
 async def get_semesters_working(db: AsyncSession = Depends(get_db)):
     """Get all semesters - working version"""
     try:
@@ -206,7 +288,7 @@ async def get_semesters_working(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch semesters: {str(e)}")
 
-@app.post("/api/v1/semesters")
+@app.post("/api/semesters")
 async def create_semester_working(request: Request, db: AsyncSession = Depends(get_db)):
     """Create a semester - working version"""
     try:
@@ -236,7 +318,7 @@ async def create_semester_working(request: Request, db: AsyncSession = Depends(g
         raise HTTPException(status_code=500, detail=f"Failed to create semester: {str(e)}")
 
 # Assignment endpoints
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises and classrooms"""
     assignments = await get_assignments(db)
@@ -281,7 +363,7 @@ async def get_all_assignments(db: AsyncSession = Depends(get_db)):
         result.append(assignment_dict)
     return result
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -289,7 +371,7 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     try:
@@ -331,7 +413,7 @@ async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession =
         raise HTTPException(status_code=500, detail=f"Failed to create assignment: {str(e)}")
 
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -339,7 +421,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -347,7 +429,7 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/export")
+@app.get("/api/assignments/{assignment_id}/export")
 async def export_assignment_submissions(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Export assignment submissions as CSV"""
     try:
@@ -449,13 +531,13 @@ async def export_assignment_submissions(assignment_id: int, db: AsyncSession = D
         raise HTTPException(status_code=500, detail=f"Failed to export submissions: {str(e)}")
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -473,7 +555,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment (stored as bytes in Postgres)."""
     assignment = await get_assignment(db, assignment_id)
@@ -503,7 +585,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "stored_in": "database",
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment (DB bytes preferred)."""
     assignment = await get_assignment(db, assignment_id)
@@ -573,7 +655,7 @@ startxref
         headers={"Content-Disposition": "inline; filename=" + assignment.pdf_file_name}
     )
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -643,13 +725,13 @@ async def view_assignment_pdf_inline(assignment_id: int, db: AsyncSession = Depe
     )
 
 # Admin endpoints for Section Extraction Configuration
-@app.get("/api/v1/admin/section-configs", response_model=List[SectionExtractionConfigResponse])
+@app.get("/api/admin/section-configs", response_model=List[SectionExtractionConfigResponse])
 async def get_section_configs(db: AsyncSession = Depends(get_db)):
     """Get all section extraction configurations"""
     configs = await get_section_extraction_configs(db)
     return configs
 
-@app.get("/api/v1/admin/section-configs/{config_id}", response_model=SectionExtractionConfigResponse)
+@app.get("/api/admin/section-configs/{config_id}", response_model=SectionExtractionConfigResponse)
 async def get_section_config(config_id: int, db: AsyncSession = Depends(get_db)):
     """Get a specific section extraction configuration"""
     config = await get_section_extraction_config(db, config_id)
@@ -657,7 +739,7 @@ async def get_section_config(config_id: int, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=404, detail="Section configuration not found")
     return config
 
-@app.post("/api/v1/admin/section-configs", response_model=SectionExtractionConfigResponse)
+@app.post("/api/admin/section-configs", response_model=SectionExtractionConfigResponse)
 async def create_section_config(config: SectionExtractionConfigCreate, db: AsyncSession = Depends(get_db)):
     """Create a new section extraction configuration"""
     try:
@@ -668,7 +750,7 @@ async def create_section_config(config: SectionExtractionConfigCreate, db: Async
     
     return await create_section_extraction_config(db, config)
 
-@app.put("/api/v1/admin/section-configs/{config_id}", response_model=SectionExtractionConfigResponse)
+@app.put("/api/admin/section-configs/{config_id}", response_model=SectionExtractionConfigResponse)
 async def update_section_config(config_id: int, config: SectionExtractionConfigUpdate, db: AsyncSession = Depends(get_db)):
     """Update a section extraction configuration"""
     try:
@@ -682,7 +764,7 @@ async def update_section_config(config_id: int, config: SectionExtractionConfigU
         raise HTTPException(status_code=404, detail="Section configuration not found")
     return updated_config
 
-@app.delete("/api/v1/admin/section-configs/{config_id}")
+@app.delete("/api/admin/section-configs/{config_id}")
 async def delete_section_config(config_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a section extraction configuration"""
     success = await delete_section_extraction_config(db, config_id)
@@ -731,7 +813,7 @@ async def update_ai_settings(body: AiSettingsBody, db: AsyncSession = Depends(ge
     return {"success": True}
 
 # PDF Extraction Testing endpoint
-@app.get("/api/v1/debug/pdf-extraction-test/{assignment_id}")
+@app.get("/api/debug/pdf-extraction-test/{assignment_id}")
 async def test_pdf_extraction_methods(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Test different PDF extraction methods to compare results"""
     
@@ -846,7 +928,7 @@ async def test_pdf_extraction_methods(assignment_id: int, db: AsyncSession = Dep
         raise HTTPException(status_code=500, detail=f"PDF extraction test failed: {str(e)}")
 
 # Debug endpoint to test Ollama connectivity
-@app.get("/api/v1/debug/ollama-test")
+@app.get("/api/debug/ollama-test")
 async def test_ollama_connection():
     """
     Test Ollama connectivity with a simple request
@@ -907,7 +989,7 @@ async def test_ollama_connection():
         }
 
 # Debug endpoint specifically for cross-reference handling
-@app.post("/api/v1/debug/test-cross-references/{assignment_id}")
+@app.post("/api/debug/test-cross-references/{assignment_id}")
 async def debug_cross_references(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Debug cross-reference detection and resolution in PDF content"""
     
@@ -1065,7 +1147,7 @@ RESPOND WITH JSON containing:
         raise HTTPException(status_code=500, detail=f"Debug failed: {str(e)}")
 
 # Debug the actual AI prompt being sent for extraction
-@app.post("/api/v1/debug/ai-prompt-debug/{assignment_id}")
+@app.post("/api/debug/ai-prompt-debug/{assignment_id}")
 async def debug_ai_prompt(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Debug the exact prompt being sent to AI and its response"""
     
@@ -1217,7 +1299,7 @@ Extract the numbered deliverables (1, 2, 3, 4...) from above. Expand any "Result
         raise HTTPException(status_code=500, detail=f"Debug failed: {str(e)}")
 
 # Test deliverables extraction specifically
-@app.post("/api/v1/debug/test-deliverables-extraction/{assignment_id}")
+@app.post("/api/debug/test-deliverables-extraction/{assignment_id}")
 async def test_deliverables_extraction(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Test if the AI can properly extract deliverables with cross-references"""
     
@@ -1301,7 +1383,7 @@ Return JSON array with expanded descriptions in original language:"""
         raise HTTPException(status_code=500, detail=f"Test failed: {str(e)}")
 
 # Test AI prompt with sample text
-@app.post("/api/v1/debug/test-ai-prompt")
+@app.post("/api/debug/test-ai-prompt")
 async def test_ai_prompt_format():
     """
     Test the AI prompt with sample exercise text to validate JSON response format
@@ -1406,7 +1488,7 @@ Find the "Què s'ha de lliurar" section and extract exercises as JSON array (no 
         }
 
 # Debug endpoint to test cross-reference expansion directly
-@app.post("/api/v1/debug/test-expansion")
+@app.post("/api/debug/test-expansion")
 async def test_expansion_directly():
     """Test cross-reference expansion directly with OpenEuroLLM-Catalan"""
     
@@ -1479,7 +1561,7 @@ Expand the cross-references using the section content provided in the system pro
         }
 
 # Debug endpoint to test detection logic
-@app.post("/api/v1/debug/test-detection")
+@app.post("/api/debug/test-detection")
 async def test_detection_logic():
     """Test the cross-reference detection logic for all deliverables"""
     
@@ -1514,7 +1596,7 @@ async def test_detection_logic():
     return {"detection_results": results}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -1610,7 +1692,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -1629,7 +1711,7 @@ async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = D
         raise HTTPException(status_code=500, detail=f"{error_msg}\n\nFor debugging: Check server logs for full error details.")
 
 # === NON-VERSIONED ALIASES (/api) ===
-# These mirror the /api/v1 endpoints to support unversioned API usage
+# These mirror the /api endpoints to support unversioned API usage
 
 # Assignments
 @app.get("/api/assignments", response_model=List[AssignmentResponse])
@@ -1706,7 +1788,7 @@ async def set_assignment_pdf_reference(
         "file_name": assignment.pdf_file_name,
     }
 
-@app.patch("/api/v1/assignments/{assignment_id}/pdf-ref")
+@app.patch("/api/assignments/{assignment_id}/pdf-ref")
 async def set_assignment_pdf_reference_v1(
     assignment_id: int,
     body: PdfReferenceBody,
@@ -1724,14 +1806,14 @@ async def extract_exercises_from_pdf_ai_alias(assignment_id: int, db: AsyncSessi
     return await extract_exercises_from_pdf_ai(assignment_id, db)
 
 # === TEST ENDPOINT ===
-@app.get("/api/v1/test-endpoint")
+@app.get("/api/test-endpoint")
 async def test_endpoint():
     """Simple test endpoint"""
     return {"message": "Test endpoint works"}
 
 # === SUBMISSION MANAGEMENT ENDPOINTS ===
 
-@app.get("/api/v1/submissions")
+@app.get("/api/submissions")
 async def get_submissions_endpoint(
     assignment_id: Optional[int] = None,
     course_id: Optional[int] = None,
@@ -1776,7 +1858,7 @@ async def get_submissions_endpoint(
         for s in submissions
     ]
 
-@app.post("/api/v1/submissions")
+@app.post("/api/submissions")
 async def create_submission_endpoint(
     assignment_id: int = Form(...),
     course_id: int = Form(None),
@@ -1850,7 +1932,7 @@ async def create_submission_endpoint(
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Failed to create submission")
 
-@app.get("/api/v1/submissions/{submission_id}")
+@app.get("/api/submissions/{submission_id}")
 async def get_submission_endpoint(submission_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single submission by ID"""
     submission = await get_submission(db, submission_id)
@@ -1884,7 +1966,7 @@ async def get_submission_endpoint(submission_id: int, db: AsyncSession = Depends
         "updated_at": submission.updated_at
     }
 
-@app.get("/api/v1/submissions/{submission_id}/pdf")
+@app.get("/api/submissions/{submission_id}/pdf")
 async def view_submission_pdf(submission_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for submission (from DB bytes)."""
     submission = await get_submission(db, submission_id)
@@ -1909,7 +1991,7 @@ async def view_submission_pdf(submission_id: int, db: AsyncSession = Depends(get
     
     return FileResponse(file_path, media_type="application/pdf", filename=submission.pdf_file_name or "submission.pdf")
 
-@app.put("/api/v1/submissions/{submission_id}")
+@app.put("/api/submissions/{submission_id}")
 async def update_submission_endpoint(submission_id: int, submission_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a submission"""
     try:
@@ -1924,7 +2006,7 @@ async def update_submission_endpoint(submission_id: int, submission_data: dict, 
         logger.error(f"Error updating submission: {e}")
         raise HTTPException(status_code=500, detail="Failed to update submission")
 
-@app.delete("/api/v1/submissions/{submission_id}")
+@app.delete("/api/submissions/{submission_id}")
 async def delete_submission_endpoint(submission_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a submission (soft delete)"""
     success = await delete_submission(db, submission_id)
@@ -1932,7 +2014,7 @@ async def delete_submission_endpoint(submission_id: int, db: AsyncSession = Depe
         raise HTTPException(status_code=404, detail="Submission not found")
     return {"message": "Submission deleted successfully"}
 
-@app.put("/api/v1/submissions/{submission_id}/pdf")
+@app.put("/api/submissions/{submission_id}/pdf")
 async def upload_submission_pdf_endpoint(
     submission_id: int,
     pdf_file: UploadFile = File(...),
@@ -1988,7 +2070,7 @@ class GradeSubmissionRequest(BaseModel):
     grade_breakdown: Optional[List[Dict[str, Any]]] = None
     graded_by: Optional[str] = "1"  # Accept string, convert to int in endpoint
 
-@app.post("/api/v1/submissions/{submission_id}/grade")
+@app.post("/api/submissions/{submission_id}/grade")
 async def grade_submission_endpoint(
     submission_id: int, 
     grade_data: GradeSubmissionRequest, 
@@ -2031,7 +2113,7 @@ async def grade_submission_endpoint(
 
 # === COURSE MANAGEMENT ENDPOINTS ===
 
-@app.get("/api/v1/courses")
+@app.get("/api/courses")
 async def get_courses_endpoint(
     created_by: int = 1,
     skip: int = 0,
@@ -2050,7 +2132,7 @@ async def get_courses_endpoint(
         logger.error(f"Error getting courses: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch courses")
 
-@app.get("/api/v1/courses/{course_id}")
+@app.get("/api/courses/{course_id}")
 async def get_course_endpoint(
     course_id: int, 
     include_semesters: bool = False,
@@ -2071,7 +2153,7 @@ async def get_course_endpoint(
         logger.error(f"Error getting course {course_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch course")
 
-@app.post("/api/v1/courses")
+@app.post("/api/courses")
 async def create_course_endpoint(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -2104,7 +2186,7 @@ async def create_course_endpoint(
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Failed to create course")
 
-@app.put("/api/v1/courses/{course_id}")
+@app.put("/api/courses/{course_id}")
 async def update_course_endpoint(
     course_id: int,
     request: Request,
@@ -2133,7 +2215,7 @@ async def update_course_endpoint(
         logger.error(f"Error updating course: {e}")
         raise HTTPException(status_code=500, detail="Failed to update course")
 
-@app.delete("/api/v1/courses/{course_id}")
+@app.delete("/api/courses/{course_id}")
 async def delete_course_endpoint(course_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a course (soft delete)"""
     success = await delete_course(db, course_id)
@@ -2143,7 +2225,7 @@ async def delete_course_endpoint(course_id: int, db: AsyncSession = Depends(get_
 
 # === SEMESTER MANAGEMENT ENDPOINTS ===
 
-@app.get("/api/v1/semesters")
+@app.get("/api/semesters")
 async def get_semesters_endpoint(
     created_by: int = 1,
     course_id: int = None,
@@ -2162,7 +2244,7 @@ async def get_semesters_endpoint(
         logger.error(f"Error getting semesters: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch semesters")
 
-@app.get("/api/v1/semesters/{semester_id}")
+@app.get("/api/semesters/{semester_id}")
 async def get_semester_endpoint(semester_id: int, db: AsyncSession = Depends(get_db)):
     """Get a specific semester by ID"""
     semester = await get_semester(db, semester_id)
@@ -2170,7 +2252,7 @@ async def get_semester_endpoint(semester_id: int, db: AsyncSession = Depends(get
         raise HTTPException(status_code=404, detail="Semester not found")
     return semester
 
-@app.get("/api/v1/semesters/{semester_id}/any-status")
+@app.get("/api/semesters/{semester_id}/any-status")
 async def get_semester_any_status_endpoint(semester_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single semester by ID regardless of active status"""
     semester = await get_semester_any_status(db, semester_id)
@@ -2178,7 +2260,7 @@ async def get_semester_any_status_endpoint(semester_id: int, db: AsyncSession = 
         raise HTTPException(status_code=404, detail="Semester not found")
     return semester
 
-@app.post("/api/v1/semesters")
+@app.post("/api/semesters")
 async def create_semester_endpoint(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -2201,7 +2283,7 @@ async def create_semester_endpoint(
         logger.error(f"Error creating semester: {e}")
         raise HTTPException(status_code=500, detail="Failed to create semester")
 
-@app.put("/api/v1/semesters/{semester_id}")
+@app.put("/api/semesters/{semester_id}")
 async def update_semester_endpoint(
     semester_id: int,
     request: Request,
@@ -2229,7 +2311,7 @@ async def update_semester_endpoint(
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to update semester: {str(e)}")
 
-@app.delete("/api/v1/semesters/{semester_id}")
+@app.delete("/api/semesters/{semester_id}")
 async def delete_semester_endpoint(semester_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a semester (soft delete)"""
     success = await delete_semester(db, semester_id)
@@ -2239,7 +2321,7 @@ async def delete_semester_endpoint(semester_id: int, db: AsyncSession = Depends(
 
 # === GROUP MANAGEMENT ENDPOINTS ===
 
-@app.get("/api/v1/groups")
+@app.get("/api/groups")
 async def get_groups_endpoint(
     created_by: Optional[int] = None,
     course_id: Optional[int] = None,
@@ -2260,7 +2342,7 @@ async def get_groups_endpoint(
     
     return groups
 
-@app.get("/api/v1/groups/{group_id}")
+@app.get("/api/groups/{group_id}")
 async def get_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single group by ID"""
     group = await get_group(db, group_id)
@@ -2268,7 +2350,7 @@ async def get_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Group not found")
     return group
 
-@app.post("/api/v1/groups")
+@app.post("/api/groups")
 async def create_group_endpoint(group_data: dict, db: AsyncSession = Depends(get_db)):
     """Create a new group"""
     try:
@@ -2288,7 +2370,7 @@ async def create_group_endpoint(group_data: dict, db: AsyncSession = Depends(get
         logger.error(f"Error creating group: {e}")
         raise HTTPException(status_code=500, detail="Failed to create group")
 
-@app.put("/api/v1/groups/{group_id}")
+@app.put("/api/groups/{group_id}")
 async def update_group_endpoint(group_id: int, group_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a group"""
     try:
@@ -2303,7 +2385,7 @@ async def update_group_endpoint(group_id: int, group_data: dict, db: AsyncSessio
         logger.error(f"Error updating group: {e}")
         raise HTTPException(status_code=500, detail="Failed to update group")
 
-@app.delete("/api/v1/groups/{group_id}")
+@app.delete("/api/groups/{group_id}")
 async def delete_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a group (soft delete)"""
     success = await delete_group(db, group_id)
@@ -2313,7 +2395,7 @@ async def delete_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db
 
 # ===== Classroom Management Endpoints =====
 
-@app.get("/api/v1/classrooms", response_model=List[ClassroomResponse])
+@app.get("/api/classrooms", response_model=List[ClassroomResponse])
 async def get_classrooms_endpoint(
     course_id: Optional[int] = None,
     semester_id: Optional[int] = None,
@@ -2325,7 +2407,7 @@ async def get_classrooms_endpoint(
     classrooms = await get_classrooms(db, course_id=course_id, semester_id=semester_id, skip=skip, limit=limit)
     return classrooms
 
-@app.get("/api/v1/classrooms/{classroom_id}")
+@app.get("/api/classrooms/{classroom_id}")
 async def get_classroom_endpoint(classroom_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single classroom by ID with its groups"""
     classroom = await get_classroom_with_details(db, classroom_id)
@@ -2365,7 +2447,7 @@ async def get_classroom_endpoint(classroom_id: int, db: AsyncSession = Depends(g
         ] if classroom.groups else []
     }
 
-@app.post("/api/v1/classrooms", response_model=ClassroomResponse)
+@app.post("/api/classrooms", response_model=ClassroomResponse)
 async def create_classroom_endpoint(classroom_data: dict, db: AsyncSession = Depends(get_db)):
     """Create a new classroom"""
     try:
@@ -2383,7 +2465,7 @@ async def create_classroom_endpoint(classroom_data: dict, db: AsyncSession = Dep
         logger.error(f"Error creating classroom: {e}")
         raise HTTPException(status_code=500, detail="Failed to create classroom")
 
-@app.put("/api/v1/classrooms/{classroom_id}")
+@app.put("/api/classrooms/{classroom_id}")
 async def update_classroom_endpoint(classroom_id: int, classroom_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a classroom"""
     try:
@@ -2398,7 +2480,7 @@ async def update_classroom_endpoint(classroom_id: int, classroom_data: dict, db:
         logger.error(f"Error updating classroom: {e}")
         raise HTTPException(status_code=500, detail="Failed to update classroom")
 
-@app.delete("/api/v1/classrooms/{classroom_id}")
+@app.delete("/api/classrooms/{classroom_id}")
 async def delete_classroom_endpoint(classroom_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a classroom (soft delete)"""
     success = await delete_classroom(db, classroom_id)
@@ -2407,12 +2489,12 @@ async def delete_classroom_endpoint(classroom_id: int, db: AsyncSession = Depend
     return {"message": "Classroom deleted successfully"}
 
 # Test endpoint
-@app.get("/api/v1/test")
+@app.get("/api/test")
 async def test_endpoint():
     return {"message": "Test endpoint works"}
 
 # AI Evaluation endpoint
-@app.post("/api/v1/submissions/{submission_id}/ai-evaluate")
+@app.post("/api/submissions/{submission_id}/ai-evaluate")
 async def ai_evaluate_submission(
     submission_id: int,
     request: Request,

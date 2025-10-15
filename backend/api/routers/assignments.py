@@ -3,13 +3,11 @@ Assignments router for assignment management with exercises
 """
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from pydantic import BaseModel, validator
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-import os
-import uuid
 from database import get_db
 from crud import (
     create_assignment as crud_create_assignment,
@@ -26,7 +24,6 @@ from crud import (
     ExerciseUpdate,
     ExerciseResponse
 )
-from .auth import User, get_current_user
 
 router = APIRouter()
 
@@ -173,28 +170,16 @@ async def upload_assignment_pdf(
     if len(content) > 10 * 1024 * 1024:  # 10MB
         raise HTTPException(status_code=400, detail="File size must be less than 10MB")
     
-    # Create uploads directory if it doesn't exist
-    upload_dir = "uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    # Generate unique filename
-    file_extension = ".pdf"
-    unique_filename = f"assignment_{assignment_id}_{uuid.uuid4().hex}{file_extension}"
-    file_path = os.path.join(upload_dir, unique_filename)
-    
-    # Save file
-    with open(file_path, "wb") as f:  # pylint: disable=unspecified-encoding
-        f.write(content)
-    
-    # Update assignment in database
-    from crud import update_assignment_pdf
-    updated_assignment = await update_assignment_pdf(db, assignment_id, f"/{file_path}", file.filename)
+    # Store PDF content directly in database
+    from crud import update_assignment_pdf_bytes
+    updated_assignment = await update_assignment_pdf_bytes(db, assignment_id, content, file.filename)
     
     return {
         "success": True,
         "message": "PDF uploaded successfully",
         "file_name": file.filename,
-        "file_path": updated_assignment.statement_file_path
+        "file_size": len(content),
+        "storage_type": "database"
     }
 
 @router.get("/{assignment_id}/pdf")
@@ -209,33 +194,53 @@ async def get_assignment_pdf(
     if not assignment:
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     
-    # Check if assignment has a PDF file
-    if not assignment.statement_file_path:
+    # Check if assignment has PDF data in database
+    if not assignment.pdf_file_data:
         raise HTTPException(status_code=404, detail="No PDF file found for this assignment")
     
-    # Construct full file path
-    file_path = assignment.statement_file_path
-    if not file_path.startswith('/'):
-        file_path = f"./{file_path}"
-    
-    # Check if file exists, if not try alternative paths
-    if not os.path.exists(file_path):
-        # Try to find the file in the uploads directory with a different pattern
-        uploads_dir = "uploads"
-        if os.path.exists(uploads_dir):
-            # Look for files that might match this assignment
-            for filename in os.listdir(uploads_dir):
-                if filename.startswith(f"assignment_{assignment_id}_") and filename.endswith('.pdf'):
-                    file_path = os.path.join(uploads_dir, filename)
-                    break
-            else:
-                raise HTTPException(status_code=404, detail="PDF file not found on server")
-        else:
-            raise HTTPException(status_code=404, detail="PDF file not found on server")
-    
-    # Return the PDF file inline for viewing (not download)
-    return FileResponse(
-        path=file_path,
+    # Return PDF content from database
+    return Response(
+        content=assignment.pdf_file_data,
         media_type="application/pdf",
         headers={"Content-Disposition": "inline"}
     )
+
+
+# AI Extraction Endpoint
+
+@router.post("/{assignment_id}/extract-exercises-ai")
+async def extract_exercises_ai(
+    assignment_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Extract exercises from assignment PDF using Google AI (Gemini)
+
+    This endpoint:
+    1. Retrieves the PDF bytes from the database
+    2. Creates a temporary file
+    3. Sends the PDF to Google AI for analysis
+    4. Parses the exercises from the AI response
+    5. Replaces existing exercises with the extracted ones
+    6. Cleans up the temporary file
+
+    Returns the extracted exercises with their descriptions, points, and criteria.
+    """
+    from services.ai_service import ai_extraction_service
+    from logging_config import logger
+    
+    logger.debug(f"Extracting exercises from assignment {assignment_id}")
+
+    try:
+        result = await ai_extraction_service.extract_exercises_from_pdf(
+            assignment_id=assignment_id,
+            db=db
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Extraction failed: {str(e)}"
+        )

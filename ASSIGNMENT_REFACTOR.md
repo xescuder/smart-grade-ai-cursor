@@ -37,10 +37,10 @@ def validate_exercises_total(cls, exercises):
 #### New Exercise Management Endpoints
 ```python
 # Get exercises for an assignment
-GET /api/v1/assignments/{assignment_id}/exercises
+GET /api/assignments/{assignment_id}/exercises
 
 # Update exercises for an assignment  
-PUT /api/v1/assignments/{assignment_id}/exercises
+PUT /api/assignments/{assignment_id}/exercises
 ```
 
 ### **Frontend Changes**
@@ -84,7 +84,7 @@ PUT /api/v1/assignments/{assignment_id}/exercises
 
 ### Create Assignment (Without Exercises)
 ```typescript
-POST /api/v1/assignments
+POST /api/assignments
 {
   "name": "Essay Assignment",
   "description": "Write about climate change",
@@ -96,7 +96,7 @@ POST /api/v1/assignments
 
 ### Manage Exercises Separately
 ```typescript
-PUT /api/v1/assignments/1/exercises
+PUT /api/assignments/1/exercises
 [
   {
     "name": "Introduction",
@@ -139,7 +139,7 @@ src/components/
 
 ### **API Structure**
 ```
-/api/v1/assignments/
+/api/assignments/
 ├── GET    /                     # List assignments
 ├── POST   /                     # Create assignment (exercises optional)
 ├── GET    /{id}                 # Get assignment details

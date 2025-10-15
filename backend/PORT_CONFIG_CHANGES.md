@@ -119,7 +119,7 @@ PORT=3000
 
 # Backend API URL
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
 
 # Feature flags
 NEXT_PUBLIC_ENABLE_AI_GRADING=true
@@ -276,4 +276,5 @@ CORS is automatically configured based on frontend port settings, and server sta
 **Status**: ✅ COMPLETE  
 **Date**: October 14, 2025  
 **Impact**: All servers use centralized port configuration
+
 

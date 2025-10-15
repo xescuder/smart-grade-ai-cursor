@@ -8,11 +8,11 @@ Smart Grade AI now **prioritizes database storage** for PDFs over filesystem sto
 
 ### ✅ Both PDF Viewing Endpoints Now Use Database First
 
-#### 1. `/api/v1/assignments/{assignment_id}/pdf`
+#### 1. `/api/assignments/{assignment_id}/pdf`
 **Function**: `view_assignment_pdf`
 
 ```python
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment (DB bytes preferred)."""
     assignment = await get_assignment(db, assignment_id)
@@ -77,7 +77,7 @@ Both functions follow this priority order:
 PDFs are uploaded using the database-first approach:
 
 ```python
-@app.post("/api/v1/assignments/{assignment_id}/upload/statement")
+@app.post("/api/assignments/{assignment_id}/upload/statement")
 async def upload_assignment_pdf(
     assignment_id: int, 
     file: UploadFile = File(...),
@@ -217,12 +217,12 @@ async def migrate_pdf_to_database(db: AsyncSession, assignment_id: int):
 ```python
 # Upload a PDF
 response = requests.post(
-    "http://localhost:8000/api/v1/assignments/1/upload/statement",
+    "http://localhost:8000/api/assignments/1/upload/statement",
     files={"file": ("test.pdf", pdf_content, "application/pdf")}
 )
 
 # Verify it's in database
-response = requests.get("http://localhost:8000/api/v1/assignments/1/pdf")
+response = requests.get("http://localhost:8000/api/assignments/1/pdf")
 assert response.status_code == 200
 assert response.headers["content-type"] == "application/pdf"
 ```
@@ -250,8 +250,8 @@ WHERE pdf_file_data IS NOT NULL OR pdf_file_path IS NOT NULL;
 
 | Endpoint | Method | Storage Priority | Headers |
 |----------|--------|------------------|---------|
-| `/api/v1/assignments/{id}/upload/statement` | POST | Database only | - |
-| `/api/v1/assignments/{id}/pdf` | GET | Database → Filesystem → GDrive | `inline; filename=...` |
+| `/api/assignments/{id}/upload/statement` | POST | Database only | - |
+| `/api/assignments/{id}/pdf` | GET | Database → Filesystem → GDrive | `inline; filename=...` |
 | `/api/assignments/{id}/download/statement` | GET | Database → Filesystem → GDrive | `inline` |
 
 ## Configuration
@@ -322,4 +322,5 @@ LIMIT 10;
 **Storage Method**: Database-First with Filesystem Fallback
 **Endpoints Updated**: 2
 **Date**: October 14, 2025
+
 

@@ -1,5 +1,5 @@
 """
-Grading router for AI-powered assignment grading
+Grading router for AI-powered grading operations
 """
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from .auth import User, get_current_user
-from .submissions import Submission, mock_submissions
+from database import get_db
 
 router = APIRouter()
 
@@ -46,10 +46,6 @@ async def ai_grade_submission(submission_id: int) -> GradeResponse:
     AI grading function - mock implementation
     In production, this would integrate with OpenAI, Anthropic, or other AI services
     """
-    submission = next((s for s in mock_submissions if s.id == submission_id), None)
-    if not submission:
-        raise HTTPException(status_code=404, detail="Submission not found")
-    
     # Mock AI grading logic
     # In production, this would send the submission to an AI model
     mock_grade = 85.5  # Mock grade
@@ -69,11 +65,11 @@ async def ai_grade_submission(submission_id: int) -> GradeResponse:
     """
     
     # Update the submission with grade
-    submission.grade = mock_grade
-    submission.feedback = mock_feedback
-    submission.graded_at = datetime.now()
-    submission.status = "graded"
-    
+    # submission.grade = mock_grade
+    # submission.feedback = mock_feedback
+    # submission.graded_at = datetime.now()
+    # submission.status = "graded"
+
     return GradeResponse(
         submission_id=submission_id,
         grade=mock_grade,
@@ -124,16 +120,16 @@ async def grade_submission(
         return await ai_grade_submission(grade_request.submission_id)
     else:
         # Manual grading
-        submission = next((s for s in mock_submissions if s.id == grade_request.submission_id), None)
-        if not submission:
-            raise HTTPException(status_code=404, detail="Submission not found")
-        
-        submission.grade = grade_request.manual_grade
-        submission.feedback = grade_request.manual_feedback
-        submission.graded_at = datetime.now()
-        submission.graded_by = current_user.id
-        submission.status = "graded"
-        
+        # submission = next((s for s in mock_submissions if s.id == grade_request.submission_id), None)
+        # if not submission:
+        #     raise HTTPException(status_code=404, detail="Submission not found")
+
+        # submission.grade = grade_request.manual_grade
+        # submission.feedback = grade_request.manual_feedback
+        # submission.graded_at = datetime.now()
+        # submission.graded_by = current_user.id
+        # submission.status = "graded"
+
         return GradeResponse(
             submission_id=grade_request.submission_id,
             grade=grade_request.manual_grade,
@@ -192,4 +188,3 @@ async def get_grading_job(
         raise HTTPException(status_code=404, detail="Grading job not found")
     
     return job
-

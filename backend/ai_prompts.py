@@ -10,26 +10,49 @@ This module contains all prompts used for AI-powered features:
 # EXERCISE EXTRACTION PROMPTS
 # ============================================================================
 
-CATALAN_EXERCISE_EXTRACTION_PROMPT = """Analitza el text del document i retorna NOMÉS un array JSON amb els exercicis.
-
-IMPORTANT: La resposta ha de començar amb [ i acabar amb ]
-
-Format requerit - Array JSON:
-[
-  {
-    "description": "Descripció de l'exercici",
-    "points": "20%",
-    "criteria": [
-      "Criteri 1",
-      "Criteri 2"
+CATALAN_EXERCISE_EXTRACTION_PROMPT = """Analitza el text del document i retorna NOMÉS un JSON amb l'estructura següent d'exemple:
+{
+    "exercises": [
+        {
+            "description": "Descripció de l'exercici",
+            "points": "20%",
+            "criteria": [
+                "Criteri 1",
+                "Criteri 2"
+            ]
+        },
     ]
-  }
-]
+}
 
-NO retornis cap text explicatiu. NO retornis un objecte. NOMÉS retorna l'array JSON."""
+Interpreta els punts de lliurament com els requisits principals o criteris per a cada exercici.
+"""
 
 
-# No default prompt - only language-specific prompts are supported
+# ============================================================================
+# EXERCISE EXTRACTION PROMPT
+# ============================================================================
+
+def get_exercise_extraction_prompt(language: str) -> str:
+    """
+    Get the appropriate exercise extraction prompt based on detected language.
+
+    Args:
+        language: Detected language code ('catalan', 'spanish', 'english', etc.)
+
+    Returns:
+        The appropriate extraction prompt
+
+    Raises:
+        ValueError: If no prompt is defined for the detected language
+    """
+    if language == 'catalan':
+        return CATALAN_EXERCISE_EXTRACTION_PROMPT
+    else:
+        raise ValueError(
+            f"No AI extraction prompt defined for language: '{language}'. "
+            f"Currently supported languages: catalan. "
+            f"Please add a prompt for '{language}' in ai_prompts.py"
+        )
 
 
 # ============================================================================
@@ -170,28 +193,4 @@ Now analyze the submission and return the JSON evaluation:"""
     return prompt
 
 
-# ============================================================================
-# HELPER FUNCTIONS
-# ============================================================================
 
-def get_exercise_extraction_prompt(language: str) -> str:
-    """
-    Get the appropriate exercise extraction prompt based on detected language.
-    
-    Args:
-        language: Detected language code ('catalan', 'spanish', 'english', etc.)
-    
-    Returns:
-        The appropriate extraction prompt
-        
-    Raises:
-        ValueError: If no prompt is defined for the detected language
-    """
-    if language == 'catalan':
-        return CATALAN_EXERCISE_EXTRACTION_PROMPT
-    else:
-        raise ValueError(
-            f"No AI extraction prompt defined for language: '{language}'. "
-            f"Currently supported languages: catalan. "
-            f"Please add a prompt for '{language}' in ai_prompts.py"
-        )
