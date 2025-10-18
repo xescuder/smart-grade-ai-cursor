@@ -2,6 +2,7 @@
 Semester management API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from pydantic import BaseModel
@@ -11,6 +12,7 @@ from database import get_db
 from crud import (
     get_semesters,
     get_semester,
+    get_semester_any_status,
     create_semester,
     update_semester,
     delete_semester,
@@ -78,8 +80,13 @@ async def create_new_semester(
         is_active=semester_request.is_active,
         created_by=1  # For now, use a default created_by user ID (1)
     )
-    db_semester = await create_semester(db, semester)
-    return db_semester
+    try:
+        db_semester = await create_semester(db, semester)
+        return db_semester
+    except IntegrityError as e:
+        # Most likely unique constraint on code
+        detail = "Semester code already exists"
+        raise HTTPException(status_code=409, detail=detail)
 
 
 @router.put("/{semester_id}", response_model=SemesterResponse)
@@ -103,7 +110,8 @@ async def delete_semester_by_id(
     db: AsyncSession = Depends(get_db)
 ):
     """Delete a semester"""
-    semester = await get_semester(db, semester_id)
+    # Allow deleting inactive or active, but error if not found
+    semester = await get_semester_any_status(db, semester_id)
     if not semester:
         raise HTTPException(status_code=404, detail=SEMESTER_NOT_FOUND)
 

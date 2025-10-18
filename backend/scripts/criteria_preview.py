@@ -185,7 +185,10 @@ async def main() -> None:
     if args.provider == "google":
         # Use Google Gemini with PDF as binary input
         google = GoogleAIService(api_key=args.google_api_key)
-        result = google.analyse_pdf(file_path=args.pdf, prompt=prompt, model=args.model)
+        # Read bytes here and pass to service
+        with open(args.pdf, "rb") as f:
+            pdf_bytes = f.read()
+        result = google.analyse_pdf(pdf_bytes=pdf_bytes, prompt=prompt, model=args.model)
         # Normalise to a list of exercises
         if isinstance(result, list):
             exercises = result

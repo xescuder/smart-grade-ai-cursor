@@ -2,15 +2,15 @@
 Assignments router for assignment management with exercises
 """
 
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import Response
-from pydantic import BaseModel, validator
-from typing import List, Optional
-from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_db
+
+from ai_prompts import get_exercise_extraction_prompt
+from core.config import settings
 from crud import (
-    create_assignment as crud_create_assignment,
     get_assignments as crud_get_assignments,
     get_assignment as crud_get_assignment,
     update_assignment as crud_update_assignment,
@@ -20,10 +20,11 @@ from crud import (
     AssignmentCreate as CrudAssignmentCreate,
     AssignmentUpdate as CrudAssignmentUpdate,
     AssignmentResponse,
-    ExerciseCreate,
     ExerciseUpdate,
-    ExerciseResponse
+    ExerciseResponse,
+    create_assignment as crud_create_assignment
 )
+from database import get_db
 
 router = APIRouter()
 
@@ -33,22 +34,6 @@ TEACHER_ONLY_CREATE = "Only teachers can create assignments"
 TEACHER_ONLY_UPDATE = "Only teachers can update assignments"  
 TEACHER_ONLY_DELETE = "Only teachers can delete assignments"
 
-
-def get_mock_user():
-    """Return mock user for demo purposes"""
-    # Create mock user without importing User class to avoid circular imports
-    class MockUser:
-        def __init__(self):
-            self.id = 1
-            self.username = "teacher"
-            self.email = "teacher@example.com" 
-            self.full_name = "Demo Teacher"
-            self.role = "teacher"
-            self.is_active = True
-    
-    return MockUser()
-
-
 @router.get("/", response_model=List[AssignmentResponse])
 async def get_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments"""
@@ -57,12 +42,7 @@ async def get_assignments(db: AsyncSession = Depends(get_db)):
 
 @router.post("/", response_model=AssignmentResponse)
 async def create_assignment(assignment: CrudAssignmentCreate, db: AsyncSession = Depends(get_db)):
-    """Create new assignment (teachers only)"""
-    current_user = get_mock_user()  # Use mock user for demo
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail=TEACHER_ONLY_CREATE)
-    
-    return await crud_create_assignment(db, assignment, current_user.id)
+    return await crud_create_assignment(db, assignment)
 
 
 @router.get("/{assignment_id}", response_model=AssignmentResponse)
@@ -80,11 +60,6 @@ async def update_assignment(
     assignment_update: CrudAssignmentUpdate,
     db: AsyncSession = Depends(get_db)
 ):
-    """Update assignment (teachers only)"""
-    current_user = get_mock_user()  # Use mock user for demo
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail=TEACHER_ONLY_UPDATE)
-    
     assignment = await crud_update_assignment(db, assignment_id, assignment_update)
     if not assignment:
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
@@ -94,11 +69,6 @@ async def update_assignment(
 
 @router.delete("/{assignment_id}")
 async def delete_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
-    """Delete assignment (teachers only)"""
-    current_user = get_mock_user()  # Use mock user for demo
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail=TEACHER_ONLY_DELETE)
-    
     success = await crud_delete_assignment(db, assignment_id)
     if not success:
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
@@ -125,11 +95,6 @@ async def update_assignment_exercises(
     exercises: List[ExerciseUpdate],
     db: AsyncSession = Depends(get_db)
 ):
-    """Update exercises for an assignment (teachers only)"""
-    current_user = get_mock_user()  # Use mock user for demo
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail=TEACHER_ONLY_UPDATE)
-    
     # Check if assignment exists
     assignment = await crud_get_assignment(db, assignment_id)
     if not assignment:
@@ -226,15 +191,31 @@ async def extract_exercises_ai(
 
     Returns the extracted exercises with their descriptions, points, and criteria.
     """
-    from services.ai_service import ai_extraction_service
+    from services.google_ai_service import GoogleAIService
     from logging_config import logger
-    
+    from crud import get_assignment
+
     logger.debug(f"Extracting exercises from assignment {assignment_id}")
 
+    # Fetch assignment and PDF bytes
+    assignment = await get_assignment(db, assignment_id)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    if not assignment.pdf_file_data:
+        raise HTTPException(status_code=404, detail="No PDF file found for this assignment")
+
     try:
-        result = await ai_extraction_service.extract_exercises_from_pdf(
-            assignment_id=assignment_id,
-            db=db
+        # Get prompt for exercise extraction depending on language of assignment
+        prompt = get_exercise_extraction_prompt(assignment.language)
+        logger.info(f"Using exercise extraction prompt for language '{assignment.language}':")
+        logger.info(f"Prompt: {prompt}")
+        
+        # Get api key from settings or environment
+        google_ai_service = GoogleAIService(api_key=settings.GOOGLE_AI_API_KEY)
+        
+        result = google_ai_service.analyse_pdf(
+            pdf_bytes=assignment.pdf_file_data,
+            prompt=prompt
         )
         return result
     except ValueError as e:

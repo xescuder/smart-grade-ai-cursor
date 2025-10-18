@@ -26,15 +26,15 @@ async def lifespan(app: FastAPI):
     logger.info(f"🤖 Google AI Model: {settings.GOOGLE_AI_MODEL}")
 
     await init_db()
-    logger.success("✅ Database initialized")
-    logger.success("✅ Smart Grade AI is ready!")
+    logger.info("✅ Database initialized")
+    logger.info("✅ Smart Grade AI is ready!")
 
     yield
 
     # Shutdown
     logger.info("👋 Smart Grade AI Backend shutting down...")
     await close_db()
-    logger.success("✅ Cleanup complete")
+    logger.info("✅ Cleanup complete")
 
 
 # Create FastAPI instance
@@ -83,6 +83,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ],

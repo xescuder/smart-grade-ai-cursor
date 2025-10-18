@@ -27,7 +27,7 @@ class TokenData(BaseModel):
 class User(BaseModel):
     id: int
     username: str
-    email: str
+    email_address: str
     full_name: str
     role: str  # 'teacher' or 'student'
     is_active: bool
@@ -35,7 +35,7 @@ class User(BaseModel):
 
 class UserCreate(BaseModel):
     username: str
-    email: str
+    email_address: str
     full_name: str
     password: str
     role: str = "student"
@@ -47,7 +47,7 @@ fake_users_db = {
         "id": 1,
         "username": "teacher",
         "email": "teacher@example.com",
-        "full_name": "John Teacher",
+        "full_name": "Xavier Escudero",
         "role": "teacher",
         "hashed_password": "fakehashedpassword",
         "is_active": True,

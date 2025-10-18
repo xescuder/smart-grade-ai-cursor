@@ -42,14 +42,18 @@ async def list_courses(
     limit: int = Query(100, ge=1, le=1000),
     department: Optional[str] = Query(None),
     created_by: Optional[int] = Query(None),
+    include_semesters: bool = Query(False),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all courses with optional filtering"""
+    """Get all courses with optional filtering.
+
+    If include_semesters=true, returns courses with their semesters preloaded.
+    """
+    if include_semesters:
+        return await get_courses_with_semesters(db, created_by, skip, limit)
     if department:
-        courses = await get_courses_by_department(db, department, created_by)
-    else:
-        courses = await get_courses(db, created_by, skip, limit)
-    return courses
+        return await get_courses_by_department(db, department, created_by)
+    return await get_courses(db, created_by, skip, limit)
 
 
 @router.get("/with-semesters", response_model=List[CourseResponse])

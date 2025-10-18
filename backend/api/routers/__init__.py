@@ -9,6 +9,7 @@ from .users import router as users_router
 from .classrooms import router as classrooms_router
 from .courses import router as courses_router
 from .semesters import router as semesters_router
+from .groups import router as groups_router
 
 __all__ = [
     "assignments_router",
@@ -18,5 +19,6 @@ __all__ = [
     "users_router",
     "classrooms_router",
     "courses_router",
-    "semesters_router"
+    "semesters_router",
+    "groups_router"
 ]

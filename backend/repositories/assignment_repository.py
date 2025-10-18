@@ -57,12 +57,20 @@ class AssignmentRepository:
             assignment: Assignment object to create
 
         Returns:
-            Created assignment with ID
+            Created assignment with ID and relationships loaded
         """
         self.db.add(assignment)
         await self.db.commit()
         await self.db.refresh(assignment)
-        return assignment
+        
+        # Reload the assignment with relationships to avoid greenlet errors during serialization
+        result = await self.db.execute(
+            select(Assignment)
+            .options(selectinload(Assignment.exercises))
+            .options(selectinload(Assignment.classrooms))
+            .where(Assignment.id == assignment.id)
+        )
+        return result.scalar_one()
 
     async def update(self, assignment: Assignment) -> Assignment:
         """

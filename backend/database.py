@@ -95,9 +95,12 @@ class Submission(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     assignment_id = Column(Integer, ForeignKey("assignments.id"), nullable=False)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=True)  # Foreign key to course
-    semester_id = Column(Integer, ForeignKey("semesters.id"), nullable=True)  # Foreign key to semester
+    classroom_id = Column(Integer, ForeignKey("classrooms.id"), nullable=False)  # Foreign key to classroom
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=True)  # Foreign key to group
+    
+    # Legacy fields for backward compatibility (can be removed later)
+    course_id = Column(Integer, nullable=True)  # Deprecated - use classroom.course_id
+    semester_id = Column(Integer, nullable=True)  # Deprecated - use classroom.semester_id
     
     # Submission content - simplified to just PDF and comments
     comments = Column(Text, nullable=True)  # Comments/description
@@ -107,6 +110,21 @@ class Submission(Base):
     pdf_file_data = Column(LargeBinary, nullable=True)
     pdf_mime_type = Column(String(100), nullable=True)
     pdf_file_size = Column(Integer, nullable=True)
+    
+    # Additional PDF files
+    private_pdf_data = Column(LargeBinary, nullable=True)  # Private PDF file
+    private_pdf_mime_type = Column(String(100), nullable=True)
+    private_pdf_size = Column(Integer, nullable=True)
+    private_pdf_filename = Column(String(255), nullable=True)
+    private_pdf_uploaded_at = Column(DateTime, nullable=True)
+    private_pdf_responsible_students = Column(Text, nullable=True)  # JSON array of coordinator names
+    
+    public_pdf_data = Column(LargeBinary, nullable=True)  # Public PDF file
+    public_pdf_mime_type = Column(String(100), nullable=True)
+    public_pdf_size = Column(Integer, nullable=True)
+    public_pdf_filename = Column(String(255), nullable=True)
+    public_pdf_uploaded_at = Column(DateTime, nullable=True)
+    public_pdf_responsible_students = Column(Text, nullable=True)  # JSON array of coordinator names
     
     # Status and grading
     status = Column(String(50), nullable=False, default='submitted')  # submitted, graded, returned, late, draft
@@ -129,8 +147,7 @@ class Submission(Base):
     
     # Relationships
     assignment = relationship("Assignment", back_populates="submissions")
-    course = relationship("Course")
-    semester = relationship("Semester")
+    classroom = relationship("Classroom")
     group = relationship("Group")
 
 class Classroom(Base):
@@ -169,8 +186,8 @@ class Group(Base):
     classroom_id = Column(Integer, ForeignKey("classrooms.id"), nullable=False)  # Foreign key to classroom
     
     # Legacy fields for backward compatibility (can be removed later)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=True)  # Deprecated - use classroom.course_id
-    semester_id = Column(Integer, ForeignKey("semesters.id"), nullable=True)  # Deprecated - use classroom.semester_id
+    course_id = Column(Integer, nullable=True)  # Deprecated - use classroom.course_id
+    semester_id = Column(Integer, nullable=True)  # Deprecated - use classroom.semester_id
     
     # Group members - JSON array of student info
     members = Column(JSON, nullable=False)  # [{"name": "John", "email": "john@example.com", "student_id": "12345"}]
@@ -184,8 +201,6 @@ class Group(Base):
     
     # Relationships
     classroom = relationship("Classroom", back_populates="groups")
-    course = relationship("Course")  # Legacy
-    semester = relationship("Semester")  # Legacy
 
 class Course(Base):
     """Course database model"""
@@ -264,7 +279,19 @@ async def init_db():
             ALTER TABLE submissions
                 ADD COLUMN IF NOT EXISTS pdf_file_data bytea,
                 ADD COLUMN IF NOT EXISTS pdf_mime_type varchar(100),
-                ADD COLUMN IF NOT EXISTS pdf_file_size integer;
+                ADD COLUMN IF NOT EXISTS pdf_file_size integer,
+                ADD COLUMN IF NOT EXISTS private_pdf_data bytea,
+                ADD COLUMN IF NOT EXISTS private_pdf_mime_type varchar(100),
+                ADD COLUMN IF NOT EXISTS private_pdf_size integer,
+                ADD COLUMN IF NOT EXISTS private_pdf_filename varchar(255),
+                ADD COLUMN IF NOT EXISTS private_pdf_uploaded_at timestamp,
+                ADD COLUMN IF NOT EXISTS private_pdf_responsible_students text,
+                ADD COLUMN IF NOT EXISTS public_pdf_data bytea,
+                ADD COLUMN IF NOT EXISTS public_pdf_mime_type varchar(100),
+                ADD COLUMN IF NOT EXISTS public_pdf_size integer,
+                ADD COLUMN IF NOT EXISTS public_pdf_filename varchar(255),
+                ADD COLUMN IF NOT EXISTS public_pdf_uploaded_at timestamp,
+                ADD COLUMN IF NOT EXISTS public_pdf_responsible_students text;
             """
         ))
         # Create ai_settings table if not exists

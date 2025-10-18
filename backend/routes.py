@@ -11,7 +11,8 @@ from api.routers import (
     users_router,
     classrooms_router,
     courses_router,
-    semesters_router
+    semesters_router,
+    groups_router
 )
 
 
@@ -86,6 +87,13 @@ def register_routes(app: FastAPI) -> None:
         tags=["semesters"]
     )
 
+    # Group management routes
+    app.include_router(
+        groups_router,
+        prefix="/api/v1/groups",
+        tags=["groups"]
+    )
+
 
 # Route configuration constants
 API_VERSION = "v1"
@@ -128,5 +136,9 @@ ROUTER_METADATA = [
     {
         "name": "semesters",
         "description": "Semester management and course scheduling"
+    },
+    {
+        "name": "groups",
+        "description": "Group management within classrooms and semesters"
     },
 ]
