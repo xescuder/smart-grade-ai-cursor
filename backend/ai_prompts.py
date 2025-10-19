@@ -45,6 +45,15 @@ Retorna un JSON amb el següent contingut:
 }
 """
 
+CATALAN_PUBLIC_REPORT_EXTRACTION_PROMPT = """
+Si us plau, analitza l'informe públic del treball dels integrants de l'equip. Revisa que per a cada apartat (1, 2, ...) hi ha una explicació detallada després de la puntuació aportada pel coordinador. Per a cada apart que manqui una explicació descompta 1.5 (sobre 10). No necessito cap anàlisi, retorna únicament un JSON amb el següent contingut:
+
+{
+   "points": 0-10
+   "comments": "Comentaris sobre els apartats no omplerts, i grau de detall"
+}
+"""
+
 # ============================================================================
 # EXERCISE EXTRACTION PROMPT
 # ============================================================================
@@ -103,4 +112,19 @@ def get_submission_evaluation_prompt(
     return prompt
 
 
+# ============================================================================
+# REPORT EVALUATION PROMPTS
+# ============================================================================
 
+def get_public_report_evaluation_prompt(
+    language: str,
+) -> str:
+    if language != 'catalan':
+        raise ValueError(
+            f"No AI extraction prompt defined for language: '{language}'. "
+            f"Currently supported languages: catalan. "
+            f"Please add a prompt for '{language}' in ai_prompts.py"
+        )
+
+    prompt = CATALAN_PUBLIC_REPORT_EXTRACTION_PROMPT
+    return prompt

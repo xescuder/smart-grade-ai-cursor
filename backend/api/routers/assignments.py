@@ -26,7 +26,7 @@ from crud import (
 )
 from database import get_db
 
-router = APIRouter()
+router = APIRouter(tags=["assignments"])
 
 # Constants
 ASSIGNMENT_NOT_FOUND = "Assignment not found"
