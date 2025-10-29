@@ -241,11 +241,10 @@ export function AssignmentEditorDialog({
   const addExercise = () => {
     const newExercise: Exercise = {
       id: Date.now(), // Temporary ID
-      name: "",
       description: "",
       points: 0,
       evaluation_criteria: "",
-      assignment_id: assignment?.id || 0
+      order: (exercises.length + 1)
     }
     setExercises([...exercises, newExercise])
     setEditingExercise(newExercise)
