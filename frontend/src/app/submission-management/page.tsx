@@ -91,6 +91,25 @@ interface AssignmentGroup {
   isExpanded: boolean
 }
 
+interface Classroom {
+  id: number
+  name: string
+  teacher_name?: string
+  language?: string
+  course?: {
+    id: number
+    name: string
+    code: string
+  }
+  semester?: {
+    id: number
+    name: string
+    code: string
+    year: number
+    season: string
+  }
+}
+
 export default function SubmissionManagementPage() {
   const [, setSubmissions] = useState<Submission[]>([])
   const [assignmentGroups, setAssignmentGroups] = useState<AssignmentGroup[]>([])
