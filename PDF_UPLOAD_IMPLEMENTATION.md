@@ -22,13 +22,13 @@ Successfully implemented PDF file upload functionality for assignments, allowing
 
 ### 2. Backend Implementation
 
-#### PDF Upload Endpoint (`POST /api/v1/assignments/{id}/upload-pdf`)
+#### PDF Upload Endpoint (`POST /api/assignments/{id}/upload-pdf`)
 - **File Validation**: Checks file type (.pdf) and size (max 10MB)
 - **Secure Storage**: Generates unique filenames to prevent conflicts
 - **Directory Management**: Creates uploads directory if it doesn't exist
 - **Assignment Updates**: Links PDF metadata to assignment record
 
-#### PDF Delete Endpoint (`DELETE /api/v1/assignments/{id}/pdf`)
+#### PDF Delete Endpoint (`DELETE /api/assignments/{id}/pdf`)
 - **Safe Deletion**: Removes PDF file and clears assignment metadata
 - **Error Handling**: Proper 404 responses for missing files
 - **Cleanup**: Maintains data integrity when removing files

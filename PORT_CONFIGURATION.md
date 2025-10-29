@@ -61,7 +61,7 @@ settings.cors_origins_list  # ['http://localhost:3000', 'http://127.0.0.1:3000',
    ```env
    PORT=3000
    NEXT_PUBLIC_API_URL=http://localhost:8000
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
    ```
 
 ### Configuration Options
@@ -70,7 +70,7 @@ settings.cors_origins_list  # ['http://localhost:3000', 'http://127.0.0.1:3000',
 |----------|---------|-------------|
 | `PORT` | 3000 | Next.js dev server port |
 | `NEXT_PUBLIC_API_URL` | http://localhost:8000 | Backend API base URL |
-| `NEXT_PUBLIC_API_BASE_URL` | http://localhost:8000/api/v1 | Backend API v1 endpoint |
+| `NEXT_PUBLIC_API_BASE_URL` | http://localhost:8000/api | Backend API v1 endpoint |
 
 ## Common Scenarios
 
@@ -101,7 +101,7 @@ ALLOWED_ORIGINS=http://localhost:4000,http://127.0.0.1:4000
 # frontend/.env.local
 PORT=4000
 NEXT_PUBLIC_API_URL=http://localhost:9000
-NEXT_PUBLIC_API_BASE_URL=http://localhost:9000/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:9000/api
 ```
 
 ### Scenario 3: Production Deployment
@@ -118,7 +118,7 @@ ALLOWED_ORIGINS=https://yourdomain.com
 # frontend/.env.local (production)
 PORT=3000
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
-NEXT_PUBLIC_API_BASE_URL=https://api.yourdomain.com/api/v1
+NEXT_PUBLIC_API_BASE_URL=https://api.yourdomain.com/api
 NODE_ENV=production
 ```
 
@@ -142,7 +142,7 @@ services:
     environment:
       - PORT=3000
       - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
     ports:
       - "3000:3000"
     depends_on:
@@ -207,7 +207,7 @@ python3 -c "from core.config import settings; \
 curl http://localhost:8000/health
 
 # API root
-curl http://localhost:8000/api/v1/assignments
+curl http://localhost:8000/api/assignments
 ```
 
 ### Test Frontend
@@ -372,4 +372,5 @@ cd frontend && cat .env.local | grep PORT
 **Frontend Port**: Configurable via `FRONTEND_PORT` & `PORT`  
 **CORS**: Auto-configured from frontend port  
 **Date**: October 14, 2025
+
 

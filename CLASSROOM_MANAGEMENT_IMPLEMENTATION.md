@@ -95,18 +95,18 @@ class Group(Base):
 
 **API Endpoints** (`backend/db_server.py`):
 ```
-GET    /api/v1/classrooms
+GET    /api/classrooms
        ?course_id=<id>&semester_id=<id>
        
-GET    /api/v1/classrooms/{classroom_id}
+GET    /api/classrooms/{classroom_id}
 
-POST   /api/v1/classrooms
+POST   /api/classrooms
        Body: ClassroomCreate
 
-PUT    /api/v1/classrooms/{classroom_id}
+PUT    /api/classrooms/{classroom_id}
        Body: ClassroomUpdate
 
-DELETE /api/v1/classrooms/{classroom_id}
+DELETE /api/classrooms/{classroom_id}
 ```
 
 ### **3. Frontend Implementation**
@@ -200,7 +200,7 @@ Course: "Computer Science 101" (CS101)
 
 ## 🔧 **API Reference**
 
-### **GET /api/v1/classrooms**
+### **GET /api/classrooms**
 Get all classrooms with optional filtering.
 
 **Query Parameters:**
@@ -231,7 +231,7 @@ Get all classrooms with optional filtering.
 ]
 ```
 
-### **GET /api/v1/classrooms/{classroom_id}**
+### **GET /api/classrooms/{classroom_id}**
 Get a specific classroom with details (course, semester, groups).
 
 **Response:**
@@ -272,7 +272,7 @@ Get a specific classroom with details (course, semester, groups).
 }
 ```
 
-### **POST /api/v1/classrooms**
+### **POST /api/classrooms**
 Create a new classroom.
 
 **Request Body:**
@@ -293,7 +293,7 @@ Create a new classroom.
 
 **Response:** ClassroomResponse (same as GET)
 
-### **PUT /api/v1/classrooms/{classroom_id}**
+### **PUT /api/classrooms/{classroom_id}**
 Update an existing classroom.
 
 **Request Body:** (all fields optional)
@@ -312,7 +312,7 @@ Update an existing classroom.
 
 **Response:** ClassroomResponse (same as GET)
 
-### **DELETE /api/v1/classrooms/{classroom_id}**
+### **DELETE /api/classrooms/{classroom_id}**
 Soft delete a classroom.
 
 **Response:**

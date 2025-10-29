@@ -84,7 +84,7 @@ const [newGroup, setNewGroup] = useState<{
 ```typescript
 const fetchClassrooms = async () => {
   try {
-    const response = await fetch('/api/v1/classrooms')
+    const response = await fetch('/api/classrooms')
     if (response.ok) {
       const data = await response.json()
       setClassrooms(Array.isArray(data) ? data : [])

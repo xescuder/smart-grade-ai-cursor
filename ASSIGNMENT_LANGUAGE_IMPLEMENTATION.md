@@ -63,7 +63,7 @@ class AssignmentCreate(AssignmentBase):
 
 #### **4. API Validation** (`backend/db_server.py`)
 ```python
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     # Validate classroom exists and language matches
     classroom = await get_classroom(db, assignment.classroom_id)
@@ -263,7 +263,7 @@ Grading Feedback (in Spanish)
 
 **Request:**
 ```json
-POST /api/v1/assignments
+POST /api/assignments
 
 {
   "name": "PAC1 - Programación Web",

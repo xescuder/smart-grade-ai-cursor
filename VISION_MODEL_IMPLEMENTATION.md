@@ -21,7 +21,7 @@ The Smart Grade AI system now supports **vision-language models** for evaluating
 
 **File**: `backend/db_server.py`
 
-**Changes to `/api/v1/submissions/{submission_id}/ai-evaluate` endpoint:**
+**Changes to `/api/submissions/{submission_id}/ai-evaluate` endpoint:**
 
 1. **PDF Handling**:
    - Supports PDFs stored as binary data in database

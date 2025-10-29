@@ -70,12 +70,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -83,7 +83,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -110,7 +110,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -125,14 +125,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -141,7 +141,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -163,7 +163,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     """Upload PDF file for assignment"""
     
@@ -191,8 +191,9 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
     file_path = os.path.join(upload_dir, unique_filename)
     
     # Save file
-    with open(file_path, "wb") as f:
-        f.write(content)
+    import aiofiles
+    async with aiofiles.open(file_path, "wb") as f:
+        await f.write(content)
     
     # Update assignment with PDF info
     assignment["pdf_file_path"] = f"/{file_path}"
@@ -205,7 +206,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int):
     """Delete PDF file for assignment"""
     

@@ -262,7 +262,7 @@ ANTHROPIC_MODEL=claude-3-sonnet
 #### Assignment Creation Flow
 ```
 Teacher (Frontend)
-    ↓ POST /api/v1/assignments
+    ↓ POST /api/assignments
 Backend API
     ↓ create_assignment()
 Database
@@ -276,7 +276,7 @@ Frontend
 #### PDF Upload & Storage Flow
 ```
 Upload PDF (Frontend)
-    ↓ POST /api/v1/assignments/{id}/upload/statement
+    ↓ POST /api/assignments/{id}/upload/statement
 Backend
     ↓ Read file bytes
     ↓ Store in assignment.pdf_file_data (Database)
@@ -292,7 +292,7 @@ Frontend
 #### AI Exercise Extraction Flow
 ```
 Click AI Extract (Frontend)
-    ↓ POST /api/v1/assignments/{id}/extract-exercises
+    ↓ POST /api/assignments/{id}/extract-exercises
 Backend
     ↓ Retrieve PDF from database
     ↓ Extract text (PyMuPDF)
@@ -333,29 +333,29 @@ Frontend
 #### RESTful Endpoints
 
 **Assignments**
-- `GET /api/v1/assignments` - List all
-- `POST /api/v1/assignments` - Create new
-- `GET /api/v1/assignments/{id}` - Get details
-- `PUT /api/v1/assignments/{id}` - Update
-- `DELETE /api/v1/assignments/{id}` - Delete
+- `GET /api/assignments` - List all
+- `POST /api/assignments` - Create new
+- `GET /api/assignments/{id}` - Get details
+- `PUT /api/assignments/{id}` - Update
+- `DELETE /api/assignments/{id}` - Delete
 
 **PDF Management**
-- `POST /api/v1/assignments/{id}/upload/statement` - Upload PDF
-- `GET /api/v1/assignments/{id}/pdf` - View PDF (from DB)
-- `POST /api/v1/assignments/{id}/extract-exercises` - AI extraction
+- `POST /api/assignments/{id}/upload/statement` - Upload PDF
+- `GET /api/assignments/{id}/pdf` - View PDF (from DB)
+- `POST /api/assignments/{id}/extract-exercises` - AI extraction
 
 **Exercises**
-- `GET /api/v1/assignments/{id}/exercises` - List exercises
-- `PUT /api/v1/assignments/{id}/exercises` - Bulk update
+- `GET /api/assignments/{id}/exercises` - List exercises
+- `PUT /api/assignments/{id}/exercises` - Bulk update
 
 **Submissions**
-- `POST /api/v1/submissions` - Submit assignment
-- `GET /api/v1/submissions` - List submissions
-- `POST /api/v1/submissions/{id}/grade` - Grade submission
+- `POST /api/submissions` - Submit assignment
+- `GET /api/submissions` - List submissions
+- `POST /api/submissions/{id}/grade` - Grade submission
 
 **Admin**
-- `GET /api/v1/admin/section-configs` - PDF extraction rules
-- `GET /api/v1/admin/ai-settings` - AI configuration
+- `GET /api/admin/section-configs` - PDF extraction rules
+- `GET /api/admin/ai-settings` - AI configuration
 
 #### Response Format
 ```json
@@ -664,7 +664,7 @@ cp env.example.txt .env.local
 # Frontend Configuration
 PORT=3000
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
 
 # Features
 NEXT_PUBLIC_ENABLE_AI_GRADING=true
@@ -748,7 +748,8 @@ Open your browser and navigate to:
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs (Interactive Swagger UI)
+- **📚 API Documentation (Swagger)**: http://localhost:8000/docs
+- **📖 Alternative Docs (ReDoc)**: http://localhost:8000/redoc
 - **Health Check**: http://localhost:8000/health
 
 ### Step 7: Verify Installation
@@ -760,7 +761,7 @@ Open your browser and navigate to:
 curl http://localhost:8000/health
 
 # List assignments
-curl http://localhost:8000/api/v1/assignments
+curl http://localhost:8000/api/assignments
 
 # Check AI availability (if using Ollama)
 curl http://localhost:11434/api/tags
@@ -986,11 +987,12 @@ After successful installation:
 
 ### 🔗 Additional Resources
 
+- **📚 API Documentation (Swagger)**: http://localhost:8000/docs ⭐
+- **📖 API Documentation (ReDoc)**: http://localhost:8000/redoc
 - **Configuration Guide**: `/backend/CONFIGURATION_GUIDE.md`
 - **Port Configuration**: `/PORT_CONFIGURATION.md`
 - **PDF Storage**: `/backend/PDF_DATABASE_STORAGE.md`
 - **AI Setup**: `/backend/AI_SETUP.md`
-- **API Documentation**: http://localhost:8000/docs (when running)
 
 ---
 
@@ -1023,27 +1025,87 @@ The project follows established coding standards defined in `.cursor/rules/`:
 - **Code Quality**: Testing, documentation, security
 - **API Design**: RESTful endpoints, proper status codes
 
-## 📊 API Endpoints
+## 📚 API Documentation
+
+### Interactive Swagger UI
+
+**Live API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+The backend provides **auto-generated, interactive API documentation** using OpenAPI (Swagger):
+
+#### Features:
+✅ **Try it Out**: Test API endpoints directly from your browser  
+✅ **Schema Validation**: See request/response models with examples  
+✅ **Authentication**: Test with real JWT tokens  
+✅ **Organized by Tags**: Endpoints grouped by functionality  
+✅ **Real-time**: Always up-to-date with code changes  
+
+#### Alternative Documentation:
+- **ReDoc** (clean, print-friendly): [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **OpenAPI JSON**: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+
+### Key API Endpoints
+
+#### 🏥 Health & Status
+- `GET /health` - System health check
+- `GET /api/health` - Detailed service status
+
+#### 📝 Assignments
+- `GET /api/assignments` - List all assignments
+- `POST /api/assignments` - Create new assignment
+- `GET /api/assignments/{id}` - Get assignment details
+- `PUT /api/assignments/{id}` - Update assignment
+- `DELETE /api/assignments/{id}` - Delete assignment
+- `POST /api/assignments/{id}/upload/statement` - Upload PDF
+- `POST /api/assignments/{id}/extract-exercises` - AI extraction
+
+#### 📄 Submissions
+- `GET /api/submissions` - List submissions
+- `POST /api/submissions` - Create submission
+- `GET /api/submissions/{id}` - Get submission details
+- `POST /api/submissions/{id}/grade` - Grade submission (AI)
+
+#### 🏫 Courses & Classrooms
+- `GET /api/courses` - List courses
+- `POST /api/courses` - Create course
+- `GET /api/classrooms` - List classrooms
+- `POST /api/classrooms` - Create classroom
+- `GET /api/groups` - List student groups
+
+#### ⚙️ Admin
+- `GET /api/admin/ai-settings` - AI configuration
+- `PUT /api/admin/ai-settings` - Update AI settings
+- `GET /api/admin/section-configs` - PDF extraction configs
+
+### API Response Format
+
+All endpoints follow consistent response patterns:
+
+```json
+// Success Response
+{
+  "success": true,
+  "data": { ... },
+  "message": "Operation successful"
+}
+
+// Error Response
+{
+  "detail": "Error description",
+  "status_code": 400
+}
+```
 
 ### Authentication
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/register` - User registration
-- `GET /api/v1/auth/me` - Get current user
 
-### Assignments
-- `GET /api/v1/assignments` - List assignments
-- `POST /api/v1/assignments` - Create assignment (teachers)
-- `GET /api/v1/assignments/{id}` - Get assignment details
+Protected endpoints require JWT token:
 
-### Submissions
-- `POST /api/v1/submissions` - Submit assignment
-- `GET /api/v1/submissions` - List submissions
-- `POST /api/v1/submissions/upload` - Upload file
+```bash
+curl -H "Authorization: Bearer <your-token>" \
+     http://localhost:8000/api/assignments
+```
 
-### Grading
-- `POST /api/v1/grading/grade` - Grade single submission
-- `POST /api/v1/grading/batch-grade` - Batch grade submissions
-- `GET /api/v1/grading/jobs` - Get grading jobs status
+**See Swagger UI for complete request/response schemas and examples.**
 
 ## 🚀 Deployment
 

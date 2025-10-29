@@ -5,18 +5,21 @@ services:
     image: postgres:15
     container_name: smartgrade_postgres
     environment:
-      POSTGRES_DB: smartgrade_db
-      POSTGRES_USER: smartgrade
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-smartgrade_db}
+      POSTGRES_USER: ${POSTGRES_USER:-smartgrade}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U smartgrade -d smartgrade_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartgrade} -d ${POSTGRES_DB:-smartgrade_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - smartgrade-network
 
   backend:
     build:
@@ -24,28 +27,88 @@ services:
       dockerfile: Dockerfile
     container_name: smartgrade_backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://smartgrade:password@postgres:5432/smartgrade_db
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-smartgrade}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-smartgrade_db}
+      DATABASE_ECHO: ${DATABASE_ECHO:-false}
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-5}
+      DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-10}
+      
+      # Server
+      HOST: 0.0.0.0
+      BACKEND_PORT: ${BACKEND_PORT:-8000}
+      RELOAD: ${RELOAD:-false}
+      
+      # Frontend (for CORS)
+      FRONTEND_HOST: ${FRONTEND_HOST:-frontend}
+      FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+      
+      # CORS
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      
+      # Application
+      APP_NAME: ${APP_NAME:-Smart Grade AI}
+      DEBUG: ${DEBUG:-false}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      
+      # AI Configuration
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      GOOGLE_AI_MODEL: ${GOOGLE_AI_MODEL:-gemini-2.0-flash-exp}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://localhost:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama2}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      DEFAULT_AI_PROVIDER: ${DEFAULT_AI_PROVIDER:-ollama}
+      
+      # File Upload
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+      ALLOWED_FILE_TYPES: ${ALLOWED_FILE_TYPES:-.pdf,.docx,.txt,.md}
+      UPLOAD_DIR: ${UPLOAD_DIR:-uploads}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FILE: ${LOG_FILE:-backend.log}
     ports:
-      - "8001:8001"
+      - "${BACKEND_PORT:-8000}:${BACKEND_PORT:-8000}"
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend:/app
       - uploads_volume:/app/uploads
+    restart: unless-stopped
+    networks:
+      - smartgrade-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: smartgrade_frontend
+    environment:
+      NODE_ENV: production
+      PORT: ${FRONTEND_PORT:-3000}
+      # Public API URL for client-side requests (set to your public domain in production)
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api}
+      NEXT_PUBLIC_ENABLE_AI_GRADING: ${NEXT_PUBLIC_ENABLE_AI_GRADING:-true}
+      NEXT_PUBLIC_ENABLE_PDF_VIEWER: ${NEXT_PUBLIC_ENABLE_PDF_VIEWER:-true}
+      NEXT_PUBLIC_ENABLE_ANALYTICS: ${NEXT_PUBLIC_ENABLE_ANALYTICS:-false}
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
+    restart: unless-stopped
+    networks:
+      - smartgrade-network
 
 volumes:
   postgres_data:
   uploads_volume:
+
+networks:
+  smartgrade-network:
+    driver: bridge

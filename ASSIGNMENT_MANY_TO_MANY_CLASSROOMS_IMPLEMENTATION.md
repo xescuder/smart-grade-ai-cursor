@@ -80,7 +80,7 @@ async def create_assignment(db: AsyncSession, assignment: AssignmentCreate, crea
 
 ### **3. Backend API Endpoints** ✅
 
-**Updated `POST /api/v1/assignments`:**
+**Updated `POST /api/assignments`:**
 ```python
 # Validates ALL classroom languages match assignment language
 if assignment.classroom_ids:
@@ -96,7 +96,7 @@ if assignment.classroom_ids:
             )
 ```
 
-**Updated `GET /api/v1/assignments`:**
+**Updated `GET /api/assignments`:**
 ```python
 # Returns assignments with classrooms array
 {

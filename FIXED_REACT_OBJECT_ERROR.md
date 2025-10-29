@@ -30,7 +30,7 @@ The error handling in `assignment-form.tsx` didn't convert objects to strings:
 # Fixed request body handling
 from fastapi import FastAPI, Request
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()  # Now reads JSON body properly

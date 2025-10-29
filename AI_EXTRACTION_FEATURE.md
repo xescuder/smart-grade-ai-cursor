@@ -7,7 +7,7 @@ I've successfully implemented the AI-powered PDF exercise extraction feature for
 ## 🎯 Features Implemented
 
 ### Backend (FastAPI + PostgreSQL)
-- **New AI Endpoint**: `POST /api/v1/assignments/{assignment_id}/extract-exercises-ai`
+- **New AI Endpoint**: `POST /api/assignments/{assignment_id}/extract-exercises-ai`
 - **PDF Processing**: Uses PyMuPDF4LLM to extract text from PDF files
 - **AI Integration**: Uses OpenAI GPT-4 to intelligently identify and extract exercises
 - **Smart Point Allocation**: Automatically ensures exercises total exactly 100 points

@@ -219,7 +219,7 @@ globs: *.ts,*.js,*.py
 # API and Database Standards
 
 ## RESTful API Design
-- Use consistent URL patterns: `/api/v1/resource`
+- Use consistent URL patterns: `/api/resource`
 - Follow HTTP method conventions (GET, POST, PUT, DELETE)
 - Return appropriate HTTP status codes
 - Use consistent response formats with proper error messages
@@ -390,11 +390,11 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
-app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(assignments.router, prefix="/api/v1/assignments", tags=["assignments"])
-app.include_router(submissions.router, prefix="/api/v1/submissions", tags=["submissions"])
-app.include_router(grading.router, prefix="/api/v1/grading", tags=["grading"])
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(assignments.router, prefix="/api/assignments", tags=["assignments"])
+app.include_router(submissions.router, prefix="/api/submissions", tags=["submissions"])
+app.include_router(grading.router, prefix="/api/grading", tags=["grading"])
 
 
 @app.get("/")
@@ -1906,24 +1906,24 @@ The project follows established coding standards defined in `.cursor/rules/`:
 ## 📊 API Endpoints
 
 ### Authentication
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/register` - User registration
-- `GET /api/v1/auth/me` - Get current user
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `GET /api/auth/me` - Get current user
 
 ### Assignments
-- `GET /api/v1/assignments` - List assignments
-- `POST /api/v1/assignments` - Create assignment (teachers)
-- `GET /api/v1/assignments/{id}` - Get assignment details
+- `GET /api/assignments` - List assignments
+- `POST /api/assignments` - Create assignment (teachers)
+- `GET /api/assignments/{id}` - Get assignment details
 
 ### Submissions
-- `POST /api/v1/submissions` - Submit assignment
-- `GET /api/v1/submissions` - List submissions
-- `POST /api/v1/submissions/upload` - Upload file
+- `POST /api/submissions` - Submit assignment
+- `GET /api/submissions` - List submissions
+- `POST /api/submissions/upload` - Upload file
 
 ### Grading
-- `POST /api/v1/grading/grade` - Grade single submission
-- `POST /api/v1/grading/batch-grade` - Batch grade submissions
-- `GET /api/v1/grading/jobs` - Get grading jobs status
+- `POST /api/grading/grade` - Grade single submission
+- `POST /api/grading/batch-grade` - Batch grade submissions
+- `GET /api/grading/jobs` - Get grading jobs status
 
 ## 🚀 Deployment
 
@@ -2229,11 +2229,11 @@ smart-grade-ai-cursor/
 - **Mobile Optimized**: Hamburger menu with smooth animations
 
 ### **API Endpoints Ready**
-- `/api/v1/auth/*` - Login, register, profile management
-- `/api/v1/assignments/*` - Create and manage assignments
-- `/api/v1/submissions/*` - Student submissions with file upload
-- `/api/v1/grading/*` - AI grading with batch processing
-- `/api/v1/users/*` - User management for teachers
+- `/api/auth/*` - Login, register, profile management
+- `/api/assignments/*` - Create and manage assignments
+- `/api/submissions/*` - Student submissions with file upload
+- `/api/grading/*` - AI grading with batch processing
+- `/api/users/*` - User management for teachers
 
 ### **AI Integration Ready**
 - OpenAI & Anthropic API configuration
@@ -3480,7 +3480,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -3506,7 +3506,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -3922,8 +3922,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -4400,29 +4400,29 @@ export class ApiClient {
 
   // Assignment API methods
   async getAssignments() {
-    return this.request('/api/v1/assignments')
+    return this.request('/api/assignments')
   }
 
   async getAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`)
+    return this.request(`/api/assignments/${id}`)
   }
 
   async createAssignment(data: any) {
-    return this.request('/api/v1/assignments', {
+    return this.request('/api/assignments', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
   async updateAssignment(id: number, data: any) {
-    return this.request(`/api/v1/assignments/${id}`, {
+    return this.request(`/api/assignments/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     })
   }
 
   async deleteAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`, {
+    return this.request(`/api/assignments/${id}`, {
       method: 'DELETE'
     })
   }
@@ -5749,7 +5749,7 @@ interface Exercise {
 
 ## 🔧 API Endpoints
 
-### Backend Routes (`/api/v1/assignments`)
+### Backend Routes (`/api/assignments`)
 
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|---------|
@@ -5763,7 +5763,7 @@ interface Exercise {
 
 **Create Assignment:**
 ```json
-POST /api/v1/assignments
+POST /api/assignments
 {
   "name": "Essay on Climate Change",
   "description": "Write a comprehensive essay about climate change",
@@ -7788,8 +7788,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -8207,8 +8207,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -8616,8 +8616,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -8980,8 +8980,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -9347,8 +9347,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -9708,8 +9708,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -9948,8 +9948,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -10118,7 +10118,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
     const loadExercises = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+        const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
           headers: {
             "Authorization": `Bearer ${localStorage.getItem("token")}`,
           },
@@ -10247,7 +10247,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
         order: index + 1
       }))
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -10506,7 +10506,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -10532,7 +10532,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -10832,7 +10832,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -10858,7 +10858,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -11158,7 +11158,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -11184,7 +11184,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -11485,7 +11485,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -11511,7 +11511,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -11812,7 +11812,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -11838,7 +11838,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -12139,7 +12139,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -12165,7 +12165,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -12482,7 +12482,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
@@ -12508,7 +12508,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -12844,40 +12844,40 @@ export class ApiClient {
 
   // Assignment API methods
   async getAssignments() {
-    return this.request('/api/v1/assignments')
+    return this.request('/api/assignments')
   }
 
   async getAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`)
+    return this.request(`/api/assignments/${id}`)
   }
 
   async createAssignment(data: any) {
-    return this.request('/api/v1/assignments', {
+    return this.request('/api/assignments', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
   async updateAssignment(id: number, data: any) {
-    return this.request(`/api/v1/assignments/${id}`, {
+    return this.request(`/api/assignments/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     })
   }
 
   async deleteAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`, {
+    return this.request(`/api/assignments/${id}`, {
       method: 'DELETE'
     })
   }
 
   // Exercise API methods
   async getAssignmentExercises(assignmentId: number) {
-    return this.request(`/api/v1/assignments/${assignmentId}/exercises`)
+    return this.request(`/api/assignments/${assignmentId}/exercises`)
   }
 
   async updateAssignmentExercises(assignmentId: number, exercises: any[]) {
-    return this.request(`/api/v1/assignments/${assignmentId}/exercises`, {
+    return this.request(`/api/assignments/${assignmentId}/exercises`, {
       method: 'PUT',
       body: JSON.stringify(exercises)
     })
@@ -12928,10 +12928,10 @@ def validate_exercises_total(cls, exercises):
 #### New Exercise Management Endpoints
 ```python
 # Get exercises for an assignment
-GET /api/v1/assignments/{assignment_id}/exercises
+GET /api/assignments/{assignment_id}/exercises
 
 # Update exercises for an assignment  
-PUT /api/v1/assignments/{assignment_id}/exercises
+PUT /api/assignments/{assignment_id}/exercises
 ```
 
 ### **Frontend Changes**
@@ -12975,7 +12975,7 @@ PUT /api/v1/assignments/{assignment_id}/exercises
 
 ### Create Assignment (Without Exercises)
 ```typescript
-POST /api/v1/assignments
+POST /api/assignments
 {
   "name": "Essay Assignment",
   "description": "Write about climate change",
@@ -12987,7 +12987,7 @@ POST /api/v1/assignments
 
 ### Manage Exercises Separately
 ```typescript
-PUT /api/v1/assignments/1/exercises
+PUT /api/assignments/1/exercises
 [
   {
     "name": "Introduction",
@@ -13030,7 +13030,7 @@ src/components/
 
 ### **API Structure**
 ```
-/api/v1/assignments/
+/api/assignments/
 ├── GET    /                     # List assignments
 ├── POST   /                     # Create assignment (exercises optional)
 ├── GET    /{id}                 # Get assignment details
@@ -13061,8 +13061,8 @@ I've successfully split the exercise creation from the assignment management int
 ### 🔧 **Backend Improvements**
 - **Relaxed Validation**: Assignments can now be created without exercises
 - **New Endpoints**: Added dedicated exercise management API routes
-  - `GET /api/v1/assignments/{id}/exercises` - Get exercises for assignment
-  - `PUT /api/v1/assignments/{id}/exercises` - Update exercises for assignment
+  - `GET /api/assignments/{id}/exercises` - Get exercises for assignment
+  - `PUT /api/assignments/{id}/exercises` - Update exercises for assignment
 - **Better Error Handling**: Consistent error messages and validation
 
 ### 🎨 **Frontend Refactoring** 
@@ -13141,7 +13141,7 @@ Create Assignment button is not doing any action
 
 I'll investigate the issue with the Create Assignment button not working. Let me check the implementation and identify the problem.
 
-I can see the issue! The frontend is making API calls to `/api/v1/assignments` but there's no proxy configured to route these calls to the FastAPI backend running on port 8000. Let me fix this by updating the API configuration.
+I can see the issue! The frontend is making API calls to `/api/assignments` but there's no proxy configured to route these calls to the FastAPI backend running on port 8000. Let me fix this by updating the API configuration.
 
 ```typescript
 import type { NextConfig } from "next";
@@ -13150,8 +13150,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/v1/:path*',
-        destination: 'http://localhost:8000/api/v1/:path*'
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/api/:path*'
       }
     ];
   },
@@ -13217,7 +13217,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -13243,7 +13243,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -13579,7 +13579,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -13605,7 +13605,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -13999,8 +13999,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -14169,7 +14169,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
     const loadExercises = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+        const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
           headers: {
             "Authorization": `Bearer fake-token-for-demo`,
           },
@@ -14298,7 +14298,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
         order: index + 1
       }))
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -14547,7 +14547,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
     const loadExercises = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+        const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
           headers: {
             "Authorization": `Bearer fake-token-for-demo`,
           },
@@ -14676,7 +14676,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
         order: index + 1
       }))
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -14937,40 +14937,40 @@ export class ApiClient {
 
   // Assignment API methods
   async getAssignments() {
-    return this.request('/api/v1/assignments')
+    return this.request('/api/assignments')
   }
 
   async getAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`)
+    return this.request(`/api/assignments/${id}`)
   }
 
   async createAssignment(data: any) {
-    return this.request('/api/v1/assignments', {
+    return this.request('/api/assignments', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
   async updateAssignment(id: number, data: any) {
-    return this.request(`/api/v1/assignments/${id}`, {
+    return this.request(`/api/assignments/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     })
   }
 
   async deleteAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`, {
+    return this.request(`/api/assignments/${id}`, {
       method: 'DELETE'
     })
   }
 
   // Exercise API methods
   async getAssignmentExercises(assignmentId: number) {
-    return this.request(`/api/v1/assignments/${assignmentId}/exercises`)
+    return this.request(`/api/assignments/${assignmentId}/exercises`)
   }
 
   async updateAssignmentExercises(assignmentId: number, exercises: any[]) {
-    return this.request(`/api/v1/assignments/${assignmentId}/exercises`, {
+    return this.request(`/api/assignments/${assignmentId}/exercises`, {
       method: 'PUT',
       body: JSON.stringify(exercises)
     })
@@ -17407,7 +17407,7 @@ The "Create Assignment" button was not working - clicking it had no effect and n
 ## 🔍 Root Causes Identified
 
 ### 1. **Missing API Routing**
-- Frontend (port 3000) was trying to call `/api/v1/assignments`
+- Frontend (port 3000) was trying to call `/api/assignments`
 - No proxy configured to route calls to backend (port 8000)
 - Requests were failing silently
 
@@ -17429,8 +17429,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/v1/:path*',
-        destination: 'http://localhost:8000/api/v1/:path*'
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/api/:path*'
       }
     ];
   },
@@ -17522,11 +17522,11 @@ npm run dev  # Port 3000
 ## 🔄 API Flow Now Working
 
 ```
-Frontend (3000) → API Call (/api/v1/assignments)
+Frontend (3000) → API Call (/api/assignments)
     ↓
 Next.js Proxy (rewrite rule)
     ↓  
-Backend (8000) → /api/v1/assignments
+Backend (8000) → /api/assignments
     ↓
 Mock Authentication (fake-token-for-demo)
     ↓
@@ -17563,7 +17563,7 @@ I've identified and fixed the issue with the Create Assignment button not workin
 
 1. **Missing API Routing**: Frontend couldn't reach backend (different ports)
 2. **Authentication Issues**: Using `localStorage.getItem("token")` which returned `null`
-3. **No API Proxy**: No configuration to route `/api/v1/*` calls to backend
+3. **No API Proxy**: No configuration to route `/api/*` calls to backend
 
 ## ✅ **Fixes Applied**
 
@@ -17573,8 +17573,8 @@ Added Next.js rewrites to `next.config.ts`:
 async rewrites() {
   return [
     {
-      source: '/api/v1/:path*',
-      destination: 'http://localhost:8000/api/v1/:path*'
+      source: '/api/:path*',
+      destination: 'http://localhost:8000/api/:path*'
     }
   ];
 }
@@ -17631,7 +17631,7 @@ npm run dev  # Port 3000
 ## 🔄 **API Flow**
 
 ```
-Frontend (3000) → /api/v1/assignments
+Frontend (3000) → /api/assignments
      ↓ (Next.js proxy)
 Backend (8000) → Assignment created
      ↓ (Mock auth passes)
@@ -17644,8 +17644,8 @@ The Create Assignment button should now work perfectly! Both the assignment crea
 async rewrites() {
   return [
     {
-      source: '/api/v1/:path*',
-      destination: 'http://localhost:8000/api/v1/:path*'
+      source: '/api/:path*',
+      destination: 'http://localhost:8000/api/:path*'
     }
   ];
 }
@@ -17667,7 +17667,7 @@ npm run dev  # Port 3000
 ```
 
 ```plaintext
-Frontend (3000) → /api/v1/assignments
+Frontend (3000) → /api/assignments
      ↓ (Next.js proxy)
 Backend (8000) → Assignment created
      ↓ (Mock auth passes)
@@ -18265,12 +18265,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id: int):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18278,7 +18278,7 @@ def get_assignment(assignment_id: int):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -18305,7 +18305,7 @@ def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id: int, assignment_data: dict):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18319,14 +18319,14 @@ def update_assignment(assignment_id: int, assignment_data: dict):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id: int):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id: int):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18335,7 +18335,7 @@ def get_assignment_exercises(assignment_id: int):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id: int, exercises_data: List[dict]):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18407,13 +18407,13 @@ pydantic>=2.10.0  # Updated to Python 3.13 compatible version
 ### **API Endpoints Working**
 ```bash
 GET    /health                                    # Health check
-GET    /api/v1/assignments                       # List assignments
-GET    /api/v1/assignments/{id}                  # Get assignment
-POST   /api/v1/assignments                       # Create assignment  
-PUT    /api/v1/assignments/{id}                  # Update assignment
-DELETE /api/v1/assignments/{id}                  # Delete assignment
-GET    /api/v1/assignments/{id}/exercises        # Get exercises
-PUT    /api/v1/assignments/{id}/exercises        # Update exercises
+GET    /api/assignments                       # List assignments
+GET    /api/assignments/{id}                  # Get assignment
+POST   /api/assignments                       # Create assignment  
+PUT    /api/assignments/{id}                  # Update assignment
+DELETE /api/assignments/{id}                  # Delete assignment
+GET    /api/assignments/{id}/exercises        # Get exercises
+PUT    /api/assignments/{id}/exercises        # Update exercises
 ```
 
 ## 🚀 How to Start the Fixed Backend
@@ -18429,7 +18429,7 @@ Server starts on `http://localhost:8000`
 
 The frontend should now work correctly:
 
-1. **Next.js Proxy**: Routes `/api/v1/*` → `http://localhost:8000/api/v1/*`
+1. **Next.js Proxy**: Routes `/api/*` → `http://localhost:8000/api/*`
 2. **CORS Configured**: Backend allows `localhost:3000` origins
 3. **Authentication**: Uses mock tokens (`fake-token-for-demo`)
 4. **Data Format**: Compatible with existing frontend types
@@ -18546,12 +18546,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -18559,7 +18559,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -18586,7 +18586,7 @@ def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id: int, assignment_data: dict):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18600,14 +18600,14 @@ def update_assignment(assignment_id: int, assignment_data: dict):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id: int):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id: int):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18616,7 +18616,7 @@ def get_assignment_exercises(assignment_id: int):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id: int, exercises_data: List[dict]):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18712,12 +18712,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -18725,7 +18725,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -18752,7 +18752,7 @@ def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data: dict):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -18766,14 +18766,14 @@ def update_assignment(assignment_id, assignment_data: dict):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -18782,7 +18782,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data: list):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -18878,12 +18878,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -18891,7 +18891,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -18918,7 +18918,7 @@ def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data: dict):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -18932,14 +18932,14 @@ def update_assignment(assignment_id, assignment_data: dict):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -18948,7 +18948,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data: list):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19044,12 +19044,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19057,7 +19057,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -19084,7 +19084,7 @@ def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data: dict):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19098,14 +19098,14 @@ def update_assignment(assignment_id, assignment_data: dict):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19114,7 +19114,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data: list):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19210,12 +19210,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19223,7 +19223,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -19250,7 +19250,7 @@ def create_assignment(assignment_data):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data: dict):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19264,14 +19264,14 @@ def update_assignment(assignment_id, assignment_data: dict):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19280,7 +19280,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data: list):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19376,12 +19376,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19389,7 +19389,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -19416,7 +19416,7 @@ def create_assignment(assignment_data):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19430,14 +19430,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19446,7 +19446,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data: list):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19542,12 +19542,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19555,7 +19555,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -19582,7 +19582,7 @@ def create_assignment(assignment_data):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19596,14 +19596,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19612,7 +19612,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19708,12 +19708,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19721,7 +19721,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -19748,7 +19748,7 @@ def create_assignment(assignment_data):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19762,14 +19762,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19778,7 +19778,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19874,12 +19874,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19887,7 +19887,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -19914,7 +19914,7 @@ def create_assignment(assignment_data):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19928,14 +19928,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19944,7 +19944,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -19978,8 +19978,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/v1/:path*',
-        destination: 'http://localhost:8001/api/v1/:path*'
+        source: '/api/:path*',
+        destination: 'http://localhost:8001/api/:path*'
       }
     ];
   },
@@ -20022,7 +20022,7 @@ curl http://localhost:8001/health
 # Returns: {"status":"healthy"}
 
 # Get assignments
-curl http://localhost:8001/api/v1/assignments
+curl http://localhost:8001/api/assignments
 # Returns: [{"id":1,"name":"Climate Change Essay Assignment",...}]
 ```
 
@@ -20304,8 +20304,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -20726,8 +20726,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -20950,8 +20950,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -21324,8 +21324,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -21557,8 +21557,8 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
       }
 
       const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
       
       const method = isEditing ? "PUT" : "POST"
 
@@ -21766,12 +21766,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -21779,7 +21779,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -21806,7 +21806,7 @@ def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -21820,14 +21820,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -21836,7 +21836,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -21932,12 +21932,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -21945,7 +21945,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -21972,7 +21972,7 @@ async def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -21986,14 +21986,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22002,7 +22002,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22098,12 +22098,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22111,7 +22111,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(assignment_data: dict):
     """Create new assignment"""
     new_id = len(mock_assignments) + 1
@@ -22138,7 +22138,7 @@ async def create_assignment(assignment_data: dict):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22152,14 +22152,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22168,7 +22168,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22264,12 +22264,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22277,7 +22277,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -22305,7 +22305,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 def update_assignment(assignment_id, assignment_data):
     """Update assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22319,14 +22319,14 @@ def update_assignment(assignment_id, assignment_data):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22335,7 +22335,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22431,12 +22431,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22444,7 +22444,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -22472,7 +22472,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -22487,14 +22487,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22503,7 +22503,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 def update_assignment_exercises(assignment_id, exercises_data):
     """Update exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22599,12 +22599,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22612,7 +22612,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -22640,7 +22640,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -22655,14 +22655,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -22671,7 +22671,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -22732,7 +22732,7 @@ The error handling in `assignment-form.tsx` didn't convert objects to strings:
 # Fixed request body handling
 from fastapi import FastAPI, Request
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()  # Now reads JSON body properly
@@ -23007,12 +23007,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -23020,7 +23020,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -23047,7 +23047,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -23062,14 +23062,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -23078,7 +23078,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -23240,12 +23240,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -23253,7 +23253,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -23280,7 +23280,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -23295,14 +23295,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -23311,7 +23311,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -23392,7 +23392,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -23418,7 +23418,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -23753,7 +23753,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -23779,7 +23779,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -24114,7 +24114,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -24140,7 +24140,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -24477,7 +24477,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
     const loadExercises = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+        const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
           headers: {
             "Authorization": `Bearer fake-token-for-demo`,
           },
@@ -24606,7 +24606,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
         order: index + 1
       }))
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -24855,7 +24855,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
     const loadExercises = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+        const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
           headers: {
             "Authorization": `Bearer fake-token-for-demo`,
           },
@@ -24984,7 +24984,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
         order: index + 1
       }))
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -25245,7 +25245,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -25271,7 +25271,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -26088,7 +26088,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -26114,7 +26114,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -26784,7 +26784,7 @@ export function InlineExerciseList({ assignment, onAssignmentUpdate }: InlineExe
         order: index + 1
       }))
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -26948,7 +26948,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -26974,7 +26974,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -27305,7 +27305,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -27331,7 +27331,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -27672,7 +27672,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -27698,7 +27698,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -28029,7 +28029,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -28055,7 +28055,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -28360,7 +28360,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -28386,7 +28386,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -28874,7 +28874,7 @@ export function InlineExerciseList({ assignment, onAssignmentUpdate }: InlineExe
         order: index + 1
       }))
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/exercises`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/exercises`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -29094,7 +29094,7 @@ export function PdfUploadDialog({ assignment, open, onOpenChange, onSuccess }: P
       const formData = new FormData()
       formData.append("file", selectedFile)
 
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/upload-pdf`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/upload-pdf`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -29353,7 +29353,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -29379,7 +29379,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -29686,7 +29686,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -29712,7 +29712,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -30019,7 +30019,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -30045,7 +30045,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -30353,7 +30353,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -30379,7 +30379,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -30701,7 +30701,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -30727,7 +30727,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -31059,7 +31059,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -31085,7 +31085,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -31444,12 +31444,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -31457,7 +31457,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -31484,7 +31484,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -31499,14 +31499,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -31515,7 +31515,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -31614,12 +31614,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -31627,7 +31627,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -31654,7 +31654,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -31669,14 +31669,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -31685,7 +31685,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -31711,328 +31711,6 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
 
-```
-
-```python
-#!/usr/bin/env python3
-"""
-Simple FastAPI server for testing
-"""
-
-from fastapi import FastAPI, Request, File, UploadFile, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-# Remove unused imports for compatibility
-from datetime import datetime
-import os
-import uuid
-
-app = FastAPI(title="Smart Grade AI API")
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Simple data structures (no Pydantic for now)
-mock_assignments = [
-    {
-        "id": 1,
-        "name": "Climate Change Essay Assignment",
-        "description": "Write a comprehensive essay on climate change impacts and solutions",
-        "instructions": "Your essay should demonstrate understanding of scientific concepts and propose realistic solutions...",
-        "due_date": "2024-12-01T23:59:59",
-        "exercises": [
-            {"id": 1, "name": "Introduction", "description": "Write a compelling introduction with thesis statement", "points": 15, "order": 1},
-            {"id": 2, "name": "Problem Analysis", "description": "Analyze current climate change impacts", "points": 25, "order": 2},
-            {"id": 3, "name": "Scientific Evidence", "description": "Present scientific evidence and data", "points": 25, "order": 3},
-            {"id": 4, "name": "Solutions Proposal", "description": "Propose realistic solutions and interventions", "points": 20, "order": 4},
-            {"id": 5, "name": "Conclusion", "description": "Summarize key points and call to action", "points": 15, "order": 5}
-        ],
-        "pdf_file_path": "/uploads/climate-essay-instructions.pdf",
-        "pdf_file_name": "climate-essay-instructions.pdf",
-        "created_by": 1,
-        "is_active": True,
-        "created_at": datetime.now().isoformat()
-    },
-    {
-        "id": 2,
-        "name": "Mathematics Problem Set",
-        "description": "Solve various calculus problems demonstrating integration techniques",
-        "instructions": "Show all work and provide clear explanations for each solution step...",
-        "due_date": "2024-11-20T23:59:59",
-        "exercises": [
-            {"id": 6, "name": "Basic Integration", "description": "Solve 5 basic integration problems", "points": 20, "order": 1},
-            {"id": 7, "name": "Integration by Parts", "description": "Apply integration by parts technique", "points": 30, "order": 2},
-            {"id": 8, "name": "Substitution Method", "description": "Use substitution for complex integrals", "points": 30, "order": 3},
-            {"id": 9, "name": "Applied Problems", "description": "Solve real-world application problems", "points": 20, "order": 4}
-        ],
-        "pdf_file_path": None,
-        "pdf_file_name": None,
-        "created_by": 1,
-        "is_active": True,
-        "created_at": datetime.now().isoformat()
-    }
-]
-
-@app.get("/")
-def root():
-    return {"message": "Smart Grade AI API", "status": "active"}
-
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
-
-@app.get("/api/v1/assignments")
-def get_assignments():
-    """Get all assignments"""
-    return mock_assignments
-
-@app.get("/api/v1/assignments/{assignment_id}")
-def get_assignment(assignment_id):
-    """Get assignment by ID"""
-    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
-    if not assignment:
-        return {"error": "Assignment not found"}
-    return assignment
-
-@app.post("/api/v1/assignments")  
-async def create_assignment(request: Request):
-    """Create new assignment"""
-    assignment_data = await request.json()
-    new_id = len(mock_assignments) + 1
-    
-    # Generate exercise IDs
-    next_exercise_id = max([ex["id"] for a in mock_assignments for ex in a["exercises"]], default=0) + 1
-    for i, exercise in enumerate(assignment_data.get("exercises", [])):
-        if "id" not in exercise:
-            exercise["id"] = next_exercise_id + i
-    
-    new_assignment = {
-        "id": new_id,
-        "name": assignment_data["name"],
-        "description": assignment_data["description"],
-        "instructions": assignment_data["instructions"],
-        "due_date": assignment_data["due_date"],
-        "exercises": assignment_data.get("exercises", []),
-        "created_by": 1,
-        "is_active": True,
-        "created_at": datetime.now().isoformat()
-    }
-    
-    mock_assignments.append(new_assignment)
-    return new_assignment
-
-@app.put("/api/v1/assignments/{assignment_id}")
-async def update_assignment(assignment_id, request: Request):
-    """Update assignment"""
-    assignment_data = await request.json()
-    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
-    if not assignment:
-        return {"error": "Assignment not found"}
-    
-    # Update fields
-    for key, value in assignment_data.items():
-        if key in assignment:
-            assignment[key] = value
-    
-    return assignment
-
-@app.delete("/api/v1/assignments/{assignment_id}")
-def delete_assignment(assignment_id):
-    """Delete assignment"""
-    global mock_assignments
-    mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
-    return {"message": "Assignment deleted successfully"}
-
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
-def get_assignment_exercises(assignment_id):
-    """Get exercises for an assignment"""
-    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
-    if not assignment:
-        return {"error": "Assignment not found"}
-    
-    return sorted(assignment["exercises"], key=lambda x: x["order"])
-
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
-async def update_assignment_exercises(assignment_id, request: Request):
-    """Update exercises for an assignment"""
-    exercises_data = await request.json()
-    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
-    if not assignment:
-        return {"error": "Assignment not found"}
-    
-    # Validate total points
-    total = sum(ex.get("points", 0) for ex in exercises_data)
-    if total != 100:
-        return {"error": "Total points must equal 100, got " + str(total)}
-    
-    # Generate IDs for new exercises
-    next_exercise_id = max([ex["id"] for a in mock_assignments for ex in a["exercises"] if "id" in ex], default=0) + 1
-    for i, exercise in enumerate(exercises_data):
-        if "id" not in exercise:
-            exercise["id"] = next_exercise_id + i
-    
-    assignment["exercises"] = exercises_data
-    return sorted(assignment["exercises"], key=lambda x: x["order"])
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
-
-```
-
-```python
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
-async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
-    """Upload PDF file for assignment"""
-    
-    # Find assignment
-    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    
-    # Validate file type
-    if not file.filename.lower().endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
-    
-    # Validate file size (max 10MB)
-    content = await file.read()
-    if len(content) > 10 * 1024 * 1024:  # 10MB
-        raise HTTPException(status_code=400, detail="File size must be less than 10MB")
-    
-    # Create uploads directory if it doesn't exist
-    upload_dir = "uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    # Generate unique filename
-    file_extension = ".pdf"
-    unique_filename = f"assignment_{assignment_id}_{uuid.uuid4().hex}{file_extension}"
-    file_path = os.path.join(upload_dir, unique_filename)
-    
-    # Save file
-    with open(file_path, "wb") as f:
-        f.write(content)
-    
-    # Update assignment with PDF info
-    assignment["pdf_file_path"] = f"/{file_path}"
-    assignment["pdf_file_name"] = file.filename
-    
-    return {
-        "success": True,
-        "message": "PDF uploaded successfully",
-        "file_name": file.filename,
-        "file_path": assignment["pdf_file_path"]
-    }
-
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
-async def delete_assignment_pdf(assignment_id: int):
-    """Delete PDF file for assignment"""
-    
-    # Find assignment
-    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    
-    if not assignment.get("pdf_file_path"):
-        raise HTTPException(status_code=404, detail="No PDF file found for this assignment")
-    
-    # Remove file from filesystem (in a real implementation)
-    # os.remove(assignment["pdf_file_path"].lstrip('/'))
-    
-    # Remove PDF info from assignment
-    assignment["pdf_file_path"] = None
-    assignment["pdf_file_name"] = None
-    
-    return {"success": True, "message": "PDF deleted successfully"}
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
-```
-
-```python
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
-async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
-    """Upload PDF file for assignment"""
-    
-    # Find assignment
-    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    
-    # Validate file type
-    if not file.filename.lower().endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
-    
-    # Validate file size (max 10MB)
-    content = await file.read()
-    if len(content) > 10 * 1024 * 1024:  # 10MB
-        raise HTTPException(status_code=400, detail="File size must be less than 10MB")
-    
-    # Create uploads directory if it doesn't exist
-    upload_dir = "uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    # Generate unique filename
-    file_extension = ".pdf"
-    unique_filename = f"assignment_{assignment_id}_{uuid.uuid4().hex}{file_extension}"
-    file_path = os.path.join(upload_dir, unique_filename)
-    
-    # Save file
-    with open(file_path, "wb") as f:
-        f.write(content)
-    
-    # Update assignment with PDF info
-    assignment["pdf_file_path"] = f"/{file_path}"
-    assignment["pdf_file_name"] = file.filename
-    
-    return {
-        "success": True,
-        "message": "PDF uploaded successfully",
-        "file_name": file.filename,
-        "file_path": assignment["pdf_file_path"]
-    }
-
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
-async def delete_assignment_pdf(assignment_id: int):
-    """Delete PDF file for assignment"""
-    
-    # Find assignment
-    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    
-    if not assignment.get("pdf_file_path"):
-        raise HTTPException(status_code=404, detail="No PDF file found for this assignment")
-    
-    # Remove file from filesystem (in a real implementation)
-    # os.remove(assignment["pdf_file_path"].lstrip('/'))
-    
-    # Remove PDF info from assignment
-    assignment["pdf_file_path"] = None
-    assignment["pdf_file_name"] = None
-    
-    return {"success": True, "message": "PDF deleted successfully"}
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
 ```
 
 ```python
@@ -32108,12 +31786,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -32121,7 +31799,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")  
+@app.post("/api/assignments")  
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -32148,7 +31826,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -32163,14 +31841,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -32179,7 +31857,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -32201,7 +31879,14 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
+
+```
+
+```python
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     """Upload PDF file for assignment"""
     
@@ -32243,7 +31928,322 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
+async def delete_assignment_pdf(assignment_id: int):
+    """Delete PDF file for assignment"""
+    
+    # Find assignment
+    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    if not assignment.get("pdf_file_path"):
+        raise HTTPException(status_code=404, detail="No PDF file found for this assignment")
+    
+    # Remove file from filesystem (in a real implementation)
+    # os.remove(assignment["pdf_file_path"].lstrip('/'))
+    
+    # Remove PDF info from assignment
+    assignment["pdf_file_path"] = None
+    assignment["pdf_file_name"] = None
+    
+    return {"success": True, "message": "PDF deleted successfully"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
+```
+
+```python
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
+async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
+    """Upload PDF file for assignment"""
+    
+    # Find assignment
+    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    # Validate file type
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    # Validate file size (max 10MB)
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10MB
+        raise HTTPException(status_code=400, detail="File size must be less than 10MB")
+    
+    # Create uploads directory if it doesn't exist
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # Generate unique filename
+    file_extension = ".pdf"
+    unique_filename = f"assignment_{assignment_id}_{uuid.uuid4().hex}{file_extension}"
+    file_path = os.path.join(upload_dir, unique_filename)
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Update assignment with PDF info
+    assignment["pdf_file_path"] = f"/{file_path}"
+    assignment["pdf_file_name"] = file.filename
+    
+    return {
+        "success": True,
+        "message": "PDF uploaded successfully",
+        "file_name": file.filename,
+        "file_path": assignment["pdf_file_path"]
+    }
+
+@app.delete("/api/assignments/{assignment_id}/pdf")
+async def delete_assignment_pdf(assignment_id: int):
+    """Delete PDF file for assignment"""
+    
+    # Find assignment
+    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    if not assignment.get("pdf_file_path"):
+        raise HTTPException(status_code=404, detail="No PDF file found for this assignment")
+    
+    # Remove file from filesystem (in a real implementation)
+    # os.remove(assignment["pdf_file_path"].lstrip('/'))
+    
+    # Remove PDF info from assignment
+    assignment["pdf_file_path"] = None
+    assignment["pdf_file_name"] = None
+    
+    return {"success": True, "message": "PDF deleted successfully"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
+```
+
+```python
+#!/usr/bin/env python3
+"""
+Simple FastAPI server for testing
+"""
+
+from fastapi import FastAPI, Request, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+# Remove unused imports for compatibility
+from datetime import datetime
+import os
+import uuid
+
+app = FastAPI(title="Smart Grade AI API")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Simple data structures (no Pydantic for now)
+mock_assignments = [
+    {
+        "id": 1,
+        "name": "Climate Change Essay Assignment",
+        "description": "Write a comprehensive essay on climate change impacts and solutions",
+        "instructions": "Your essay should demonstrate understanding of scientific concepts and propose realistic solutions...",
+        "due_date": "2024-12-01T23:59:59",
+        "exercises": [
+            {"id": 1, "name": "Introduction", "description": "Write a compelling introduction with thesis statement", "points": 15, "order": 1},
+            {"id": 2, "name": "Problem Analysis", "description": "Analyze current climate change impacts", "points": 25, "order": 2},
+            {"id": 3, "name": "Scientific Evidence", "description": "Present scientific evidence and data", "points": 25, "order": 3},
+            {"id": 4, "name": "Solutions Proposal", "description": "Propose realistic solutions and interventions", "points": 20, "order": 4},
+            {"id": 5, "name": "Conclusion", "description": "Summarize key points and call to action", "points": 15, "order": 5}
+        ],
+        "pdf_file_path": "/uploads/climate-essay-instructions.pdf",
+        "pdf_file_name": "climate-essay-instructions.pdf",
+        "created_by": 1,
+        "is_active": True,
+        "created_at": datetime.now().isoformat()
+    },
+    {
+        "id": 2,
+        "name": "Mathematics Problem Set",
+        "description": "Solve various calculus problems demonstrating integration techniques",
+        "instructions": "Show all work and provide clear explanations for each solution step...",
+        "due_date": "2024-11-20T23:59:59",
+        "exercises": [
+            {"id": 6, "name": "Basic Integration", "description": "Solve 5 basic integration problems", "points": 20, "order": 1},
+            {"id": 7, "name": "Integration by Parts", "description": "Apply integration by parts technique", "points": 30, "order": 2},
+            {"id": 8, "name": "Substitution Method", "description": "Use substitution for complex integrals", "points": 30, "order": 3},
+            {"id": 9, "name": "Applied Problems", "description": "Solve real-world application problems", "points": 20, "order": 4}
+        ],
+        "pdf_file_path": None,
+        "pdf_file_name": None,
+        "created_by": 1,
+        "is_active": True,
+        "created_at": datetime.now().isoformat()
+    }
+]
+
+@app.get("/")
+def root():
+    return {"message": "Smart Grade AI API", "status": "active"}
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+@app.get("/api/assignments")
+def get_assignments():
+    """Get all assignments"""
+    return mock_assignments
+
+@app.get("/api/assignments/{assignment_id}")
+def get_assignment(assignment_id):
+    """Get assignment by ID"""
+    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
+    if not assignment:
+        return {"error": "Assignment not found"}
+    return assignment
+
+@app.post("/api/assignments")  
+async def create_assignment(request: Request):
+    """Create new assignment"""
+    assignment_data = await request.json()
+    new_id = len(mock_assignments) + 1
+    
+    # Generate exercise IDs
+    next_exercise_id = max([ex["id"] for a in mock_assignments for ex in a["exercises"]], default=0) + 1
+    for i, exercise in enumerate(assignment_data.get("exercises", [])):
+        if "id" not in exercise:
+            exercise["id"] = next_exercise_id + i
+    
+    new_assignment = {
+        "id": new_id,
+        "name": assignment_data["name"],
+        "description": assignment_data["description"],
+        "instructions": assignment_data["instructions"],
+        "due_date": assignment_data["due_date"],
+        "exercises": assignment_data.get("exercises", []),
+        "created_by": 1,
+        "is_active": True,
+        "created_at": datetime.now().isoformat()
+    }
+    
+    mock_assignments.append(new_assignment)
+    return new_assignment
+
+@app.put("/api/assignments/{assignment_id}")
+async def update_assignment(assignment_id, request: Request):
+    """Update assignment"""
+    assignment_data = await request.json()
+    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
+    if not assignment:
+        return {"error": "Assignment not found"}
+    
+    # Update fields
+    for key, value in assignment_data.items():
+        if key in assignment:
+            assignment[key] = value
+    
+    return assignment
+
+@app.delete("/api/assignments/{assignment_id}")
+def delete_assignment(assignment_id):
+    """Delete assignment"""
+    global mock_assignments
+    mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
+    return {"message": "Assignment deleted successfully"}
+
+@app.get("/api/assignments/{assignment_id}/exercises")
+def get_assignment_exercises(assignment_id):
+    """Get exercises for an assignment"""
+    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
+    if not assignment:
+        return {"error": "Assignment not found"}
+    
+    return sorted(assignment["exercises"], key=lambda x: x["order"])
+
+@app.put("/api/assignments/{assignment_id}/exercises")
+async def update_assignment_exercises(assignment_id, request: Request):
+    """Update exercises for an assignment"""
+    exercises_data = await request.json()
+    assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
+    if not assignment:
+        return {"error": "Assignment not found"}
+    
+    # Validate total points
+    total = sum(ex.get("points", 0) for ex in exercises_data)
+    if total != 100:
+        return {"error": "Total points must equal 100, got " + str(total)}
+    
+    # Generate IDs for new exercises
+    next_exercise_id = max([ex["id"] for a in mock_assignments for ex in a["exercises"] if "id" in ex], default=0) + 1
+    for i, exercise in enumerate(exercises_data):
+        if "id" not in exercise:
+            exercise["id"] = next_exercise_id + i
+    
+    assignment["exercises"] = exercises_data
+    return sorted(assignment["exercises"], key=lambda x: x["order"])
+
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
+async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
+    """Upload PDF file for assignment"""
+    
+    # Find assignment
+    assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    # Validate file type
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    # Validate file size (max 10MB)
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10MB
+        raise HTTPException(status_code=400, detail="File size must be less than 10MB")
+    
+    # Create uploads directory if it doesn't exist
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # Generate unique filename
+    file_extension = ".pdf"
+    unique_filename = f"assignment_{assignment_id}_{uuid.uuid4().hex}{file_extension}"
+    file_path = os.path.join(upload_dir, unique_filename)
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Update assignment with PDF info
+    assignment["pdf_file_path"] = f"/{file_path}"
+    assignment["pdf_file_name"] = file.filename
+    
+    return {
+        "success": True,
+        "message": "PDF uploaded successfully",
+        "file_name": file.filename,
+        "file_path": assignment["pdf_file_path"]
+    }
+
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int):
     """Delete PDF file for assignment"""
     
@@ -32300,13 +32300,13 @@ Successfully implemented PDF file upload functionality for assignments, allowing
 
 ### 2. Backend Implementation
 
-#### PDF Upload Endpoint (`POST /api/v1/assignments/{id}/upload-pdf`)
+#### PDF Upload Endpoint (`POST /api/assignments/{id}/upload-pdf`)
 - **File Validation**: Checks file type (.pdf) and size (max 10MB)
 - **Secure Storage**: Generates unique filenames to prevent conflicts
 - **Directory Management**: Creates uploads directory if it doesn't exist
 - **Assignment Updates**: Links PDF metadata to assignment record
 
-#### PDF Delete Endpoint (`DELETE /api/v1/assignments/{id}/pdf`)
+#### PDF Delete Endpoint (`DELETE /api/assignments/{id}/pdf`)
 - **Safe Deletion**: Removes PDF file and clears assignment metadata
 - **Error Handling**: Proper 404 responses for missing files
 - **Cleanup**: Maintains data integrity when removing files
@@ -32393,7 +32393,7 @@ def root():
 ```
 
 ```python
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id: int):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -32401,7 +32401,7 @@ def get_assignment(assignment_id: int):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
 ```
 
@@ -32478,12 +32478,12 @@ def root():
 def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     """Get all assignments"""
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -32491,7 +32491,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -32518,7 +32518,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     """Update assignment"""
     assignment_data = await request.json()
@@ -32533,14 +32533,14 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     """Delete assignment"""
     global mock_assignments
     mock_assignments = [a for a in mock_assignments if a["id"] != int(assignment_id)]
     return {"message": "Assignment deleted successfully"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     """Get exercises for an assignment"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -32549,7 +32549,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     """Update exercises for an assignment"""
     exercises_data = await request.json()
@@ -32571,7 +32571,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     """Upload PDF file for assignment"""
     
@@ -32613,7 +32613,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int):
     """Delete PDF file for assignment"""
     
@@ -32646,7 +32646,7 @@ if __name__ == "__main__":
 ```
 
 ```python
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     """Get assignment by ID"""
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -32654,7 +32654,7 @@ def get_assignment(assignment_id):
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     """Create new assignment"""
     assignment_data = await request.json()
@@ -32682,8 +32682,8 @@ Perfect! I've successfully implemented the PDF upload feature for assignments. H
    - Upload button turns blue when PDF exists, gray when empty
 
 4. **Backend Support**:
-   - `POST /api/v1/assignments/{id}/upload-pdf` endpoint
-   - `DELETE /api/v1/assignments/{id}/pdf` endpoint
+   - `POST /api/assignments/{id}/upload-pdf` endpoint
+   - `DELETE /api/assignments/{id}/pdf` endpoint
    - Secure file storage with unique filenames
    - Full validation and error handling
 
@@ -32787,18 +32787,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -32826,7 +32826,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id: int, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -32840,7 +32840,7 @@ async def update_assignment(assignment_id: int, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id: int):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -32850,7 +32850,7 @@ def delete_assignment(assignment_id: int):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -32858,7 +32858,7 @@ def get_assignment_exercises(assignment_id: int):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id: int, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -32879,7 +32879,7 @@ async def update_assignment_exercises(assignment_id: int, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -32919,7 +32919,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33011,18 +33011,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -33050,7 +33050,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id: int, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33064,7 +33064,7 @@ async def update_assignment(assignment_id: int, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id: int):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33074,7 +33074,7 @@ def delete_assignment(assignment_id: int):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33082,7 +33082,7 @@ def get_assignment_exercises(assignment_id: int):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id: int, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33103,7 +33103,7 @@ async def update_assignment_exercises(assignment_id: int, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33143,7 +33143,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33236,18 +33236,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -33275,7 +33275,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33289,7 +33289,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id: int):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33299,7 +33299,7 @@ def delete_assignment(assignment_id: int):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33307,7 +33307,7 @@ def get_assignment_exercises(assignment_id: int):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id: int, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33328,7 +33328,7 @@ async def update_assignment_exercises(assignment_id: int, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33368,7 +33368,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33461,18 +33461,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -33500,7 +33500,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33514,7 +33514,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33524,7 +33524,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33532,7 +33532,7 @@ def get_assignment_exercises(assignment_id: int):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id: int, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33553,7 +33553,7 @@ async def update_assignment_exercises(assignment_id: int, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33593,7 +33593,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33686,18 +33686,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -33725,7 +33725,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33739,7 +33739,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33749,7 +33749,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33757,7 +33757,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id: int, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33778,7 +33778,7 @@ async def update_assignment_exercises(assignment_id: int, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33818,7 +33818,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33911,18 +33911,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -33950,7 +33950,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33964,7 +33964,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -33974,7 +33974,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -33982,7 +33982,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34003,7 +34003,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34043,7 +34043,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -34136,18 +34136,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -34175,7 +34175,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34189,7 +34189,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34199,7 +34199,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -34207,7 +34207,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34228,7 +34228,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34268,7 +34268,7 @@ async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id: int):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -34361,18 +34361,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -34400,7 +34400,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34414,7 +34414,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34424,7 +34424,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -34432,7 +34432,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34453,7 +34453,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
@@ -34493,7 +34493,7 @@ async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == assignment_id), None)
     if not assignment:
@@ -34586,18 +34586,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -34625,7 +34625,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -34639,7 +34639,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -34649,7 +34649,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
@@ -34657,7 +34657,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -34678,7 +34678,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -34718,7 +34718,7 @@ async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
@@ -34785,7 +34785,7 @@ Perfect! I've successfully fixed the 500 Internal Server Error. The issue was th
 ### 🎯 **Current Status:**
 - ✅ **Backend running** on `http://localhost:8001`
 - ✅ **Health endpoint** responding correctly
-- ✅ **PDF upload endpoint** ready at `/api/v1/assignments/{id}/upload-pdf`
+- ✅ **PDF upload endpoint** ready at `/api/assignments/{id}/upload-pdf`
 - ✅ **Assignment API** returning PDF fields correctly
 
 ## 🚀 **Ready to Test PDF Upload!**
@@ -34933,18 +34933,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -34972,7 +34972,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -34986,7 +34986,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -34996,7 +34996,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
@@ -35004,7 +35004,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -35025,7 +35025,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -35065,7 +35065,7 @@ async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 def view_assignment_pdf(assignment_id):
     from fastapi.responses import FileResponse
     import os
@@ -35119,7 +35119,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment["pdf_file_name"])
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
@@ -35187,7 +35187,7 @@ export function PdfViewerDialog({ assignment, open, onOpenChange }: PdfViewerDia
     setError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/pdf`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/pdf`, {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -35385,7 +35385,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -35411,7 +35411,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -35750,7 +35750,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -35776,7 +35776,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -36115,7 +36115,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -36141,7 +36141,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -36481,7 +36481,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -36507,7 +36507,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -36854,7 +36854,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -36880,7 +36880,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -37243,7 +37243,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -37269,7 +37269,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -37599,7 +37599,7 @@ Perfect! I've successfully implemented the PDF viewer functionality. Here's what
 ### 🆕 **New Features Added:**
 
 #### 1. **Backend PDF Viewing Endpoint**
-- `GET /api/v1/assignments/{id}/pdf` - Serves PDF files for viewing
+- `GET /api/assignments/{id}/pdf` - Serves PDF files for viewing
 - Returns mock PDF content for demo purposes 
 - Proper content-type headers (`application/pdf`)
 - Handles cases where PDFs don't exist on disk
@@ -37711,18 +37711,18 @@ def root():
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/v1/assignments")
+@app.get("/api/assignments")
 def get_assignments():
     return mock_assignments
 
-@app.get("/api/v1/assignments/{assignment_id}")
+@app.get("/api/assignments/{assignment_id}")
 def get_assignment(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
         return {"error": "Assignment not found"}
     return assignment
 
-@app.post("/api/v1/assignments")
+@app.post("/api/assignments")
 async def create_assignment(request: Request):
     assignment_data = await request.json()
     new_id = len(mock_assignments) + 1
@@ -37750,7 +37750,7 @@ async def create_assignment(request: Request):
     mock_assignments.append(new_assignment)
     return new_assignment
 
-@app.put("/api/v1/assignments/{assignment_id}")
+@app.put("/api/assignments/{assignment_id}")
 async def update_assignment(assignment_id, request: Request):
     assignment_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -37764,7 +37764,7 @@ async def update_assignment(assignment_id, request: Request):
     
     return assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 def delete_assignment(assignment_id):
     global mock_assignments
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -37774,7 +37774,7 @@ def delete_assignment(assignment_id):
     mock_assignments = [a for a in mock_assignments if a["id"] != assignment_id]
     return {"success": True, "message": "Assignment deleted"}
 
-@app.get("/api/v1/assignments/{assignment_id}/exercises")
+@app.get("/api/assignments/{assignment_id}/exercises")
 def get_assignment_exercises(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
@@ -37782,7 +37782,7 @@ def get_assignment_exercises(assignment_id):
     
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises")
+@app.put("/api/assignments/{assignment_id}/exercises")
 async def update_assignment_exercises(assignment_id, request: Request):
     exercises_data = await request.json()
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -37803,7 +37803,7 @@ async def update_assignment_exercises(assignment_id, request: Request):
     assignment["exercises"] = exercises_data
     return sorted(assignment["exercises"], key=lambda x: x["order"])
 
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
     # Find assignment
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
@@ -37843,7 +37843,7 @@ async def upload_assignment_pdf(assignment_id, file: UploadFile = File(...)):
         "file_path": assignment["pdf_file_path"]
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 def view_assignment_pdf(assignment_id):
     from fastapi.responses import FileResponse
     import os
@@ -37897,7 +37897,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment["pdf_file_name"])
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 def delete_assignment_pdf(assignment_id):
     assignment = next((a for a in mock_assignments if a["id"] == int(assignment_id)), None)
     if not assignment:
@@ -38298,13 +38298,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -38312,14 +38312,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail="Assignment not found")
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -38327,7 +38327,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail="Assignment not found")
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -38336,13 +38336,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -38359,7 +38359,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -38400,7 +38400,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -38450,7 +38450,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -38767,12 +38767,12 @@ CREATE TABLE exercises (
 
 All your existing endpoints now use PostgreSQL:
 
-- `GET /api/v1/assignments` - List assignments from DB
-- `POST /api/v1/assignments` - Create assignment in DB  
-- `PUT /api/v1/assignments/{id}` - Update assignment in DB
-- `DELETE /api/v1/assignments/{id}` - Delete from DB
-- `GET/PUT /api/v1/assignments/{id}/exercises` - Exercise CRUD
-- `POST/GET/DELETE /api/v1/assignments/{id}/upload-pdf` - PDF management
+- `GET /api/assignments` - List assignments from DB
+- `POST /api/assignments` - Create assignment in DB  
+- `PUT /api/assignments/{id}` - Update assignment in DB
+- `DELETE /api/assignments/{id}` - Delete from DB
+- `GET/PUT /api/assignments/{id}/exercises` - Exercise CRUD
+- `POST/GET/DELETE /api/assignments/{id}/upload-pdf` - PDF management
 
 ## 🚀 Benefits You Get
 
@@ -38929,7 +38929,7 @@ export function PdfViewerDialog({ assignment, open, onOpenChange }: PdfViewerDia
     setError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/pdf`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/pdf`, {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -39202,7 +39202,7 @@ export function PdfViewerDialog({ assignment, open, onOpenChange }: PdfViewerDia
     setError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/pdf`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/pdf`, {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -39431,7 +39431,7 @@ export function PdfViewerDialog({ assignment, open, onOpenChange }: PdfViewerDia
     setError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignment.id}/pdf`, {
+      const response = await fetch(`/api/assignments/${assignment.id}/pdf`, {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -39678,7 +39678,7 @@ from typing import List, Dict, Any
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -39848,7 +39848,7 @@ const handleAiExtractExercises = async (assignmentId: number) => {
   setAiExtractionError("")
 
   try {
-    const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+    const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer fake-token-for-demo`,
@@ -40023,7 +40023,7 @@ from typing import List, Dict, Any
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -40183,7 +40183,7 @@ const handleAiExtractExercises = async (assignmentId: number) => {
   setAiExtractionError("")
 
   try {
-    const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+    const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer fake-token-for-demo`,
@@ -40406,13 +40406,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -40420,14 +40420,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail="Assignment not found")
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -40435,7 +40435,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail="Assignment not found")
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -40444,13 +40444,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -40467,7 +40467,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -40508,7 +40508,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -40558,7 +40558,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -40647,13 +40647,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -40661,14 +40661,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail="Assignment not found")
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -40676,7 +40676,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail="Assignment not found")
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -40685,13 +40685,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -40708,7 +40708,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -40749,7 +40749,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -40799,7 +40799,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -40888,13 +40888,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -40902,14 +40902,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail="Assignment not found")
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -40917,7 +40917,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail="Assignment not found")
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -40926,13 +40926,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -40949,7 +40949,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -40990,7 +40990,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -41040,7 +41040,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -41061,7 +41061,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -41275,13 +41275,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -41289,14 +41289,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail="Assignment not found")
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -41304,7 +41304,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail="Assignment not found")
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -41313,13 +41313,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -41336,7 +41336,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -41377,7 +41377,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -41427,7 +41427,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -41448,7 +41448,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -41662,13 +41662,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -41676,14 +41676,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -41691,7 +41691,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -41700,13 +41700,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -41723,7 +41723,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -41764,7 +41764,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -41814,7 +41814,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -41835,7 +41835,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -42049,13 +42049,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -42063,14 +42063,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -42078,7 +42078,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -42087,13 +42087,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -42110,7 +42110,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -42151,7 +42151,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -42201,7 +42201,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -42222,7 +42222,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -42477,7 +42477,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -42503,7 +42503,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -42878,7 +42878,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -42904,7 +42904,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -43279,7 +43279,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -43305,7 +43305,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -43366,7 +43366,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -43715,7 +43715,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -43741,7 +43741,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -43802,7 +43802,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -44167,7 +44167,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -44193,7 +44193,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -44254,7 +44254,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -44727,13 +44727,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -44741,14 +44741,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -44756,7 +44756,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -44765,13 +44765,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -44788,7 +44788,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -44829,7 +44829,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -44879,7 +44879,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -44900,7 +44900,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -45124,13 +45124,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -45138,14 +45138,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -45153,7 +45153,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -45162,13 +45162,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -45185,7 +45185,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -45226,7 +45226,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -45276,7 +45276,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -45297,7 +45297,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -45457,7 +45457,7 @@ I've successfully implemented the AI-powered PDF exercise extraction feature for
 ## 🎯 Features Implemented
 
 ### Backend (FastAPI + PostgreSQL)
-- **New AI Endpoint**: `POST /api/v1/assignments/{assignment_id}/extract-exercises-ai`
+- **New AI Endpoint**: `POST /api/assignments/{assignment_id}/extract-exercises-ai`
 - **PDF Processing**: Uses PyMuPDF4LLM to extract text from PDF files
 - **AI Integration**: Uses OpenAI GPT-4 to intelligently identify and extract exercises
 - **Smart Point Allocation**: Automatically ensures exercises total exactly 100 points
@@ -45575,7 +45575,7 @@ I've successfully implemented the AI-powered PDF exercise extraction feature you
 ### ✅ **What's Been Implemented**
 
 1. **🤖 Backend AI Processing**
-   - New API endpoint: `POST /api/v1/assignments/{assignment_id}/extract-exercises-ai`
+   - New API endpoint: `POST /api/assignments/{assignment_id}/extract-exercises-ai`
    - Uses PyMuPDF4LLM for PDF text extraction
    - Uses OpenAI GPT-4 for intelligent exercise identification
    - Automatically adjusts points to sum to exactly 100
@@ -45795,13 +45795,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -45809,14 +45809,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -45824,7 +45824,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -45833,13 +45833,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -45856,7 +45856,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -45897,7 +45897,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -45947,7 +45947,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -45968,7 +45968,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -46195,13 +46195,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -46209,14 +46209,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -46224,7 +46224,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -46233,13 +46233,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -46256,7 +46256,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -46297,7 +46297,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -46347,7 +46347,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -46368,7 +46368,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -46615,13 +46615,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -46629,14 +46629,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -46644,7 +46644,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -46653,13 +46653,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -46676,7 +46676,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -46717,7 +46717,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -46767,7 +46767,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -46788,7 +46788,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -47035,13 +47035,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -47049,14 +47049,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -47064,7 +47064,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -47073,13 +47073,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -47096,7 +47096,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -47137,7 +47137,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -47187,7 +47187,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -47208,7 +47208,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -47455,13 +47455,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -47469,14 +47469,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -47484,7 +47484,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -47493,13 +47493,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -47516,7 +47516,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -47557,7 +47557,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -47607,7 +47607,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -47628,7 +47628,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -47890,13 +47890,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -47904,14 +47904,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -47919,7 +47919,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -47928,13 +47928,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -47951,7 +47951,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -47992,7 +47992,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -48042,7 +48042,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -48063,7 +48063,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -48325,13 +48325,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -48339,14 +48339,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -48354,7 +48354,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -48363,13 +48363,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -48386,7 +48386,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -48427,7 +48427,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -48477,7 +48477,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -48498,7 +48498,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -48717,7 +48717,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -48743,7 +48743,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -48804,7 +48804,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -49252,7 +49252,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -49278,7 +49278,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -49339,7 +49339,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -49788,7 +49788,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -49814,7 +49814,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -49875,7 +49875,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -50324,7 +50324,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -50350,7 +50350,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -50411,7 +50411,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -50860,7 +50860,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -50886,7 +50886,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -50947,7 +50947,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -51825,13 +51825,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -51839,14 +51839,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -51854,7 +51854,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -51863,13 +51863,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -51886,7 +51886,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -51927,7 +51927,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -51977,7 +51977,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -51998,7 +51998,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -52275,13 +52275,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -52289,14 +52289,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -52304,7 +52304,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -52313,13 +52313,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -52336,7 +52336,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -52377,7 +52377,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -52427,7 +52427,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -52448,7 +52448,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -52725,13 +52725,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -52739,14 +52739,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -52754,7 +52754,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -52763,13 +52763,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -52786,7 +52786,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -52827,7 +52827,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -52877,7 +52877,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -52898,7 +52898,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -53262,13 +53262,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -53276,14 +53276,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -53291,7 +53291,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -53300,13 +53300,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -53323,7 +53323,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -53364,7 +53364,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -53414,7 +53414,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -53435,7 +53435,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -53738,13 +53738,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -53752,14 +53752,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -53767,7 +53767,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -53776,13 +53776,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -53799,7 +53799,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -53840,7 +53840,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -53890,7 +53890,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -53911,7 +53911,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -54164,7 +54164,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -54190,7 +54190,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -54251,7 +54251,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -54701,7 +54701,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -54727,7 +54727,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -54788,7 +54788,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -55251,7 +55251,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -55277,7 +55277,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -55338,7 +55338,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -55879,13 +55879,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -55893,14 +55893,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -55908,7 +55908,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -55917,13 +55917,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -55940,7 +55940,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -55981,7 +55981,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -56031,7 +56031,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -56052,7 +56052,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -56103,7 +56103,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -56358,7 +56358,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -56384,7 +56384,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -56445,7 +56445,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -56931,7 +56931,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -56957,7 +56957,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -57017,7 +57017,7 @@ export default function AssignmentManagementPage() {
     setIsLoadingPreview(true)
     
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/preview-pdf-text`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/preview-pdf-text`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -57045,7 +57045,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -57531,7 +57531,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -57557,7 +57557,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -57617,7 +57617,7 @@ export default function AssignmentManagementPage() {
     setIsLoadingPreview(true)
     
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/preview-pdf-text`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/preview-pdf-text`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -57645,7 +57645,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -58131,7 +58131,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -58157,7 +58157,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -58217,7 +58217,7 @@ export default function AssignmentManagementPage() {
     setIsLoadingPreview(true)
     
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/preview-pdf-text`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/preview-pdf-text`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -58245,7 +58245,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -58777,7 +58777,7 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/v1/assignments", {
+      const response = await fetch("/api/assignments", {
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
         },
@@ -58803,7 +58803,7 @@ export default function AssignmentManagementPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer fake-token-for-demo`,
@@ -58863,7 +58863,7 @@ export default function AssignmentManagementPage() {
     setIsLoadingPreview(true)
     
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/preview-pdf-text`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/preview-pdf-text`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -58891,7 +58891,7 @@ export default function AssignmentManagementPage() {
     setAiExtractionError("")
 
     try {
-      const response = await fetch(`/api/v1/assignments/${assignmentId}/extract-exercises-ai`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/extract-exercises-ai`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer fake-token-for-demo`,
@@ -59379,7 +59379,7 @@ export default function AssignmentManagementPage() {
 ### ✅ **What I Added:**
 
 #### **1. PDF Text Preview Endpoint**
-- **New Backend Route**: `GET /api/v1/assignments/{id}/preview-pdf-text`
+- **New Backend Route**: `GET /api/assignments/{id}/preview-pdf-text`
 - **PyMuPDF4LLM Integration**: Extracts markdown-formatted text from PDF
 - **Comprehensive Statistics**: Character count, word count, lines, AI input size
 - **Text Views**: Full text, truncated preview (2000 chars), AI-ready text (4000 chars)
@@ -59608,13 +59608,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -59622,14 +59622,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -59637,7 +59637,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -59646,13 +59646,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -59669,7 +59669,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -59710,7 +59710,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -59760,7 +59760,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -59781,7 +59781,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -59832,7 +59832,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -60148,13 +60148,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -60162,14 +60162,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -60177,7 +60177,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -60186,13 +60186,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -60209,7 +60209,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -60250,7 +60250,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -60300,7 +60300,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -60321,7 +60321,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -60372,7 +60372,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -60721,13 +60721,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -60735,14 +60735,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -60750,7 +60750,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -60759,13 +60759,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -60782,7 +60782,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -60823,7 +60823,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -60873,7 +60873,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -60894,7 +60894,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -60945,7 +60945,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -61288,13 +61288,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -61302,14 +61302,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -61317,7 +61317,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -61326,13 +61326,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -61349,7 +61349,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -61390,7 +61390,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -61440,7 +61440,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -61461,7 +61461,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -61512,7 +61512,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -61856,13 +61856,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -61870,14 +61870,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -61885,7 +61885,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -61894,13 +61894,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -61917,7 +61917,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -61958,7 +61958,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -62008,7 +62008,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -62029,7 +62029,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -62080,7 +62080,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -62433,13 +62433,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -62447,14 +62447,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -62462,7 +62462,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -62471,13 +62471,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -62494,7 +62494,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -62535,7 +62535,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -62585,7 +62585,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -62606,7 +62606,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -62657,7 +62657,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -63016,13 +63016,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -63030,14 +63030,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -63045,7 +63045,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -63054,13 +63054,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -63077,7 +63077,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -63118,7 +63118,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -63168,7 +63168,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -63189,7 +63189,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # Debug endpoint to test Ollama connectivity
-@app.get("/api/v1/debug/ollama-test")
+@app.get("/api/debug/ollama-test")
 async def test_ollama_connection():
     """
     Test Ollama connectivity with a simple request
@@ -63250,7 +63250,7 @@ async def test_ollama_connection():
         }
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -63301,7 +63301,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -63574,10 +63574,10 @@ I've significantly improved the error handling and logging system to help debug 
 
 ### ✅ **3. Debug Endpoint for Ollama Testing**
 
-**Added `/api/v1/debug/ollama-test` endpoint to isolate Ollama issues:**
+**Added `/api/debug/ollama-test` endpoint to isolate Ollama issues:**
 
 ```bash
-curl http://localhost:8001/api/v1/debug/ollama-test
+curl http://localhost:8001/api/debug/ollama-test
 ```
 
 ### 🧪 **Current Test Results:**
@@ -63599,7 +63599,7 @@ tail -f /var/log/your-app.log
 
 **2. Test Ollama Directly:**
 ```bash
-curl http://localhost:8001/api/v1/debug/ollama-test
+curl http://localhost:8001/api/debug/ollama-test
 ```
 
 **3. Try AI Extraction Again:**
@@ -63668,7 +63668,7 @@ Try the extraction again and let me know what specific error message you see now
 ```
 
 ```shellscript
-curl http://localhost:8001/api/v1/debug/ollama-test
+curl http://localhost:8001/api/debug/ollama-test
 ```
 
 ```plaintext
@@ -63685,7 +63685,7 @@ tail -f /var/log/your-app.log
 ```
 
 ```shellscript
-curl http://localhost:8001/api/v1/debug/ollama-test
+curl http://localhost:8001/api/debug/ollama-test
 ```
 
 ```plaintext
@@ -63829,13 +63829,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -63843,14 +63843,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -63858,7 +63858,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -63867,13 +63867,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -63890,7 +63890,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -63931,7 +63931,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -63981,7 +63981,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -64002,7 +64002,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # Debug endpoint to test Ollama connectivity
-@app.get("/api/v1/debug/ollama-test")
+@app.get("/api/debug/ollama-test")
 async def test_ollama_connection():
     """
     Test Ollama connectivity with a simple request
@@ -64063,7 +64063,7 @@ async def test_ollama_connection():
         }
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -64114,7 +64114,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI
@@ -64477,13 +64477,13 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "database": "postgresql"}
 
 # Assignment endpoints
-@app.get("/api/v1/assignments", response_model=List[AssignmentResponse])
+@app.get("/api/assignments", response_model=List[AssignmentResponse])
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises"""
     assignments = await get_assignments(db)
     return assignments
 
-@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -64491,14 +64491,14 @@ async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return assignment
 
-@app.post("/api/v1/assignments", response_model=AssignmentResponse)
+@app.post("/api/assignments", response_model=AssignmentResponse)
 async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     """Create a new assignment"""
     # Mock user ID for demo - in production, get from authentication
     created_by = 1
     return await create_assignment(db, assignment, created_by)
 
-@app.put("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.put("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def update_existing_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: AsyncSession = Depends(get_db)):
     """Update an assignment"""
     updated_assignment = await update_assignment(db, assignment_id, assignment_update)
@@ -64506,7 +64506,7 @@ async def update_existing_assignment(assignment_id: int, assignment_update: Assi
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
     return updated_assignment
 
-@app.delete("/api/v1/assignments/{assignment_id}")
+@app.delete("/api/assignments/{assignment_id}")
 async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete an assignment"""
     success = await delete_assignment(db, assignment_id)
@@ -64515,13 +64515,13 @@ async def delete_existing_assignment(assignment_id: int, db: AsyncSession = Depe
     return {"success": True, "message": "Assignment deleted"}
 
 # Exercise endpoints
-@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -64538,7 +64538,7 @@ async def update_exercises_for_assignment(assignment_id: int, exercises: List[Ex
     return updated_exercises
 
 # PDF endpoints
-@app.post("/api/v1/assignments/{assignment_id}/upload-pdf")
+@app.post("/api/assignments/{assignment_id}/upload-pdf")
 async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     """Upload PDF file for assignment"""
     
@@ -64579,7 +64579,7 @@ async def upload_assignment_pdf(assignment_id: int, file: UploadFile = File(...)
         "file_path": updated_assignment.pdf_file_path
     }
 
-@app.get("/api/v1/assignments/{assignment_id}/pdf")
+@app.get("/api/assignments/{assignment_id}/pdf")
 async def view_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """View/download PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -64629,7 +64629,7 @@ startxref
     
     return FileResponse(file_path, media_type="application/pdf", filename=assignment.pdf_file_name)
 
-@app.delete("/api/v1/assignments/{assignment_id}/pdf")
+@app.delete("/api/assignments/{assignment_id}/pdf")
 async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Delete PDF file for assignment"""
     assignment = await get_assignment(db, assignment_id)
@@ -64650,7 +64650,7 @@ async def delete_assignment_pdf(assignment_id: int, db: AsyncSession = Depends(g
     return {"success": True, "message": "PDF deleted successfully"}
 
 # Debug endpoint to test Ollama connectivity
-@app.get("/api/v1/debug/ollama-test")
+@app.get("/api/debug/ollama-test")
 async def test_ollama_connection():
     """
     Test Ollama connectivity with a simple request
@@ -64711,7 +64711,7 @@ async def test_ollama_connection():
         }
 
 # PDF Text Preview endpoint
-@app.get("/api/v1/assignments/{assignment_id}/preview-pdf-text")
+@app.get("/api/assignments/{assignment_id}/preview-pdf-text")
 async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Preview the text extracted from PDF using PyMuPDF4LLM
@@ -64762,7 +64762,7 @@ async def preview_pdf_text(assignment_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Error extracting text from PDF: {str(e)}")
 
 # AI PDF Exercise Extraction endpoint
-@app.post("/api/v1/assignments/{assignment_id}/extract-exercises-ai")
+@app.post("/api/assignments/{assignment_id}/extract-exercises-ai")
 async def extract_exercises_from_pdf_ai(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Extract exercises from PDF using AI

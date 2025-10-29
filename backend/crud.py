@@ -7,136 +7,94 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy import delete
 from database import Assignment, Exercise, SectionExtractionConfig, Submission, Group, Course, Semester, Classroom
-from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from repositories.assignment_repository import AssignmentRepository
 
-# Pydantic models for API
-class ExerciseBase(BaseModel):
-    description: str
-    evaluation_criteria: Optional[str] = None
-    points: int
-    order: int = 1
-
-class ExerciseCreate(ExerciseBase):
-    pass
-
-class ExerciseUpdate(ExerciseBase):
-    pass
-
-class ExerciseResponse(ExerciseBase):
-    id: int
-    assignment_id: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-class AssignmentBase(BaseModel):
-    name: str
-    description: str
-    due_date: datetime
-    language: str  # Language code: en, es, ca, etc.
-    is_active: bool = True
-
-class AssignmentCreate(AssignmentBase):
-    classroom_ids: List[int] = []  # List of classroom IDs to assign this to
-    exercises: List[ExerciseCreate] = []
-
-class AssignmentUpdate(AssignmentBase):
-    pdf_file_path: Optional[str] = None
-    pdf_file_name: Optional[str] = None
-    pdf_file_data: Optional[bytes] = None
-    pdf_mime_type: Optional[str] = None
-    pdf_file_size: Optional[int] = None
-
-class AssignmentResponse(AssignmentBase):
-    id: int
-    pdf_file_path: Optional[str] = None
-    pdf_file_name: Optional[str] = None
-    # Exclude raw bytes from API response for performance/security
-    created_by: int
-    created_at: datetime
-    updated_at: datetime
-    exercises: List[ExerciseResponse] = []
-
-    class Config:
-        from_attributes = True
+# Import all domain models from schemas
+from schemas import (
+    # Exercise models
+    ExerciseBase, ExerciseCreate, ExerciseUpdate, ExerciseResponse, ExerciseGrade,
+    # Assignment models
+    AssignmentBase, AssignmentCreate, AssignmentUpdate, AssignmentResponse,
+    # Section config models
+    SectionExtractionConfigBase, SectionExtractionConfigCreate,
+    SectionExtractionConfigUpdate, SectionExtractionConfigResponse,
+    # Group models
+    GroupMember,
+    GroupBase, GroupCreate, GroupUpdate, GroupResponse,
+    # Course models
+    CourseBase, CourseCreate, CourseUpdate, CourseResponse,
+    # Semester models
+    SemesterBase, SemesterCreate, SemesterUpdate, SemesterResponse,
+    # Classroom models
+    ClassroomBase, ClassroomCreate, ClassroomUpdate, ClassroomResponse,
+    # Submission models
+    SubmissionBase, SubmissionCreate, SubmissionUpdate, SubmissionResponse,
+    SubmissionFile
+)
 
 # CRUD Operations for Assignments
-async def create_assignment(db: AsyncSession, assignment: AssignmentCreate, created_by: int) -> Assignment:
-    """Create a new assignment with exercises and associate with classrooms"""
-    db_assignment = Assignment(
-        name=assignment.name,
-        description=assignment.description,
-        due_date=assignment.due_date,
-        language=assignment.language,
-        is_active=assignment.is_active,
-        created_by=created_by
-    )
-    
-    db.add(db_assignment)
-    await db.flush()  # Get the assignment ID
-    
-    # Associate with classrooms
-    if assignment.classroom_ids:
-        from crud import get_classroom  # Import here to avoid circular import
-        for classroom_id in assignment.classroom_ids:
-            classroom = await get_classroom(db, classroom_id)
-            if classroom:
-                db_assignment.classrooms.append(classroom)
-    
-    # Add exercises
-    for exercise_data in assignment.exercises:
-        db_exercise = Exercise(
-            assignment_id=db_assignment.id,
-            description=exercise_data.description,
-            evaluation_criteria=exercise_data.evaluation_criteria,
-            points=exercise_data.points,
-            order=exercise_data.order
-        )
-        db.add(db_exercise)
-    
-    await db.commit()
-    await db.refresh(db_assignment)
-    return db_assignment
-
 async def get_assignments(db: AsyncSession) -> List[Assignment]:
-    """Get all assignments with their exercises and classrooms"""
+    """Get all assignments with their exercises, course, and semester"""
     result = await db.execute(
         select(Assignment)
-        .options(selectinload(Assignment.exercises))
-        .options(selectinload(Assignment.classrooms))
+        .options(
+            selectinload(Assignment.exercises),
+            selectinload(Assignment.course),
+            selectinload(Assignment.semester)
+        )
+        .order_by(Assignment.created_at.desc())
+    )
+    return result.scalars().all()
+
+async def get_assignments_by_semester(db: AsyncSession, semester_id: int) -> List[Assignment]:
+    """Get all assignments for a specific semester"""
+    result = await db.execute(
+        select(Assignment)
+        .options(
+            selectinload(Assignment.exercises),
+            selectinload(Assignment.course),
+            selectinload(Assignment.semester)
+        )
+        .where(Assignment.semester_id == semester_id, Assignment.is_active == True)
         .order_by(Assignment.created_at.desc())
     )
     return result.scalars().all()
 
 async def get_assignment(db: AsyncSession, assignment_id: int) -> Optional[Assignment]:
-    """Get a single assignment by ID with exercises and classrooms"""
+    """Get a single assignment by ID with exercises, course, and semester"""
     result = await db.execute(
         select(Assignment)
-        .options(selectinload(Assignment.exercises))
-        .options(selectinload(Assignment.classrooms))
+        .options(
+            selectinload(Assignment.exercises),
+            selectinload(Assignment.course),
+            selectinload(Assignment.semester)
+        )
         .where(Assignment.id == assignment_id)
     )
     return result.scalar_one_or_none()
 
 async def update_assignment(db: AsyncSession, assignment_id: int, assignment_update: AssignmentUpdate) -> Optional[Assignment]:
     """Update an assignment"""
-    result = await db.execute(select(Assignment).where(Assignment.id == assignment_id))
+    result = await db.execute(
+        select(Assignment)
+        .options(selectinload(Assignment.exercises))
+        .where(Assignment.id == assignment_id)
+    )
     db_assignment = result.scalar_one_or_none()
     
     if not db_assignment:
         return None
     
     # Update fields
-    for field, value in assignment_update.dict(exclude_unset=True).items():
+    update_data = assignment_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
         setattr(db_assignment, field, value)
     
     db_assignment.updated_at = datetime.utcnow()
     await db.commit()
-    await db.refresh(db_assignment)
+    await db.refresh(db_assignment, ['exercises'])
     return db_assignment
 
 async def delete_assignment(db: AsyncSession, assignment_id: int) -> bool:
@@ -242,30 +200,6 @@ async def remove_assignment_pdf(db: AsyncSession, assignment_id: int) -> Optiona
     await db.refresh(db_assignment)
     return db_assignment
 
-# Pydantic models for Section Extraction Configuration
-class SectionExtractionConfigBase(BaseModel):
-    name: str
-    markers: str  # JSON string of array
-    description: Optional[str] = None
-    priority: int = 1
-    is_active: bool = True
-    extraction_strategy: str = 'section_to_end'
-    max_characters: int = 4000
-
-class SectionExtractionConfigCreate(SectionExtractionConfigBase):
-    pass
-
-class SectionExtractionConfigUpdate(SectionExtractionConfigBase):
-    pass
-
-class SectionExtractionConfigResponse(SectionExtractionConfigBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
 # CRUD Operations for Section Extraction Configuration
 async def get_section_extraction_configs(db: AsyncSession) -> List[SectionExtractionConfig]:
     """Get all section extraction configurations"""
@@ -332,69 +266,19 @@ async def delete_section_extraction_config(db: AsyncSession, config_id: int) -> 
 
 # === SUBMISSION MODELS AND OPERATIONS ===
 
-# Pydantic models for submissions
-class StudentInfo(BaseModel):
-    name: str
-    email: str
-    student_id: str
-
-class SubmissionFile(BaseModel):
-    name: str
-    path: str
-    size: int
-    content_type: str
-
-class ExerciseGrade(BaseModel):
-    exercise_id: int
-    score: float
-    feedback: Optional[str] = None
-
-class SubmissionBase(BaseModel):
-    assignment_id: int
-    course_id: Optional[int] = None
-    semester_id: Optional[int] = None
-    group_id: Optional[int] = None
-    comments: Optional[str] = None
-    status: str = 'submitted'
-
-class SubmissionCreate(SubmissionBase):
-    pdf_file_path: Optional[str] = None
-    pdf_file_name: Optional[str] = None
-    pdf_file_data: Optional[bytes] = None
-    pdf_mime_type: Optional[str] = None
-    pdf_file_size: Optional[int] = None
-
-class SubmissionUpdate(BaseModel):
-    course_id: Optional[int] = None
-    semester_id: Optional[int] = None
-    group_id: Optional[int] = None
-    comments: Optional[str] = None
-    pdf_file_path: Optional[str] = None
-    pdf_file_name: Optional[str] = None
-    pdf_file_data: Optional[bytes] = None
-    pdf_mime_type: Optional[str] = None
-    pdf_file_size: Optional[int] = None
-    status: Optional[str] = None
-    total_score: Optional[float] = None
-    percentage_score: Optional[float] = None
-    teacher_feedback: Optional[str] = None
-    grade_breakdown: Optional[List[dict]] = None
-    ai_feedback: Optional[str] = None
-    graded_by: Optional[int] = None
-
-
 # CRUD operations for submissions
-async def get_submissions(db: AsyncSession, assignment_id: Optional[int] = None, course_id: Optional[int] = None, semester_id: Optional[int] = None, group_id: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Submission]:
+async def get_submissions(db: AsyncSession, assignment_id: Optional[int] = None, classroom_id: Optional[int] = None, group_id: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Submission]:
     """Get all submissions with optional filtering"""
-    # Use simple query without eager loading to avoid relationship issues
-    query = select(Submission)
+    query = select(Submission).options(
+        selectinload(Submission.assignment).selectinload(Assignment.exercises),
+        selectinload(Submission.classroom).selectinload(Classroom.semester).selectinload(Semester.course),
+        selectinload(Submission.group)
+    )
     
     if assignment_id:
         query = query.where(Submission.assignment_id == assignment_id)
-    if course_id:
-        query = query.where(Submission.course_id == course_id)
-    if semester_id:
-        query = query.where(Submission.semester_id == semester_id)
+    if classroom_id:
+        query = query.where(Submission.classroom_id == classroom_id)
     if group_id:
         query = query.where(Submission.group_id == group_id)
     
@@ -409,9 +293,8 @@ async def get_submission(db: AsyncSession, submission_id: int) -> Optional[Submi
     
     result = await db.execute(
         select(Submission).options(
-            selectinload(Submission.assignment),
-            selectinload(Submission.course),
-            selectinload(Submission.semester),
+            selectinload(Submission.assignment).selectinload(Assignment.exercises),
+            selectinload(Submission.classroom).selectinload(Classroom.semester).selectinload(Semester.course),
             selectinload(Submission.group)
         ).where(Submission.id == submission_id)
     )
@@ -421,6 +304,10 @@ async def get_submissions_by_assignment(db: AsyncSession, assignment_id: int) ->
     """Get all submissions for a specific assignment"""
     result = await db.execute(
         select(Submission)
+        .options(
+            selectinload(Submission.group),
+            selectinload(Submission.classroom)
+        )
         .where(Submission.assignment_id == assignment_id)
         .order_by(Submission.submitted_at.desc())
     )
@@ -444,10 +331,19 @@ async def create_submission(db: AsyncSession, submission: SubmissionCreate) -> S
     else:
         max_score = 100
     
+    # Get the classroom to inherit semester_id
+    classroom_result = await db.execute(
+        select(Classroom).where(Classroom.id == submission.classroom_id)
+    )
+    classroom = classroom_result.scalar_one_or_none()
+    
+    if not classroom:
+        raise ValueError(f"Classroom with id {submission.classroom_id} not found")
+    
     db_submission = Submission(
         assignment_id=submission.assignment_id,
-        course_id=submission.course_id,
-        semester_id=submission.semester_id,
+        classroom_id=submission.classroom_id,
+        semester_id=classroom.semester_id,  # Inherit from classroom
         group_id=submission.group_id,
         comments=submission.comments,
         pdf_file_path=submission.pdf_file_path,
@@ -457,7 +353,7 @@ async def create_submission(db: AsyncSession, submission: SubmissionCreate) -> S
         pdf_file_size=submission.pdf_file_size,
         status=submission.status,
         max_score=max_score,
-        is_late=assignment.due_date < datetime.now() if assignment else False
+        is_late=assignment.due_date < datetime.now() if assignment and assignment.due_date else False
     )
     
     db.add(db_submission)
@@ -523,33 +419,6 @@ async def delete_submission(db: AsyncSession, submission_id: int) -> bool:
 
 # === GROUP MODELS AND OPERATIONS ===
 
-# Pydantic models for groups
-class GroupMember(BaseModel):
-    name: str
-    email: str
-    student_id: str
-
-class GroupBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    course_id: Optional[int] = None
-    semester_id: Optional[int] = None
-    members: Optional[List[GroupMember]] = []
-    max_members: Optional[int] = None
-    is_active: bool = True
-
-class GroupCreate(GroupBase):
-    created_by: int
-
-class GroupUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    course_id: Optional[int] = None
-    semester_id: Optional[int] = None
-    members: Optional[List[GroupMember]] = None
-    max_members: Optional[int] = None
-    is_active: Optional[bool] = None
-
 # CRUD operations for groups
 async def get_groups(db: AsyncSession, created_by: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Group]:
     """Get all groups, optionally filtered by creator"""
@@ -560,10 +429,9 @@ async def get_groups(db: AsyncSession, created_by: Optional[int] = None, skip: i
     if created_by:
         query = query.where(Group.created_by == created_by)
     
-    # Load related course and semester data
+    # Load related classroom data
     query = query.options(
-        selectinload(Group.course),
-        selectinload(Group.semester)
+        selectinload(Group.classroom)
     ).offset(skip).limit(limit).order_by(Group.created_at.desc())
     
     result = await db.execute(query)
@@ -575,8 +443,7 @@ async def get_group(db: AsyncSession, group_id: int) -> Optional[Group]:
     
     result = await db.execute(
         select(Group).options(
-            selectinload(Group.course),
-            selectinload(Group.semester)
+            selectinload(Group.classroom)
         ).where(Group.id == group_id, Group.is_active == True)
     )
     return result.scalar_one_or_none()
@@ -595,16 +462,22 @@ async def get_group_by_name(db: AsyncSession, name: str, created_by: int) -> Opt
 async def create_group(db: AsyncSession, group: GroupCreate) -> Group:
     """Create a new group"""
     
+    # Get the classroom to inherit semester_id
+    classroom = await db.get(Classroom, group.classroom_id)
+    if not classroom:
+        raise ValueError(f"Classroom with id {group.classroom_id} not found")
+    
     # Convert Pydantic models to dict for JSON storage
-    members_dict = [member.model_dump() for member in (group.members or [])]
+    members_dict = []
+    if group.members:
+        members_dict = [member.model_dump() for member in group.members]
     
     db_group = Group(
         name=group.name,
+        nickname=group.nickname,
         description=group.description,
-        course_id=group.course_id,
-        semester_id=group.semester_id,
+        classroom_id=group.classroom_id,
         members=members_dict,
-        max_members=group.max_members,
         created_by=group.created_by,
         is_active=group.is_active
     )
@@ -627,7 +500,13 @@ async def update_group(db: AsyncSession, group_id: int, group_update: GroupUpdat
     
     # Handle nested models
     if 'members' in update_data and update_data['members'] is not None:
-        update_data['members'] = [member.model_dump() for member in update_data['members']]
+        # Check if members are already dictionaries or Pydantic models
+        if isinstance(update_data['members'][0], dict):
+            # Already dictionaries, no need to convert
+            pass
+        else:
+            # Pydantic models, convert to dictionaries
+            update_data['members'] = [member.model_dump() for member in update_data['members']]
     
     for field, value in update_data.items():
         setattr(db_group, field, value)
@@ -659,10 +538,26 @@ async def get_groups_by_course(db: AsyncSession, course_id: int, created_by: Opt
     if created_by:
         query = query.where(Group.created_by == created_by)
     
-    # Load related course and semester data
+    # Load related classroom data
     query = query.options(
-        selectinload(Group.course),
-        selectinload(Group.semester)
+        selectinload(Group.classroom)
+    ).order_by(Group.name)
+    
+    result = await db.execute(query)
+    return result.scalars().all()
+
+async def get_groups_by_classroom(db: AsyncSession, classroom_id: int, created_by: Optional[int] = None) -> List[Group]:
+    """Get all groups for a specific classroom"""
+    from sqlalchemy.orm import selectinload
+    
+    query = select(Group).where(Group.classroom_id == classroom_id, Group.is_active == True)
+    
+    if created_by:
+        query = query.where(Group.created_by == created_by)
+    
+    # Load related classroom data
+    query = query.options(
+        selectinload(Group.classroom)
     ).order_by(Group.name)
     
     result = await db.execute(query)
@@ -670,44 +565,18 @@ async def get_groups_by_course(db: AsyncSession, course_id: int, created_by: Opt
 
 # === COURSE MODELS AND OPERATIONS ===
 
-# Pydantic models for courses
-class CourseBase(BaseModel):
-    name: str
-    code: str
-    description: Optional[str] = None
-    department: Optional[str] = None
-    credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
-    is_active: bool = True
-
-class CourseCreate(CourseBase):
-    created_by: int
-
-class CourseUpdate(BaseModel):
-    name: Optional[str] = None
-    code: Optional[str] = None
-    description: Optional[str] = None
-    department: Optional[str] = None
-    credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
-    is_active: Optional[bool] = None
-
-class CourseResponse(CourseBase):
-    id: int
-    created_by: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
 # CRUD operations for courses
 async def get_courses(db: AsyncSession, created_by: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Course]:
     """Get all courses, optionally filtered by creator"""
+    from sqlalchemy.orm import selectinload
+    
     query = select(Course).where(Course.is_active == True)
     
     if created_by:
         query = query.where(Course.created_by == created_by)
     
-    query = query.offset(skip).limit(limit).order_by(Course.name)
+    # Load semesters relationship
+    query = query.options(selectinload(Course.semesters)).offset(skip).limit(limit).order_by(Course.name)
     
     result = await db.execute(query)
     return result.scalars().all()
@@ -789,77 +658,6 @@ async def get_courses_by_department(db: AsyncSession, department: str, created_b
     return result.scalars().all()
 
 # === SEMESTER MODELS AND OPERATIONS ===
-
-# Pydantic models for semesters
-class SemesterBase(BaseModel):
-    name: str
-    code: str
-    year: int
-    season: str
-    start_date: datetime
-    end_date: datetime
-    course_id: int
-    is_active: bool = True
-
-class SemesterCreate(SemesterBase):
-    created_by: int
-
-class SemesterUpdate(BaseModel):
-    name: Optional[str] = None
-    code: Optional[str] = None
-    year: Optional[int] = None
-    season: Optional[str] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    course_id: Optional[int] = None
-    is_active: Optional[bool] = None
-
-class SemesterResponse(SemesterBase):
-    id: int
-    created_by: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-# Group Response model (defined after Course and Semester models)
-class GroupResponse(GroupBase):
-    id: int
-    created_by: int
-    created_at: datetime
-    updated_at: datetime
-    course: Optional[CourseResponse] = None
-    semester: Optional[SemesterResponse] = None
-
-    class Config:
-        from_attributes = True
-
-class SubmissionResponse(SubmissionBase):
-    id: int
-    pdf_file_path: Optional[str] = None
-    pdf_file_name: Optional[str] = None
-    pdf_file_size: Optional[int] = None
-    pdf_mime_type: Optional[str] = None
-    total_score: Optional[float] = None
-    max_score: Optional[float] = None
-    percentage_score: Optional[float] = None
-    teacher_feedback: Optional[str] = None
-    ai_feedback: Optional[str] = None
-    grade_breakdown: Optional[List[ExerciseGrade]] = []
-    submitted_at: datetime
-    graded_at: Optional[datetime] = None
-    # Relationship data - excluded to avoid lazy loading issues
-    # course: Optional[CourseResponse] = None
-    # semester: Optional[SemesterResponse] = None
-    # group: Optional[GroupResponse] = None
-    graded_by: Optional[int] = None
-    is_late: bool = False
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 # CRUD operations for semesters
 async def get_semesters(db: AsyncSession, created_by: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Semester]:
@@ -989,55 +787,42 @@ async def get_semesters_by_course(db: AsyncSession, course_id: int, created_by: 
     return result.scalars().all()
 
 async def get_courses_with_semesters(db: AsyncSession, created_by: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Course]:
-    """Get all courses with their semesters"""
-    query = select(Course).where(Course.is_active == True)
+    """Get all courses with their active semesters"""
+    # Use selectinload to eagerly load semesters relationship
+    query = select(Course).options(selectinload(Course.semesters)).where(Course.is_active == True)
     
     if created_by:
         query = query.where(Course.created_by == created_by)
     
-    query = query.options(selectinload(Course.semesters)).offset(skip).limit(limit).order_by(Course.name)
+    query = query.offset(skip).limit(limit).order_by(Course.name)
     
     result = await db.execute(query)
-    return result.scalars().all()
+    courses = result.scalars().all()
+    
+    # Filter semesters to only active ones for each course
+    for course in courses:
+        course.semesters = [semester for semester in course.semesters if semester.is_active]
+        # Sort semesters by year desc, then season
+        course.semesters.sort(key=lambda s: (s.year, s.season), reverse=True)
+    
+    return courses
 
 async def get_course_with_semesters(db: AsyncSession, course_id: int) -> Optional[Course]:
-    """Get a single course by ID with its semesters"""
+    """Get a single course by ID with its active semesters"""
     result = await db.execute(
-        select(Course)
-        .options(selectinload(Course.semesters))
-        .where(Course.id == course_id, Course.is_active == True)
+        select(Course).options(selectinload(Course.semesters)).where(Course.id == course_id, Course.is_active == True)
     )
-    return result.scalar_one_or_none()
+    course = result.scalar_one_or_none()
+    
+    if course:
+        # Filter semesters to only active ones
+        course.semesters = [semester for semester in course.semesters if semester.is_active]
+        # Sort semesters by year desc, then season
+        course.semesters.sort(key=lambda s: (s.year, s.season), reverse=True)
+    
+    return course
 
 # ===== Classroom Management =====
-
-class ClassroomBase(BaseModel):
-    name: str
-    teacher_name: str
-    language: str  # e.g., "en", "es", "ca", "English", "Spanish", "Catalan"
-    course_id: int
-    semester_id: int
-    description: Optional[str] = None
-
-class ClassroomCreate(ClassroomBase):
-    pass
-
-class ClassroomUpdate(BaseModel):
-    name: Optional[str] = None
-    teacher_name: Optional[str] = None
-    language: Optional[str] = None
-    description: Optional[str] = None
-    is_active: Optional[bool] = None
-
-class ClassroomResponse(ClassroomBase):
-    id: int
-    created_by: int
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 async def create_classroom(db: AsyncSession, classroom: ClassroomCreate, created_by: int) -> Classroom:
     """Create a new classroom"""
@@ -1045,9 +830,7 @@ async def create_classroom(db: AsyncSession, classroom: ClassroomCreate, created
         name=classroom.name,
         teacher_name=classroom.teacher_name,
         language=classroom.language,
-        course_id=classroom.course_id,
         semester_id=classroom.semester_id,
-        description=classroom.description,
         created_by=created_by,
         is_active=True
     )
@@ -1061,10 +844,15 @@ async def get_classrooms(
     db: AsyncSession, 
     course_id: Optional[int] = None,
     semester_id: Optional[int] = None,
+    search: Optional[str] = None,
     skip: int = 0,
     limit: int = 100
 ) -> List[Classroom]:
     """Get all classrooms with optional filtering"""
+    from sqlalchemy.orm import selectinload
+    from sqlalchemy import or_
+    from sqlalchemy.sql import func
+    
     query = select(Classroom).where(Classroom.is_active == True)
     
     if course_id:
@@ -1072,7 +860,19 @@ async def get_classrooms(
     if semester_id:
         query = query.where(Classroom.semester_id == semester_id)
     
-    query = query.order_by(Classroom.created_at.desc()).offset(skip).limit(limit)
+    # Search functionality
+    if search:
+        search_filter = or_(
+            Classroom.name.ilike(f"%{search}%"),
+            Classroom.teacher_name.ilike(f"%{search}%")
+        )
+        query = query.where(search_filter)
+    
+    # Load related data including groups
+    query = query.options(
+        selectinload(Classroom.semester).selectinload(Semester.course),
+        selectinload(Classroom.groups)
+    ).order_by(Classroom.created_at.desc()).offset(skip).limit(limit)
     
     result = await db.execute(query)
     return result.scalars().all()
@@ -1133,3 +933,29 @@ async def get_classroom_with_details(db: AsyncSession, classroom_id: int) -> Opt
         .where(Classroom.id == classroom_id, Classroom.is_active == True)
     )
     return result.scalar_one_or_none()
+
+async def create_assignment(db: AsyncSession, assignment: AssignmentCreate, created_by: int = 1) -> Assignment:
+    """Create a new assignment with exercises using AssignmentRepository"""
+    db_assignment = Assignment(
+        name=assignment.name,
+        description=assignment.description,
+        due_date=assignment.due_date,
+        language=assignment.language,
+        course_id=assignment.course_id,
+        semester_id=assignment.semester_id,
+        is_active=assignment.is_active,
+        created_by=created_by
+    )
+    # Add exercises
+    for exercise_data in assignment.exercises:
+        db_exercise = Exercise(
+            assignment=db_assignment,
+            description=exercise_data.description,
+            evaluation_criteria=exercise_data.evaluation_criteria,
+            points=exercise_data.points,
+            order=exercise_data.order
+        )
+        db_assignment.exercises.append(db_exercise)
+    repo = AssignmentRepository(db)
+    created_assignment = await repo.create(db_assignment)
+    return created_assignment

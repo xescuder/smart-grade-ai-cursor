@@ -105,7 +105,7 @@ interface Exercise {
 
 ## 🔧 API Endpoints
 
-### Backend Routes (`/api/v1/assignments`)
+### Backend Routes (`/api/assignments`)
 
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|---------|
@@ -119,7 +119,7 @@ interface Exercise {
 
 **Create Assignment:**
 ```json
-POST /api/v1/assignments
+POST /api/assignments
 {
   "name": "Essay on Climate Change",
   "description": "Write a comprehensive essay about climate change",

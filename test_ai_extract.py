@@ -15,7 +15,7 @@ async def test_ai_extract_logic():
     
     async with AsyncSessionLocal() as db:
         # Get assignment using the same function as the AI extract endpoint
-        assignment = await get_assignment(db, 17)
+        assignment: Assignment = await get_assignment(db, 17)
         
         if not assignment:
             print("❌ Assignment not found")

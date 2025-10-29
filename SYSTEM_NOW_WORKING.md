@@ -27,7 +27,7 @@ curl http://localhost:8001/health
 # Returns: {"status":"healthy"}
 
 # Get assignments
-curl http://localhost:8001/api/v1/assignments
+curl http://localhost:8001/api/assignments
 # Returns: [{"id":1,"name":"Climate Change Essay Assignment",...}]
 ```
 

@@ -1,77 +1,135 @@
 """
 Smart Grade AI - FastAPI Backend
-Main application entry point
+Main application entry point with modular router architecture
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+import os
 
-from api.routers import auth, assignments, submissions, grading, users
 from core.config import settings
+from database import init_db, close_db
+from routes import register_routes, ROUTER_METADATA
+from logging_config import logger
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
-    print("🚀 Smart Grade AI Backend starting up...")
+    logger.info("🚀 Smart Grade AI Backend starting up...")
+    logger.info(f"📊 Environment: {settings.ENVIRONMENT}")
+    logger.info(f"🌐 Backend URL: {settings.backend_url}")
+    logger.info(f"🎨 Frontend URL: {settings.frontend_url}")
+    logger.info(f"🤖 Google AI Model: {settings.GOOGLE_AI_MODEL}")
+
+    await init_db()
+    logger.info("✅ Database initialized")
+    logger.info("✅ Smart Grade AI is ready!")
+
     yield
+
     # Shutdown
-    print("👋 Smart Grade AI Backend shutting down...")
+    logger.info("👋 Smart Grade AI Backend shutting down...")
+    await close_db()
+    logger.info("✅ Cleanup complete")
 
 
 # Create FastAPI instance
 app = FastAPI(
     title="Smart Grade AI API",
-    description="AI-powered grading system for educational assignments",
-    version="1.0.0",
-    lifespan=lifespan
+    description="""
+## AI-Powered Grading System API
+
+Smart Grade AI automates assignment grading using advanced AI models, providing
+consistent, detailed feedback to students while saving teachers valuable time.
+
+### Key Features
+
+* 🎓 **Assignment Management**: Create, update, and organize assignments
+* 📄 **PDF Processing**: Upload and extract exercises from PDF statements  
+* 🤖 **AI Grading**: Automatic submission evaluation with detailed feedback
+* 👥 **Group Management**: Organize students into groups and classrooms
+* 📊 **Analytics**: Track performance and grading statistics
+* 🔧 **Configuration**: Customize AI models and extraction settings
+
+### AI Providers Supported
+
+- **Google AI (Gemini)**: Advanced vision models for PDF analysis
+- **Ollama** (Local, Free): Privacy-focused, offline-capable
+- **OpenAI GPT-4**: Advanced cloud-based grading
+- **Anthropic Claude**: High-quality AI analysis
+
+### Architecture
+
+Clean architecture with:
+- **Repository Pattern** for data access
+- **Service Layer** for business logic
+- **Router Layer** for API endpoints
+- **Dependency Injection** for testability
+    """,
+    version="2.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=ROUTER_METADATA
 )
 
-# Configure CORS
+# Configure CORS - Allow frontend to access backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
-# Include API routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
-app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(assignments.router, prefix="/api/v1/assignments", tags=["assignments"])
-app.include_router(submissions.router, prefix="/api/v1/submissions", tags=["submissions"])
-app.include_router(grading.router, prefix="/api/v1/grading", tags=["grading"])
+# Mount static files for uploads
+if not os.path.exists(settings.UPLOAD_DIR):
+    os.makedirs(settings.UPLOAD_DIR)
+app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+
+# Register all routes from routes.py
+register_routes(app)
 
 
-@app.get("/")
+# Health check endpoints
+@app.get("/", tags=["health"])
 async def root():
     """Root endpoint"""
     return {
         "message": "Smart Grade AI API",
-        "version": "1.0.0",
-        "status": "active"
+        "version": "2.0.0",
+        "status": "running",
+        "docs": "/docs",
+        "architecture": "modular_routers"
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=["health"])
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "environment": settings.ENVIRONMENT,
+        "google_ai_configured": bool(settings.GOOGLE_AI_API_KEY),
+        "database": "postgresql",
+        "architecture": "repository_pattern"
+    }
 
 
 if __name__ == "__main__":
     import uvicorn
-    print(f"🚀 Starting Smart Grade AI Backend")
-    print(f"   Backend:  {settings.backend_url}")
-    print(f"   Frontend: {settings.frontend_url}")
+
+    logger.info(f"Starting server on {settings.HOST}:{settings.PORT}")
+
     uvicorn.run(
         "main:app",
         host=settings.HOST,
-        port=settings.BACKEND_PORT,
+        port=settings.PORT,
         reload=settings.RELOAD,
         log_level=settings.LOG_LEVEL.lower()
     )
-

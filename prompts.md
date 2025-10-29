@@ -265,4 +265,8 @@ Use twelve-factor configuration best practices, and move all configuration manag
 Still calling 8002. I see in file next.config.js rewrites to 8002. Can you change the port in the rewrite to use the configured backend port in .env?
 
 
-
+Change extract_exercises_from_pdf to:
+Get the PDF from database
+Store the PDF in a temporary directory
+Use Google AI Service to give PDF and get the response
+Then use parsed information to put the info in the screen

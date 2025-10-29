@@ -99,11 +99,11 @@ This fix maintains backward compatibility with existing data:
 
 ```bash
 # Test backend directly
-$ curl http://localhost:8002/api/v1/assignments
+$ curl http://localhost:8002/api/assignments
 ✅ Success: Found 2 assignments
 
 # Test frontend proxy
-$ curl http://localhost:3000/api/v1/assignments
+$ curl http://localhost:3000/api/assignments
 ✅ Success: Frontend proxy working, found 2 assignments
 ```
 
@@ -130,7 +130,7 @@ $ curl http://localhost:3000/api/v1/assignments
 
 ## 🔧 **API Behavior**
 
-### **GET /api/v1/assignments**
+### **GET /api/assignments**
 
 **Response:**
 ```json
@@ -158,7 +158,7 @@ $ curl http://localhost:3000/api/v1/assignments
 ]
 ```
 
-### **POST /api/v1/assignments**
+### **POST /api/assignments**
 
 **Case 1: Without Classroom**
 ```json

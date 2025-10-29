@@ -6,7 +6,7 @@ globs: *.ts,*.js,*.py
 # API and Database Standards
 
 ## RESTful API Design
-- Use consistent URL patterns: `/api/v1/resource`
+- Use consistent URL patterns: `/api/resource`
 - Follow HTTP method conventions (GET, POST, PUT, DELETE)
 - Return appropriate HTTP status codes
 - Use consistent response formats with proper error messages
