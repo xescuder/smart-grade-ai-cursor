@@ -80,7 +80,7 @@ export default function CourseManagementPage() {
   // Fetch courses with semesters
   const fetchCourses = async () => {
     try {
-      const data = await apiClient.request('/api/v1/courses?created_by=1&include_semesters=true')
+      const data = await apiClient.request<Course[]>('/api/v1/courses?created_by=1&include_semesters=true')
       setCourses(data)
     } catch (error) {
       console.error('Error fetching courses:', error)
