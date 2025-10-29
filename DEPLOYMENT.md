@@ -226,3 +226,4 @@ For issues, check:
 - Database: `docker-compose exec postgres psql -U smartgrade -d smartgrade_db`
 - Backend API: http://localhost:8000/docs
 
+
