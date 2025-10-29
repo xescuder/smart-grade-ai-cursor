@@ -547,7 +547,7 @@ export function AssignmentEditorDialog({
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => removeExercise(exercise.id)}
+                                  onClick={() => { if (typeof exercise.id === 'number') removeExercise(exercise.id) }}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
