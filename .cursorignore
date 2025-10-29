@@ -1,0 +1,27 @@
+# Ignore heavy and generated folders
+**/node_modules/**
+**/.next/**
+**/dist/**
+**/build/**
+**/.turbo/**
+
+# Python caches
+**/__pycache__/**
+**/*.pyc
+
+# VCS and IDE
+**/.git/**
+**/.svn/**
+**/.hg/**
+**/.vscode/**
+**/.idea/**
+
+# Uploads and temp
+uploads/**
+backend/uploads/**
+**/temp/**
+**/tmp/**
+
+# Logs
+**/*.log
+logs/**

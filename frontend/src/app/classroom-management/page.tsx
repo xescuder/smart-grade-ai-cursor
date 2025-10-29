@@ -144,7 +144,7 @@ export default function ClassroomManagementPage() {
     room_number: "",
     schedule: "",
     max_students: undefined,
-    // created_by will be set by backend based on authenticated user
+    created_by: 1
   })
 
   // Group form data
