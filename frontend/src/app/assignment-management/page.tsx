@@ -160,6 +160,13 @@ export default function AssignmentManagementPage() {
     fetchAssignments()
   }
 
+  const handleAssignmentSave = () => {
+    setIsCreateDialogOpen(false)
+    setIsEditDialogOpen(false)
+    setSelectedAssignment(null)
+    fetchAssignments()
+  }
+
   // PDF Viewer handlers
   const handleViewPdf = (assignment: Assignment) => {
     setSelectedAssignment(assignment)
