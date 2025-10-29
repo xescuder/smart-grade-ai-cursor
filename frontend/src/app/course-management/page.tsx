@@ -65,6 +65,7 @@ export default function CourseManagementPage() {
     name: "",
     code: "",
     credits: 3,
+    created_by: 1
     // created_by will be set by backend based on authenticated user
   })
   const [semesterFormData, setSemesterFormData] = useState({
