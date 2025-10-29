@@ -144,8 +144,8 @@ export class ApiClient {
   }
 
   // Course API methods
-  async getCourses() {
-    return this.request('/api/v1/courses/')
+  async getCourses(): Promise<CourseListItem[]> {
+    return this.request<CourseListItem[]>('/api/v1/courses/')
   }
 
   async getCourse(id: number) {
