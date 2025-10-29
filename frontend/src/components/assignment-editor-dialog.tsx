@@ -307,7 +307,7 @@ export function AssignmentEditorDialog({
         ...formData,
         exercises: exercises.map(ex => ({
           ...ex,
-          id: ex.id > 1000000 ? undefined : ex.id // Remove temporary IDs
+          id: typeof ex.id === 'number' ? (ex.id > 1000000 ? undefined : ex.id) : undefined // Remove temporary IDs
         }))
       }
 
