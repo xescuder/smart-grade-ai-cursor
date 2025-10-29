@@ -51,6 +51,20 @@ interface Group {
   updated_at: string
 }
 
+interface Course {
+  id: number
+  name: string
+  code: string
+}
+
+interface Semester {
+  id: number
+  name: string
+  code: string
+  year: number
+  season: string
+}
+
 export default function GroupManagementPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
