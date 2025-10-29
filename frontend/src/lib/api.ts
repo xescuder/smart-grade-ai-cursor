@@ -173,8 +173,8 @@ export class ApiClient {
   }
 
   // Semester API methods
-  async getSemesters() {
-    return this.request('/api/v1/semesters/')
+  async getSemesters(): Promise<SemesterListItem[]> {
+    return this.request<SemesterListItem[]>('/api/v1/semesters/')
   }
 
   async getSemester(id: number) {
