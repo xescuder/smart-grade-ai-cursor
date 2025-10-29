@@ -8,7 +8,7 @@
 import { getAuthHeaders } from "@/lib/utils"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,14 +33,7 @@ export function PdfViewerDialog({ assignment, open, onOpenChange, onUpload }: Pd
   const [pdfUrl, setPdfUrl] = useState("")
   const [zoom, setZoom] = useState(100)
 
-  // Load PDF when dialog opens (prefer name/id; DB bytes may not have a path)
-  useEffect(() => {
-    if (open && assignment?.id) {
-      loadPdf()
-    }
-  }, [open, assignment?.id])
-
-  const loadPdf = async () => {
+  const loadPdf = useCallback(async () => {
     if (!assignment?.id) return
 
     setIsLoading(true)
@@ -61,12 +54,19 @@ export function PdfViewerDialog({ assignment, open, onOpenChange, onUpload }: Pd
       } else {
         setError("Failed to load PDF")
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred while loading the PDF")
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [assignment?.id])
+
+  // Load PDF when dialog opens (prefer name/id; DB bytes may not have a path)
+  useEffect(() => {
+    if (open && assignment?.id) {
+      loadPdf()
+    }
+  }, [open, assignment?.id, loadPdf])
 
   // Clean up blob URL when dialog closes
   useEffect(() => {

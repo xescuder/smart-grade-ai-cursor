@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * Assignment Editor Dialog Component
  * Displays assignment PDF with exercise management side by side

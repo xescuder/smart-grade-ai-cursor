@@ -14,21 +14,11 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Plus, Edit, Trash2, Calendar, BookOpen, Upload, FileText, Brain, Download, Globe } from "lucide-react"
+import { Plus, Edit, Trash2, Calendar, BookOpen, Upload, FileText, Download, Globe } from "lucide-react"
 import { toast } from "sonner"
 import { Assignment } from "@/types/assignment"
 import { Badge } from "@/components/ui/badge"
-import { AssignmentForm } from "@/components/assignment-form"
 import { AssignmentCreateDialog } from "@/components/assignment-create-dialog"
 import { AssignmentPdfUploadDialog } from "@/components/assignment-pdf-upload-dialog"
 import { AssignmentExerciseManagementDialog } from "@/components/assignment-exercise-management-dialog"
@@ -50,10 +40,10 @@ export default function AssignmentManagementPage() {
   const fetchAssignments = async () => {
     try {
       setIsLoading(true)
-      const data: any = await apiClient.getAssignments()
+      const data: Assignment[] = await apiClient.getAssignments()
       
       // Transform API response to match frontend expectations
-      const transformedData = data.map((assignment: any) => ({
+      const transformedData: Assignment[] = data.map((assignment: Assignment) => ({
         id: assignment.id,
         name: assignment.name,
         description: assignment.description,
@@ -139,15 +129,6 @@ export default function AssignmentManagementPage() {
     }
   }
 
-  // Handle successful form submission
-  const handleFormSuccess = () => {
-    setIsCreateDialogOpen(false)
-    setIsEditDialogOpen(false)
-    setIsPdfUploadDialogOpen(false)
-    setSelectedAssignment(null)
-    fetchAssignments()
-  }
-
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -166,14 +147,7 @@ export default function AssignmentManagementPage() {
     return { exerciseCount }
   }
 
-  // Handle assignment save (create or update)
-  const handleAssignmentSave = (assignment: Assignment) => {
-    setIsCreateDialogOpen(false)
-    setIsEditDialogOpen(false)
-    setSelectedAssignment(null)
-    fetchAssignments()
-  }
-
+  
   const handlePdfUploadSuccess = () => {
     setIsPdfUploadDialogOpen(false)
     setSelectedAssignment(null)

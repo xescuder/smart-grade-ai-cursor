@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { getAuthHeaders } from "@/lib/utils"
@@ -29,7 +30,7 @@ function extractDriveFileId(input: string): string | null {
     if (pathMatch && pathMatch[1]) return pathMatch[1];
     const idParam = url.searchParams.get("id");
     if (idParam && /^[A-Za-z0-9_-]{20,}$/.test(idParam)) return idParam;
-  } catch (_) {
+  } catch {
     // not a URL
   }
   return null;

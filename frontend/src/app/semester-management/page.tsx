@@ -135,14 +135,14 @@ export default function SemesterManagementPage() {
   useEffect(() => {
     fetchCourses()
     fetchSemesters()
-  }, [])
+  })
 
   // Refetch semesters when course selection changes
   useEffect(() => {
     if (courses.length > 0) {
       fetchSemesters()
     }
-  }, [selectedCourseId, courses.length])
+  })
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

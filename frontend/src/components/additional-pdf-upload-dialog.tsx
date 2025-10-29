@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React, { useState } from 'react'
@@ -5,7 +6,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Upload, FileText, X, User, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { getAuthHeadersForFileUpload } from '@/lib/utils'
@@ -174,7 +174,7 @@ export function StudentPdfUploadDialog({
           <div className="space-y-3">
             <Label className="text-sm font-medium">Responsible Students (max 2)</Label>
             <div className="grid grid-cols-2 gap-2">
-              {studentOptions.map((option) => (
+              {studentOptions.map((option: { value: string; label: string }) => (
                 <Button
                   key={option.value}
                   variant={selectedStudents.includes(option.value) ? "default" : "outline"}

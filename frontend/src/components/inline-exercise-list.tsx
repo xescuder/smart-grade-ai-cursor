@@ -22,7 +22,6 @@ interface InlineExerciseListProps {
 
 export function InlineExerciseList({ assignment, onAssignmentUpdate }: InlineExerciseListProps) {
   const [exercises, setExercises] = useState<Exercise[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
 
@@ -126,7 +125,7 @@ export function InlineExerciseList({ assignment, onAssignmentUpdate }: InlineExe
         const errorData = await response.json()
         alert(errorData.error || "Failed to save exercises")
       }
-    } catch (error) {
+    } catch {
       alert("An error occurred while saving exercises")
     } finally {
       setIsSaving(false)

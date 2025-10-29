@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, BookOpen, Target, FileText } from "lucide-react"
+import { Calendar, BookOpen, Target } from "lucide-react"
 import { Assignment } from "@/types/assignment"
 
 interface AssignmentDetailsProps {

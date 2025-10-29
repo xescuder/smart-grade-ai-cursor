@@ -133,18 +133,7 @@ async def list_submissions_grading_data(
                 "name": submission.classroom.name,
                 "teacher_name": submission.classroom.teacher_name,
                 "language": submission.classroom.language,
-                "course": {
-                    "id": submission.classroom.semester.course.id,
-                    "name": submission.classroom.semester.course.name,
-                    "code": submission.classroom.semester.course.code
-                } if submission.classroom.semester and submission.classroom.semester.course else None,
-                "semester": {
-                    "id": submission.classroom.semester.id,
-                    "name": f"{submission.classroom.semester.season} {submission.classroom.semester.year}",
-                    "code": f"{submission.classroom.semester.year}{submission.classroom.semester.season[0]}",
-                    "year": submission.classroom.semester.year,
-                    "season": submission.classroom.semester.season
-                } if submission.classroom.semester else None
+                # placeholders to be filled below
             } if submission.classroom else None,
             "group": {
                 "id": submission.group.id,

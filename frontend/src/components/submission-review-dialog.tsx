@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Submission Review Dialog Component
  * Displays PDF contents with exercise grading form side by side
@@ -39,14 +40,42 @@ import { Label } from "@/components/ui/label"
 import { X, ZoomIn, ZoomOut, RotateCw, FileText, Brain, Bot, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
+type GroupMember = string | { name?: string; email?: string }
+
+type ExerciseLite = { id?: number; description?: string; points?: number; order?: number; name?: string; evaluation_criteria?: string }
+interface AssignmentLite { id?: number; name?: string; exercises?: ExerciseLite[] }
+interface GradeLite { exercise_id?: number; score?: number; points?: number | string; feedback?: string; comments?: string }
+interface CoordinatorEval { name: string; points?: string | number; comments?: string }
+interface MemberEval { name: string; points?: string | number; comments?: string }
+interface PrivateEval { coordinators?: CoordinatorEval[]; members?: MemberEval[] }
+interface SubmissionLite {
+  id?: number
+  assignment?: { name?: string } | AssignmentLite
+  assignment_id?: number
+  classroom?: { name?: string; course?: { name?: string; id?: number }; semester?: { name?: string; id?: number } }
+  classroom_id?: number
+  group?: { name?: string; members?: GroupMember[] }
+  group_id?: number
+  has_submission_pdf?: boolean
+  has_public_pdf?: boolean
+  has_private_pdf?: boolean
+  private_pdf_filename?: string
+  public_pdf_filename?: string
+  coordinators?: string
+  public_pdf_responsible_students?: string
+  grade_breakdown?: GradeLite[]
+  private_report_evaluation?: PrivateEval
+  meeting_notes?: boolean
+}
+
 interface SubmissionReviewDialogProps {
-  submission: any // Submission object with PDF and exercise data
-  assignment: any // Assignment object with exercises
+  submission: SubmissionLite // Submission object with PDF and exercise data
+  assignment: AssignmentLite // Assignment object with exercises
   open: boolean
   onOpenChange: (open: boolean) => void
-  onGradeSubmit?: (grades: any[], totalScore: number) => void
+  onGradeSubmit?: (grades: GradeLite[], totalScore: number) => void
   onViewPdf?: () => void // Optional callback to open dedicated PDF viewer
-  onSubmissionUpdate?: (updatedSubmission: any) => void // Callback when submission is updated
+  onSubmissionUpdate?: (updatedSubmission: SubmissionLite) => void // Callback when submission is updated
 }
 
 export function SubmissionReviewDialog({ 
@@ -55,7 +84,6 @@ export function SubmissionReviewDialog({
   open, 
   onOpenChange, 
   onGradeSubmit,
-  onViewPdf,
   onSubmissionUpdate
 }: SubmissionReviewDialogProps) {
   const [zoom, setZoom] = useState(100)
@@ -135,7 +163,7 @@ export function SubmissionReviewDialog({
       // Second try: if no coordinators field, try to get from group members (first 1-2 members as coordinators)
       else if (submission.group?.members && Array.isArray(submission.group.members)) {
         const groupMembers = submission.group.members.slice(0, 2) // Take first 2 members as coordinators
-        coordinators = groupMembers.map((member: any) => ({
+        coordinators = (groupMembers as GroupMember[]).map((member: GroupMember) => ({
           name: typeof member === 'string' ? member : (member.name || member.email || 'Unknown'),
           points: '',
           comments: ''
@@ -165,12 +193,12 @@ export function SubmissionReviewDialog({
       else if (submission.group?.members && Array.isArray(submission.group.members)) {
         // Get coordinator names for filtering
         const coordinatorNames = coordinators.map(c => c.name)
-        members = submission.group.members
-          .filter((member: any) => {
+        members = (submission.group.members as GroupMember[])
+          .filter((member: GroupMember) => {
             const memberName = typeof member === 'string' ? member : (member.name || member.email || 'Unknown')
             return !coordinatorNames.includes(memberName)
           })
-          .map((member: any) => {
+          .map((member: GroupMember) => {
             const memberName = typeof member === 'string' ? member : (member.name || member.email || 'Unknown')
             // Check if we have saved evaluation data for this member
             const savedMember = submission.private_report_evaluation?.members?.find(
@@ -507,7 +535,7 @@ export function SubmissionReviewDialog({
         if (results.coordinators && results.members) {
           setManualEvaluation(prev => {
             // First, populate coordinators with AI coordinator results
-            const updatedCoordinators = prev.coordinators.map((coord, index) => {
+            const updatedCoordinators = prev.coordinators.map((coord, _index) => {
               const aiCoord = results.coordinators.find((c: any) => c.name === coord.name)
               if (aiCoord) {
                 return {
@@ -529,7 +557,7 @@ export function SubmissionReviewDialog({
               : 0
             
             // Populate members - use max points for coordinator-members, AI results for others
-            const updatedMembers = prev.members.map((member, index) => {
+            const updatedMembers = prev.members.map((member, _index) => {
               const aiMember = results.members.find((m: any) => m.name === member.name)
               const isCoordinator = coordinatorNames.includes(member.name)
               

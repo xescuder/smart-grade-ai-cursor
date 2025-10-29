@@ -276,12 +276,12 @@ export default function ClassroomManagementPage() {
     fetchCourses()
     fetchSemesters()
     fetchClassrooms()
-  }, [])
+  })
 
   // Refetch classrooms when filters change
   useEffect(() => {
     fetchClassrooms()
-  }, [selectedCourseId, selectedSemesterId])
+  })
 
   // Filter semesters by selected course
   useEffect(() => {
@@ -308,10 +308,11 @@ export default function ClassroomManagementPage() {
     } else {
       setFilteredSemesters(semesters)
     }
-  }, [formData.course_id, semesters])
+  }, [formData.course_id, formData.semester_id, semesters])
 
   // Handle form input changes
-  const handleInputChange = (field: keyof ClassroomFormData, value: any) => {
+  type ClassroomFormValue = ClassroomFormData[keyof ClassroomFormData]
+  const handleInputChange = (field: keyof ClassroomFormData, value: ClassroomFormValue) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 

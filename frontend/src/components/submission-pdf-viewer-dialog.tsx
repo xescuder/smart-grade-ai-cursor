@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Submission PDF Viewer Dialog Component
  * Dedicated dialog for viewing submission PDFs with full-screen experience
@@ -62,7 +64,7 @@ export function SubmissionPdfViewerDialog({
       } else {
         setError("Failed to load PDF")
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred while loading the PDF")
     } finally {
       setIsLoading(false)

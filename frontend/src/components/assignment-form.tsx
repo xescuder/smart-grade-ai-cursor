@@ -85,14 +85,23 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
     try {
       const assignmentData: AssignmentCreate = {
         ...formData,
-        exercises: [] // Exercises will be managed separately
+        exercises: [], // Exercises will be managed separately
+        language: assignment?.language ?? "",
+        course_id: typeof assignment?.course_id === "number"
+          ? assignment.course_id
+          : Number(assignment?.course_id ?? 0),
+        semester_id: typeof assignment?.semester_id === "number"
+          ? assignment.semester_id
+          : Number(assignment?.semester_id ?? 0),
       }
 
-      const url = isEditing 
-        ? `/api/v1/assignments/${assignment.id}`
-        : "/api/v1/assignments"
-      
-      const method = isEditing ? "PUT" : "POST"
+      // Determine API endpoint and method
+      // Safely determine if editing an assignment
+      const isEdit = assignment && typeof assignment.id === "number"
+      const url = isEdit
+        ? `/api/assignments/${assignment.id}`
+        : "/api/assignments"
+      const method = isEdit ? "PUT" : "POST"
 
       const response = await fetch(url, {
         method,
@@ -113,13 +122,15 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
           if (typeof errorData.detail === 'string') {
             errorMessage = errorData.detail
           } else if (Array.isArray(errorData.detail)) {
-            errorMessage = errorData.detail.map(err => err.msg).join(', ')
+            errorMessage = errorData.detail.map((err: { msg?: string }) => err.msg ?? "Unknown error").join(', ')
           }
         }
         setErrors({ submit: errorMessage })
+        return
       }
-    } catch (err) {
+    } catch {
       setErrors({ submit: "An error occurred while saving the assignment" })
+      return
     } finally {
       setIsSubmitting(false)
     }

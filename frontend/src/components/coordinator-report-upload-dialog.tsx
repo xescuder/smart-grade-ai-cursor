@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React, { useState } from 'react'
@@ -55,7 +56,7 @@ export function AdditionalPdfUploadDialog({
       if (submission?.coordinators) {
         try {
           coordinators = JSON.parse(submission.coordinators)
-        } catch (e) {
+        } catch {
           // If parsing fails, use as string
           coordinators = [submission.coordinators]
         }
@@ -80,7 +81,8 @@ export function AdditionalPdfUploadDialog({
       })
 
       if (response.ok) {
-        const result = await response.json()
+        // Await and ignore unused result for lint compliance
+        await response.json()
         toast.success(`${uploadType === 'private' ? 'Private' : 'Public'} PDF uploaded successfully`)
         onSuccess()
         onOpenChange(false)

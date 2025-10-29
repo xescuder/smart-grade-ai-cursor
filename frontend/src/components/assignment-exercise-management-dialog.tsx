@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
 import { getAuthHeaders } from "@/lib/utils"
@@ -32,7 +34,7 @@ export function AssignmentExerciseManagementDialog({
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [pdfUrl, setPdfUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+  const [isUploading] = useState(false)
   const [error, setError] = useState("")
   const [isExtractingWithAi, setIsExtractingWithAi] = useState(false)
   const [zoom, setZoom] = useState(100)

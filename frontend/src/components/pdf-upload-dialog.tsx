@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Upload, FileText, X, Check } from "lucide-react"
+import { Upload, FileText, X } from "lucide-react"
 import { Assignment } from "@/types/assignment"
 
 interface PdfUploadDialogProps {
@@ -93,9 +93,14 @@ export function PdfUploadDialog({ assignment, open, onOpenChange, onSuccess }: P
         }, 500)
       } else {
         const errorData = await response.json()
-        setError(errorData.error || "Failed to upload PDF")
+        setError(
+          (errorData && typeof errorData.error === "string" && errorData.error.trim())
+            ? errorData.error
+            : "Failed to upload PDF"
+        )
       }
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_err) {
       setError("An error occurred while uploading the PDF")
     } finally {
       setIsUploading(false)

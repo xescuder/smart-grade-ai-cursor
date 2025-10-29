@@ -182,7 +182,7 @@ export function ExerciseManagement({ assignment, onSuccess, onCancel }: Exercise
         const errorData = await response.json()
         setErrors({ submit: errorData.detail || "Failed to save exercises" })
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: "An error occurred while saving the exercises" })
     } finally {
       setIsSubmitting(false)

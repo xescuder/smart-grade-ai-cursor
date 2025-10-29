@@ -1,3 +1,4 @@
+import type { Assignment } from "@/types/assignment"
 /**
  * API utilities for frontend-backend communication
  */
@@ -50,30 +51,30 @@ export class ApiClient {
   }
 
   // Assignment API methods
-  async getAssignments() {
-    return this.request('/api/v1/assignments/')
+  async getAssignments(): Promise<Assignment[]> {
+    return this.request<Assignment[]>('/api/v1/assignments/')
   }
 
-  async getAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`)
+  async getAssignment(id: number): Promise<Assignment> {
+    return this.request<Assignment>(`/api/v1/assignments/${id}`)
   }
 
-  async createAssignment(data: any) {
-    return this.request('/api/v1/assignments', {
+  async createAssignment(data: Partial<Assignment>) {
+    return this.request<Assignment>('/api/v1/assignments', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
-  async updateAssignment(id: number, data: any) {
-    return this.request(`/api/v1/assignments/${id}`, {
+  async updateAssignment(id: number, data: Partial<Assignment>) {
+    return this.request<Assignment>(`/api/v1/assignments/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     })
   }
 
   async deleteAssignment(id: number) {
-    return this.request(`/api/v1/assignments/${id}`, {
+    return this.request<void>(`/api/v1/assignments/${id}`, {
       method: 'DELETE'
     })
   }
@@ -83,7 +84,7 @@ export class ApiClient {
     return this.request(`/api/v1/assignments/${assignmentId}/exercises`)
   }
 
-  async updateAssignmentExercises(assignmentId: number, exercises: any[]) {
+  async updateAssignmentExercises(assignmentId: number, exercises: unknown[]) {
     return this.request(`/api/v1/assignments/${assignmentId}/exercises`, {
       method: 'PUT',
       body: JSON.stringify(exercises)
@@ -122,14 +123,14 @@ export class ApiClient {
     return this.request(`/api/v1/classrooms/${id}`)
   }
 
-  async createClassroom(data: any) {
+  async createClassroom(data: unknown) {
     return this.request('/api/v1/classrooms', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
-  async updateClassroom(id: number, data: any) {
+  async updateClassroom(id: number, data: unknown) {
     return this.request(`/api/v1/classrooms/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -151,14 +152,14 @@ export class ApiClient {
     return this.request(`/api/v1/courses/${id}`)
   }
 
-  async createCourse(data: any) {
+  async createCourse(data: unknown) {
     return this.request('/api/v1/courses', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
-  async updateCourse(id: number, data: any) {
+  async updateCourse(id: number, data: unknown) {
     return this.request(`/api/v1/courses/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -180,14 +181,14 @@ export class ApiClient {
     return this.request(`/api/v1/semesters/${id}`)
   }
 
-  async createSemester(data: any) {
+  async createSemester(data: unknown) {
     return this.request('/api/v1/semesters', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
-  async updateSemester(id: number, data: any) {
+  async updateSemester(id: number, data: unknown) {
     return this.request(`/api/v1/semesters/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -211,14 +212,14 @@ export class ApiClient {
     return this.request(`/api/v1/groups${suffix}`)
   }
 
-  async createGroup(data: any) {
+  async createGroup(data: unknown) {
     return this.request('/api/v1/groups', {
       method: 'POST',
       body: JSON.stringify(data)
     })
   }
 
-  async updateGroup(id: number, data: any) {
+  async updateGroup(id: number, data: unknown) {
     return this.request(`/api/v1/groups/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -265,7 +266,7 @@ export class ApiClient {
     return this.request(`/api/v1/submissions/${id}/grading`)
   }
 
-  async updateSubmission(id: number, data: any) {
+  async updateSubmission(id: number, data: unknown) {
     return this.request(`/api/v1/submissions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -278,7 +279,7 @@ export class ApiClient {
     })
   }
 
-  async gradeSubmission(id: number, data: any) {
+  async gradeSubmission(id: number, data: unknown) {
     return this.request(`/api/v1/submissions/${id}/grade`, {
       method: 'POST',
       body: JSON.stringify(data)
