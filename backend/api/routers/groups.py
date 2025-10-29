@@ -58,12 +58,12 @@ async def list_groups(
         group_dict = {
             "id": group.id,
             "name": group.name,
+            "nickname": group.nickname,
             "description": group.description,
             "classroom_id": group.classroom_id,
             "course_id": group.course_id,
             "semester_id": group.semester_id,
             "members": group.members,
-            "max_members": group.max_members,
             "is_active": group.is_active,
             "created_by": group.created_by,
             "created_at": group.created_at,

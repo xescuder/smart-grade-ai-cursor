@@ -5,7 +5,7 @@ These represent the API request/response models and business domain entities
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 
 
 # ===== EXERCISE MODELS =====
@@ -37,8 +37,8 @@ class ExerciseResponse(ExerciseBase):
 
 class ExerciseGrade(BaseModel):
     exercise_id: int
-    score: float
-    feedback: Optional[str] = None
+    points: float
+    comments: Optional[str] = None
 
 
 # ===== ASSIGNMENT MODELS =====
@@ -52,7 +52,6 @@ class AssignmentBase(BaseModel):
 
 
 class AssignmentCreate(AssignmentBase):
-    classroom_ids: List[int] = []  # List of classroom IDs to assign this to
     exercises: List[ExerciseCreate] = []
 
 
@@ -72,30 +71,10 @@ class AssignmentResponse(AssignmentBase):
     created_by: int
     created_at: datetime
     updated_at: datetime
-    classroom_ids: List[int] = []  # Add classroom IDs to response
     exercises: List[ExerciseResponse] = []
 
     class Config:
         from_attributes = True
-
-    @classmethod
-    def from_orm(cls, obj):
-        """Custom from_orm to extract classroom IDs from relationship"""
-        data = {
-            'id': obj.id,
-            'name': obj.name,
-            'description': obj.description,
-            'due_date': obj.due_date,
-            'language': obj.language,
-            'is_active': obj.is_active,
-            'pdf_file_path': obj.pdf_file_path,
-            'pdf_file_name': obj.pdf_file_name,
-            'created_by': obj.created_by,
-            'created_at': obj.created_at,
-            'updated_at': obj.updated_at,
-            'classroom_ids': [c.id for c in obj.classrooms] if hasattr(obj, 'classrooms') and obj.classrooms else []
-        }
-        return cls(**data)
 
 
 # ===== SECTION EXTRACTION CONFIG MODELS =====
@@ -167,12 +146,10 @@ class GroupMember(BaseModel):
 
 class GroupBase(BaseModel):
     name: str
+    nickname: Optional[str] = None  # Optional nickname like "Mandalorian"
     description: Optional[str] = None
     classroom_id: int  # Required field
-    course_id: Optional[int] = None
-    semester_id: Optional[int] = None
     members: Optional[List[GroupMember]] = None
-    max_members: Optional[int] = None
     is_active: bool = True
 
 
@@ -182,12 +159,12 @@ class GroupCreate(GroupBase):
 
 class GroupUpdate(BaseModel):
     name: Optional[str] = None
+    nickname: Optional[str] = None  # Optional nickname like "Mandalorian"
     description: Optional[str] = None
     classroom_id: Optional[int] = None
     course_id: Optional[int] = None
     semester_id: Optional[int] = None
     members: Optional[List[GroupMember]] = None
-    max_members: Optional[int] = None
     is_active: Optional[bool] = None
 
 
@@ -196,8 +173,6 @@ class GroupUpdate(BaseModel):
 class CourseBase(BaseModel):
     name: str
     code: str
-    description: Optional[str] = None
-    department: Optional[str] = None
     credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
     is_active: bool = True
 
@@ -209,8 +184,6 @@ class CourseCreate(CourseBase):
 class CourseUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
-    description: Optional[str] = None
-    department: Optional[str] = None
     credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
     is_active: Optional[bool] = None
 
@@ -229,14 +202,12 @@ class CourseResponse(CourseBase):
 # ===== SEMESTER MODELS =====
 
 class SemesterBase(BaseModel):
-    name: str
-    code: str
     year: int
     season: str
-    start_date: datetime
-    end_date: datetime
     course_id: int
     is_active: bool = True
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
 class SemesterCreate(SemesterBase):
@@ -244,14 +215,12 @@ class SemesterCreate(SemesterBase):
 
 
 class SemesterUpdate(BaseModel):
-    name: Optional[str] = None
-    code: Optional[str] = None
     year: Optional[int] = None
     season: Optional[str] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
     course_id: Optional[int] = None
     is_active: Optional[bool] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
 class SemesterResponse(SemesterBase):
@@ -270,9 +239,7 @@ class ClassroomBase(BaseModel):
     name: str
     teacher_name: str
     language: str  # e.g., "en", "es", "ca", "English", "Spanish", "Catalan"
-    course_id: int
     semester_id: int
-    description: Optional[str] = None
 
 
 class ClassroomCreate(ClassroomBase):
@@ -283,7 +250,6 @@ class ClassroomUpdate(BaseModel):
     name: Optional[str] = None
     teacher_name: Optional[str] = None
     language: Optional[str] = None
-    description: Optional[str] = None
     is_active: Optional[bool] = None
 
 
@@ -312,6 +278,11 @@ class SubmissionBase(BaseModel):
     classroom_id: int  # Required field
     group_id: Optional[int] = None
     comments: Optional[str] = None
+    meeting_notes: Optional[bool] = False
+    # persisted presence flags
+    has_submission_pdf: Optional[bool] = False
+    has_private_pdf: Optional[bool] = False
+    has_public_pdf: Optional[bool] = False
     status: str = 'submitted'
 
 
@@ -328,6 +299,10 @@ class SubmissionUpdate(BaseModel):
     semester_id: Optional[int] = None
     group_id: Optional[int] = None
     comments: Optional[str] = None
+    meeting_notes: Optional[bool] = None
+    has_submission_pdf: Optional[bool] = None
+    has_private_pdf: Optional[bool] = None
+    has_public_pdf: Optional[bool] = None
     pdf_file_path: Optional[str] = None
     pdf_file_name: Optional[str] = None
     pdf_file_data: Optional[bytes] = None
@@ -339,6 +314,7 @@ class SubmissionUpdate(BaseModel):
     teacher_feedback: Optional[str] = None
     grade_breakdown: Optional[List[dict]] = None
     ai_feedback: Optional[str] = None
+    private_report_evaluation: Optional[dict] = None
     graded_by: Optional[int] = None
 
 
@@ -368,12 +344,18 @@ class SubmissionResponse(SubmissionBase):
     teacher_feedback: Optional[str] = None
     ai_feedback: Optional[str] = None
     grade_breakdown: Optional[List[ExerciseGrade]] = []
+    private_report_evaluation: Optional[dict] = None
     submitted_at: datetime
     graded_at: Optional[datetime] = None
     graded_by: Optional[int] = None
     is_late: bool = False
     created_at: datetime
     updated_at: datetime
+    
+    # Derived attributes (computed from PDF data)
+    has_submission_pdf_derived: Optional[bool] = None
+    has_private_pdf_derived: Optional[bool] = None
+    has_public_pdf_derived: Optional[bool] = None
 
     class Config:
         from_attributes = True

@@ -2,8 +2,9 @@
 Database configuration and models for Smart Grade AI
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Float, JSON, LargeBinary, create_engine, text, Table
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Float, JSON, LargeBinary, create_engine, text, Table, Date
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from datetime import datetime
@@ -24,17 +25,10 @@ AsyncSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False)
 # Base class for models
 Base = declarative_base()
 
-# Association table for many-to-many relationship between assignments and classrooms
-assignment_classroom_association = Table(
-    'assignment_classroom',
-    Base.metadata,
-    Column('assignment_id', Integer, ForeignKey('assignments.id', ondelete='CASCADE'), primary_key=True),
-    Column('classroom_id', Integer, ForeignKey('classrooms.id', ondelete='CASCADE'), primary_key=True),
-    Column('created_at', DateTime, default=datetime.utcnow)
-)
+# Removed assignment_classroom_association table - assignments no longer linked to classrooms
 
 class Assignment(Base):
-    """Assignment database model - can be assigned to multiple classrooms"""
+    """Assignment database model - assignments belong to specific course-semester combinations"""
     __tablename__ = "assignments"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -42,6 +36,8 @@ class Assignment(Base):
     description = Column(Text)
     due_date = Column(DateTime, nullable=False)
     language = Column(String(50), nullable=False)  # Language of assignment (en, es, ca, etc.)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=True)  # Course assignment belongs to (nullable for backward compatibility)
+    semester_id = Column(Integer, ForeignKey("semesters.id"), nullable=True)  # Semester assignment belongs to (nullable for backward compatibility)
     pdf_file_path = Column(String(500), nullable=True)
     pdf_file_name = Column(String(255), nullable=True)
     # Optional: store PDF bytes directly in DB
@@ -54,7 +50,8 @@ class Assignment(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    classrooms = relationship("Classroom", secondary=assignment_classroom_association, back_populates="assignments")
+    course = relationship("Course")
+    semester = relationship("Semester")
     exercises = relationship("Exercise", back_populates="assignment", cascade="all, delete-orphan")
     submissions = relationship("Submission", back_populates="assignment", cascade="all, delete-orphan")
 
@@ -63,7 +60,7 @@ class SectionExtractionConfig(Base):
     __tablename__ = "section_extraction_configs"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)  # e.g., "Descripció", "Què s'ha de lliurar"
+    name = Column(String(255), nullable=False)  # e.g., "Description", "What to deliver"
     markers = Column(Text, nullable=False)  # JSON array of search terms
     description = Column(Text)  # Human readable description
     priority = Column(Integer, default=1)  # Lower number = higher priority
@@ -104,6 +101,7 @@ class Submission(Base):
     
     # Submission content - simplified to just PDF and comments
     comments = Column(Text, nullable=True)  # Comments/description
+    meeting_notes = Column(Boolean, nullable=False, default=False)  # Meeting notes checkbox
     pdf_file_path = Column(String(500), nullable=True)  # Path to uploaded PDF file
     pdf_file_name = Column(String(255), nullable=True)  # Original PDF filename
     # Optional: store PDF bytes directly in DB
@@ -117,7 +115,7 @@ class Submission(Base):
     private_pdf_size = Column(Integer, nullable=True)
     private_pdf_filename = Column(String(255), nullable=True)
     private_pdf_uploaded_at = Column(DateTime, nullable=True)
-    private_pdf_responsible_students = Column(Text, nullable=True)  # JSON array of coordinator names
+    coordinators = Column(Text, nullable=True)  # JSON array of coordinator names
     
     public_pdf_data = Column(LargeBinary, nullable=True)  # Public PDF file
     public_pdf_mime_type = Column(String(100), nullable=True)
@@ -125,6 +123,42 @@ class Submission(Base):
     public_pdf_filename = Column(String(255), nullable=True)
     public_pdf_uploaded_at = Column(DateTime, nullable=True)
     public_pdf_responsible_students = Column(Text, nullable=True)  # JSON array of coordinator names
+    
+    # Presence flags (persisted and editable)
+    has_submission_pdf = Column(Boolean, nullable=False, default=False)
+    has_private_pdf = Column(Boolean, nullable=False, default=False)
+    has_public_pdf = Column(Boolean, nullable=False, default=False)
+    
+    # Hybrid properties for derived attributes
+    @hybrid_property
+    def has_submission_pdf_derived(self):
+        """Derived attribute: True if pdf_file_data exists and is not empty"""
+        return bool(self.pdf_file_data and len(self.pdf_file_data) > 0)
+    
+    @has_submission_pdf_derived.expression
+    def has_submission_pdf_derived(cls):
+        """SQL expression for the derived attribute"""
+        return cls.pdf_file_data.isnot(None) & (cls.pdf_file_data != b'')
+    
+    @hybrid_property
+    def has_private_pdf_derived(self):
+        """Derived attribute: True if private_pdf_data exists and is not empty"""
+        return bool(self.private_pdf_data and len(self.private_pdf_data) > 0)
+    
+    @has_private_pdf_derived.expression
+    def has_private_pdf_derived(cls):
+        """SQL expression for the derived attribute"""
+        return cls.private_pdf_data.isnot(None) & (cls.private_pdf_data != b'')
+    
+    @hybrid_property
+    def has_public_pdf_derived(self):
+        """Derived attribute: True if public_pdf_data exists and is not empty"""
+        return bool(self.public_pdf_data and len(self.public_pdf_data) > 0)
+    
+    @has_public_pdf_derived.expression
+    def has_public_pdf_derived(cls):
+        """SQL expression for the derived attribute"""
+        return cls.public_pdf_data.isnot(None) & (cls.public_pdf_data != b'')
     
     # Status and grading
     status = Column(String(50), nullable=False, default='submitted')  # submitted, graded, returned, late, draft
@@ -135,7 +169,8 @@ class Submission(Base):
     # Feedback
     teacher_feedback = Column(Text, nullable=True)
     ai_feedback = Column(Text, nullable=True)
-    grade_breakdown = Column(JSON, nullable=True)  # Detailed breakdown by exercise: [{"exercise_id": 1, "score": 20, "feedback": "Good work"}]
+    grade_breakdown = Column(JSON, nullable=True)  # Detailed breakdown by exercise: [{"exercise_id": 1, "points": 20, "comments": "Good work"}]
+    private_report_evaluation = Column(JSON, nullable=True)  # Private report evaluation results
     
     # Metadata
     submitted_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -158,11 +193,7 @@ class Classroom(Base):
     name = Column(String(255), nullable=False)  # e.g., "CS101 - Fall 2024 - Morning Section"
     teacher_name = Column(String(255), nullable=False)  # Teacher's full name
     language = Column(String(50), nullable=False)  # e.g., "en", "es", "ca", "English", "Spanish", "Catalan"
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
     semester_id = Column(Integer, ForeignKey("semesters.id"), nullable=False)
-    
-    # Additional information
-    description = Column(Text, nullable=True)
     
     # Metadata
     created_by = Column(Integer, nullable=False)  # Teacher user ID
@@ -171,10 +202,8 @@ class Classroom(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    course = relationship("Course")
     semester = relationship("Semester")
     groups = relationship("Group", back_populates="classroom", cascade="all, delete-orphan")
-    assignments = relationship("Assignment", secondary=assignment_classroom_association, back_populates="classrooms")
 
 class Group(Base):
     """Group database model for student groups"""
@@ -182,12 +211,9 @@ class Group(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
+    nickname = Column(String(100), nullable=True)  # Optional nickname like "Mandalorian"
     description = Column(Text, nullable=True)
     classroom_id = Column(Integer, ForeignKey("classrooms.id"), nullable=False)  # Foreign key to classroom
-    
-    # Legacy fields for backward compatibility (can be removed later)
-    course_id = Column(Integer, nullable=True)  # Deprecated - use classroom.course_id
-    semester_id = Column(Integer, nullable=True)  # Deprecated - use classroom.semester_id
     
     # Group members - JSON array of student info
     members = Column(JSON, nullable=False)  # [{"name": "John", "email": "john@example.com", "student_id": "12345"}]
@@ -195,7 +221,6 @@ class Group(Base):
     # Metadata
     created_by = Column(Integer, nullable=False)  # Teacher user ID
     is_active = Column(Boolean, default=True)
-    max_members = Column(Integer, nullable=True)  # Optional limit on group size
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -209,8 +234,6 @@ class Course(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)  # e.g., "Computer Science 101"
     code = Column(String(50), nullable=False, unique=True)  # e.g., "CS101"
-    description = Column(Text, nullable=True)
-    department = Column(String(255), nullable=True)  # e.g., "Computer Science"
     credits = Column(Integer, nullable=True)  # Course credits
     
     # Metadata
@@ -227,13 +250,11 @@ class Semester(Base):
     __tablename__ = "semesters"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)  # e.g., "Fall 2024"
-    code = Column(String(20), nullable=False, unique=True)  # e.g., "F24"
     year = Column(Integer, nullable=False)  # e.g., 2024
     season = Column(String(20), nullable=False)  # e.g., "Fall", "Spring", "Summer"
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
     course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)  # Link to course
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
     
     # Metadata
     created_by = Column(Integer, nullable=False)  # Teacher user ID
@@ -253,6 +274,7 @@ class AiSetting(Base):
     value = Column(Text, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
 # Dependency to get database session
 async def get_db():
     async with AsyncSessionLocal() as session:
@@ -271,7 +293,46 @@ async def init_db():
             ALTER TABLE assignments
                 ADD COLUMN IF NOT EXISTS pdf_file_data bytea,
                 ADD COLUMN IF NOT EXISTS pdf_mime_type varchar(100),
-                ADD COLUMN IF NOT EXISTS pdf_file_size integer;
+                ADD COLUMN IF NOT EXISTS pdf_file_size integer,
+                ADD COLUMN IF NOT EXISTS course_id integer,
+                ADD COLUMN IF NOT EXISTS semester_id integer,
+                ADD COLUMN IF NOT EXISTS description text,
+                ADD COLUMN IF NOT EXISTS due_date timestamp,
+                ADD COLUMN IF NOT EXISTS pdf_file_path varchar(500),
+                ADD COLUMN IF NOT EXISTS pdf_file_name varchar(255);
+            """
+        ))
+        # Add start_date and end_date to semesters if not exists
+        await conn.execute(text(
+            """
+            ALTER TABLE semesters
+                ADD COLUMN IF NOT EXISTS start_date date,
+                ADD COLUMN IF NOT EXISTS end_date date;
+            """
+        ))
+        # Add foreign key constraints if they don't exist
+        await conn.execute(text(
+            """
+            DO $$ 
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints 
+                    WHERE constraint_name = 'assignments_course_id_fkey'
+                ) THEN
+                    ALTER TABLE assignments 
+                    ADD CONSTRAINT assignments_course_id_fkey 
+                    FOREIGN KEY (course_id) REFERENCES courses(id);
+                END IF;
+                
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints 
+                    WHERE constraint_name = 'assignments_semester_id_fkey'
+                ) THEN
+                    ALTER TABLE assignments 
+                    ADD CONSTRAINT assignments_semester_id_fkey 
+                    FOREIGN KEY (semester_id) REFERENCES semesters(id);
+                END IF;
+            END $$;
             """
         ))
         await conn.execute(text(
@@ -280,18 +341,22 @@ async def init_db():
                 ADD COLUMN IF NOT EXISTS pdf_file_data bytea,
                 ADD COLUMN IF NOT EXISTS pdf_mime_type varchar(100),
                 ADD COLUMN IF NOT EXISTS pdf_file_size integer,
+                ADD COLUMN IF NOT EXISTS meeting_notes boolean DEFAULT FALSE,
                 ADD COLUMN IF NOT EXISTS private_pdf_data bytea,
                 ADD COLUMN IF NOT EXISTS private_pdf_mime_type varchar(100),
                 ADD COLUMN IF NOT EXISTS private_pdf_size integer,
                 ADD COLUMN IF NOT EXISTS private_pdf_filename varchar(255),
                 ADD COLUMN IF NOT EXISTS private_pdf_uploaded_at timestamp,
-                ADD COLUMN IF NOT EXISTS private_pdf_responsible_students text,
+                ADD COLUMN IF NOT EXISTS coordinators text,
                 ADD COLUMN IF NOT EXISTS public_pdf_data bytea,
                 ADD COLUMN IF NOT EXISTS public_pdf_mime_type varchar(100),
                 ADD COLUMN IF NOT EXISTS public_pdf_size integer,
                 ADD COLUMN IF NOT EXISTS public_pdf_filename varchar(255),
                 ADD COLUMN IF NOT EXISTS public_pdf_uploaded_at timestamp,
-                ADD COLUMN IF NOT EXISTS public_pdf_responsible_students text;
+                ADD COLUMN IF NOT EXISTS public_pdf_responsible_students text,
+                ADD COLUMN IF NOT EXISTS has_submission_pdf boolean DEFAULT FALSE,
+                ADD COLUMN IF NOT EXISTS has_private_pdf boolean DEFAULT FALSE,
+                ADD COLUMN IF NOT EXISTS has_public_pdf boolean DEFAULT FALSE;
             """
         ))
         # Create ai_settings table if not exists
@@ -337,20 +402,10 @@ async def init_db():
                 ADD COLUMN IF NOT EXISTS language VARCHAR(50) DEFAULT 'en';
             """
         ))
-        # Create assignment-classroom association table (many-to-many)
-        await conn.execute(text(
-            """
-            CREATE TABLE IF NOT EXISTS assignment_classroom (
-                assignment_id INTEGER REFERENCES assignments(id) ON DELETE CASCADE,
-                classroom_id INTEGER REFERENCES classrooms(id) ON DELETE CASCADE,
-                created_at TIMESTAMP DEFAULT NOW(),
-                PRIMARY KEY (assignment_id, classroom_id)
-            );
-            """
-        ))
-        # Drop old classroom_id column from assignments if it exists (may have data, so be careful)
-        # We'll keep it for now for backward compatibility and manual migration
-        # await conn.execute(text("ALTER TABLE assignments DROP COLUMN IF EXISTS classroom_id;"))
+        # Drop assignment_classroom association table if it exists (no longer needed)
+        await conn.execute(text("DROP TABLE IF EXISTS assignment_classroom;"))
+        # Drop old classroom_id column from assignments if it exists (no longer needed)
+        await conn.execute(text("ALTER TABLE assignments DROP COLUMN IF EXISTS classroom_id;"))
 
 async def close_db():
     """Close database connections"""

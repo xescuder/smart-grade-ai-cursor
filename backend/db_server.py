@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# coding: utf-8
 """
 FastAPI server with PostgreSQL database integration
 """
@@ -11,7 +13,7 @@ import csv
 import io
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy import select
+from sqlalchemy import select, text
 from pydantic import ValidationError, BaseModel
 from datetime import datetime
 import os
@@ -48,14 +50,14 @@ NO_PDF_FOUND = "No PDF file found for this assignment"
 
 from database import get_db, init_db, close_db, Assignment, Exercise, SectionExtractionConfig, Submission, Group, Course, Semester, AiSetting, Classroom
 from crud import (
-    create_assignment, get_assignments, get_assignment, update_assignment, delete_assignment,
+    create_assignment, get_assignments, get_assignment, update_assignment, delete_assignment, get_assignments_by_semester,
     get_assignment_exercises, update_assignment_exercises, update_assignment_pdf, remove_assignment_pdf,
     AssignmentCreate, AssignmentUpdate, AssignmentResponse, ExerciseUpdate, ExerciseResponse,
     get_section_extraction_configs, get_section_extraction_config, create_section_extraction_config,
     update_section_extraction_config, delete_section_extraction_config,
     SectionExtractionConfigCreate, SectionExtractionConfigUpdate, SectionExtractionConfigResponse,
     get_submissions, get_submission, get_submissions_by_assignment, create_submission, update_submission, delete_submission,
-    SubmissionCreate, SubmissionUpdate, SubmissionResponse, StudentInfo, SubmissionFile, ExerciseGrade,
+    SubmissionCreate, SubmissionUpdate, SubmissionResponse, SubmissionFile, ExerciseGrade,
     get_groups, get_group, get_group_by_name, create_group, update_group, delete_group, get_groups_by_course,
     GroupCreate, GroupUpdate, GroupResponse, GroupMember,
     get_courses, get_course, get_course_by_code, create_course, update_course, delete_course, get_courses_by_department,
@@ -68,6 +70,11 @@ from crud import (
     ClassroomCreate, ClassroomUpdate, ClassroomResponse
 )
 from ai_prompts import get_submission_evaluation_prompt
+from api.routers.submissions import router as submissions_router
+from api.routers.courses import router as courses_router
+from api.routers.semesters import router as semesters_router
+from api.routers.classrooms import router as classrooms_router
+from api.routers.assignments import router as assignments_router
 
 # FastAPI app with comprehensive OpenAPI/Swagger configuration
 app = FastAPI(
@@ -250,6 +257,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API routers
+app.include_router(submissions_router, prefix="/api/v1/submissions", tags=["submissions"])
+app.include_router(courses_router, prefix="/api/v1/courses", tags=["courses"])
+app.include_router(semesters_router, prefix="/api/v1/semesters", tags=["semesters"])
+app.include_router(classrooms_router, prefix="/api/v1/classrooms", tags=["classrooms"])
+app.include_router(assignments_router, prefix="/api/v1/assignments", tags=["assignments"])
+
 # Create uploads directory if it doesn't exist (use centralized config)
 UPLOAD_DIR = settings.UPLOAD_DIR
 if not os.path.exists(UPLOAD_DIR):
@@ -318,7 +332,7 @@ async def create_semester_working(request: Request, db: AsyncSession = Depends(g
         raise HTTPException(status_code=500, detail=f"Failed to create semester: {str(e)}")
 
 # Assignment endpoints
-@app.get("/api/assignments")
+@app.get("/api/v1/assignments")
 async def get_all_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments with exercises and classrooms"""
     assignments = await get_assignments(db)
@@ -328,10 +342,7 @@ async def get_all_assignments(db: AsyncSession = Depends(get_db)):
         assignment_dict = {
             "id": assignment.id,
             "name": assignment.name,
-            "description": assignment.description,
-            "due_date": assignment.due_date.isoformat() if assignment.due_date else None,
             "language": assignment.language,
-            "pdf_file_path": assignment.pdf_file_path,
             "pdf_file_name": assignment.pdf_file_name,
             "created_by": assignment.created_by,
             "is_active": assignment.is_active,
@@ -350,20 +361,49 @@ async def get_all_assignments(db: AsyncSession = Depends(get_db)):
                 }
                 for ex in assignment.exercises
             ],
-            "classrooms": [
-                {
-                    "id": classroom.id,
-                    "name": classroom.name,
-                    "teacher_name": classroom.teacher_name,
-                    "language": classroom.language,
-                }
-                for classroom in assignment.classrooms
-            ]
+            "classrooms": []
         }
         result.append(assignment_dict)
     return result
 
-@app.get("/api/assignments/{assignment_id}", response_model=AssignmentResponse)
+@app.get("/api/v1/assignments/by-semester/{semester_id}")
+async def get_assignments_by_semester_endpoint(semester_id: int, db: AsyncSession = Depends(get_db)):
+    """Get all assignments for a specific semester"""
+    assignments = await get_assignments_by_semester(db, semester_id)
+    
+    # Convert to dict to avoid lazy loading issues
+    result = []
+    for assignment in assignments:
+        assignment_dict = {
+            "id": assignment.id,
+            "name": assignment.name,
+            "language": assignment.language,
+            "pdf_file_name": assignment.pdf_file_name,
+            "created_by": assignment.created_by,
+            "is_active": assignment.is_active,
+            "created_at": assignment.created_at.isoformat() if assignment.created_at else None,
+            "updated_at": assignment.updated_at.isoformat() if assignment.updated_at else None,
+            "course_id": assignment.course_id,
+            "semester_id": assignment.semester_id,
+            "exercises": [
+                {
+                    "id": ex.id,
+                    "assignment_id": ex.assignment_id,
+                    "description": ex.description,
+                    "evaluation_criteria": ex.evaluation_criteria,
+                    "points": ex.points,
+                    "order": ex.order,
+                    "created_at": ex.created_at.isoformat() if ex.created_at else None,
+                    "updated_at": ex.updated_at.isoformat() if ex.updated_at else None,
+                }
+                for ex in assignment.exercises
+            ],
+            "classrooms": []
+        }
+        result.append(assignment_dict)
+    return result
+
+@app.get("/api/v1/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_single_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single assignment by ID"""
     assignment = await get_assignment(db, assignment_id)
@@ -379,19 +419,6 @@ async def create_new_assignment(assignment: AssignmentCreate, db: AsyncSession =
         logger.info(f"Assignment type: {type(assignment)}")
         logger.info(f"Due date type: {type(assignment.due_date)}")
         logger.info(f"Due date value: {assignment.due_date}")
-        
-        # Validate classrooms exist and all have matching language
-        if assignment.classroom_ids:
-            for classroom_id in assignment.classroom_ids:
-                classroom = await get_classroom(db, classroom_id)
-                if not classroom:
-                    raise HTTPException(status_code=404, detail=f"Classroom {classroom_id} not found")
-                
-                if assignment.language != classroom.language:
-                    raise HTTPException(
-                        status_code=400, 
-                        detail=f"Assignment language ({assignment.language}) must match all classroom languages. Classroom '{classroom.name}' has language '{classroom.language}'"
-                    )
         
         # Mock user ID for demo - in production, get from authentication
         created_by = 1
@@ -531,13 +558,13 @@ async def export_assignment_submissions(assignment_id: int, db: AsyncSession = D
         raise HTTPException(status_code=500, detail=f"Failed to export submissions: {str(e)}")
 
 # Exercise endpoints
-@app.get("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.get("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def get_exercises_for_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get all exercises for an assignment"""
     exercises = await get_assignment_exercises(db, assignment_id)
     return exercises
 
-@app.put("/api/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
+@app.put("/api/v1/assignments/{assignment_id}/exercises", response_model=List[ExerciseResponse])
 async def update_exercises_for_assignment(assignment_id: int, exercises: List[ExerciseUpdate], db: AsyncSession = Depends(get_db)):
     """Update exercises for an assignment"""
     # Validate assignment exists
@@ -1825,8 +1852,8 @@ async def get_submissions_endpoint(
 ):
     """Get all submissions with optional filtering"""
     submissions = await get_submissions(
-        db, assignment_id=assignment_id, course_id=course_id, 
-        semester_id=semester_id, group_id=group_id, skip=skip, limit=limit
+        db, assignment_id=assignment_id, classroom_id=None, 
+        group_id=group_id, skip=skip, limit=limit
     )
     # Return submissions as dicts without binary data
     return [
@@ -1947,6 +1974,24 @@ async def get_submission_endpoint(submission_id: int, db: AsyncSession = Depends
         "semester_id": submission.semester_id,
         "group_id": submission.group_id,
         "comments": submission.comments,
+        "meeting_notes": submission.meeting_notes,
+        "has_submission_pdf": submission.has_submission_pdf,
+        "has_private_pdf": submission.has_private_pdf,
+        "has_public_pdf": submission.has_public_pdf,
+        # Derived attributes (computed from PDF data)
+        "has_submission_pdf_derived": bool(submission.pdf_file_data and len(submission.pdf_file_data) > 0) if submission.pdf_file_data is not None else False,
+        "has_private_pdf_derived": bool(submission.private_pdf_data and len(submission.private_pdf_data) > 0) if submission.private_pdf_data is not None else False,
+        "has_public_pdf_derived": bool(submission.public_pdf_data and len(submission.public_pdf_data) > 0) if submission.public_pdf_data is not None else False,
+        # PDF data (base64 encoded for frontend) - with error handling
+        # "pdf_file_data": base64.b64encode(submission.pdf_file_data).decode('utf-8') if submission.pdf_file_data else None,
+        # "private_pdf_data": base64.b64encode(submission.private_pdf_data).decode('utf-8') if submission.private_pdf_data else None,
+        # "public_pdf_data": base64.b64encode(submission.public_pdf_data).decode('utf-8') if submission.public_pdf_data else None,
+        "private_pdf_mime_type": submission.private_pdf_mime_type,
+        "private_pdf_filename": submission.private_pdf_filename,
+        "public_pdf_mime_type": submission.public_pdf_mime_type,
+        "public_pdf_filename": submission.public_pdf_filename,
+        "coordinators": submission.coordinators,
+        "public_pdf_responsible_students": submission.public_pdf_responsible_students,
         "pdf_file_name": submission.pdf_file_name,
         "pdf_file_path": submission.pdf_file_path,
         "pdf_file_size": submission.pdf_file_size,
@@ -1991,12 +2036,11 @@ async def view_submission_pdf(submission_id: int, db: AsyncSession = Depends(get
     
     return FileResponse(file_path, media_type="application/pdf", filename=submission.pdf_file_name or "submission.pdf")
 
-@app.put("/api/submissions/{submission_id}")
-async def update_submission_endpoint(submission_id: int, submission_data: dict, db: AsyncSession = Depends(get_db)):
+@app.put("/api/submissions/{submission_id}", response_model=SubmissionResponse)
+async def update_submission_endpoint(submission_id: int, submission_data: SubmissionUpdate, db: AsyncSession = Depends(get_db)):
     """Update a submission"""
     try:
-        submission_update = SubmissionUpdate(**submission_data)
-        submission = await update_submission(db, submission_id, submission_update)
+        submission = await update_submission(db, submission_id, submission_data)
         if not submission:
             raise HTTPException(status_code=404, detail="Submission not found")
         return submission
@@ -2005,6 +2049,57 @@ async def update_submission_endpoint(submission_id: int, submission_data: dict, 
     except Exception as e:
         logger.error(f"Error updating submission: {e}")
         raise HTTPException(status_code=500, detail="Failed to update submission")
+
+@app.post("/api/submissions/migrate-pdf-flags")
+async def migrate_pdf_flags(db: AsyncSession = Depends(get_db)):
+    """Migrate existing submissions to set has_submission_pdf based on PDF data"""
+    try:
+        # Update submissions that have PDF data but has_submission_pdf is False or NULL
+        result = await db.execute(
+            text("""
+                UPDATE submissions 
+                SET has_submission_pdf = TRUE 
+                WHERE pdf_file_data IS NOT NULL 
+                AND pdf_file_data != '' 
+                AND (has_submission_pdf IS NULL OR has_submission_pdf = FALSE)
+            """)
+        )
+        
+        # Update submissions that have private PDF data
+        result2 = await db.execute(
+            text("""
+                UPDATE submissions 
+                SET has_private_pdf = TRUE 
+                WHERE private_pdf_data IS NOT NULL 
+                AND private_pdf_data != '' 
+                AND (has_private_pdf IS NULL OR has_private_pdf = FALSE)
+            """)
+        )
+        
+        # Update submissions that have public PDF data
+        result3 = await db.execute(
+            text("""
+                UPDATE submissions 
+                SET has_public_pdf = TRUE 
+                WHERE public_pdf_data IS NOT NULL 
+                AND public_pdf_data != '' 
+                AND (has_public_pdf IS NULL OR has_public_pdf = FALSE)
+            """)
+        )
+        
+        await db.commit()
+        
+        return {
+            "message": "PDF flags migration completed",
+            "submission_pdf_updated": result.rowcount,
+            "private_pdf_updated": result2.rowcount,
+            "public_pdf_updated": result3.rowcount
+        }
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error migrating PDF flags: {e}")
+        raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")
 
 @app.delete("/api/submissions/{submission_id}")
 async def delete_submission_endpoint(submission_id: int, db: AsyncSession = Depends(get_db)):
@@ -2244,6 +2339,20 @@ async def get_semesters_endpoint(
         logger.error(f"Error getting semesters: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch semesters")
 
+@app.get("/api/v1/semesters/by-course/{course_id}")
+async def get_semesters_by_course_endpoint(
+    course_id: int,
+    created_by: int = 1,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all semesters for a specific course"""
+    try:
+        semesters = await get_semesters_by_course(db, course_id=course_id, created_by=created_by)
+        return semesters
+    except Exception as e:
+        logger.error(f"Error getting semesters by course: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch semesters")
+
 @app.get("/api/semesters/{semester_id}")
 async def get_semester_endpoint(semester_id: int, db: AsyncSession = Depends(get_db)):
     """Get a specific semester by ID"""
@@ -2321,7 +2430,7 @@ async def delete_semester_endpoint(semester_id: int, db: AsyncSession = Depends(
 
 # === GROUP MANAGEMENT ENDPOINTS ===
 
-@app.get("/api/groups")
+@app.get("/api/v1/groups")
 async def get_groups_endpoint(
     created_by: Optional[int] = None,
     course_id: Optional[int] = None,
@@ -2342,7 +2451,7 @@ async def get_groups_endpoint(
     
     return groups
 
-@app.get("/api/groups/{group_id}")
+@app.get("/api/v1/groups/{group_id}")
 async def get_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single group by ID"""
     group = await get_group(db, group_id)
@@ -2350,7 +2459,7 @@ async def get_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Group not found")
     return group
 
-@app.post("/api/groups")
+@app.post("/api/v1/groups")
 async def create_group_endpoint(group_data: dict, db: AsyncSession = Depends(get_db)):
     """Create a new group"""
     try:
@@ -2370,7 +2479,7 @@ async def create_group_endpoint(group_data: dict, db: AsyncSession = Depends(get
         logger.error(f"Error creating group: {e}")
         raise HTTPException(status_code=500, detail="Failed to create group")
 
-@app.put("/api/groups/{group_id}")
+@app.put("/api/v1/groups/{group_id}")
 async def update_group_endpoint(group_id: int, group_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a group"""
     try:
@@ -2385,7 +2494,7 @@ async def update_group_endpoint(group_id: int, group_data: dict, db: AsyncSessio
         logger.error(f"Error updating group: {e}")
         raise HTTPException(status_code=500, detail="Failed to update group")
 
-@app.delete("/api/groups/{group_id}")
+@app.delete("/api/v1/groups/{group_id}")
 async def delete_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a group (soft delete)"""
     success = await delete_group(db, group_id)
@@ -2395,7 +2504,7 @@ async def delete_group_endpoint(group_id: int, db: AsyncSession = Depends(get_db
 
 # ===== Classroom Management Endpoints =====
 
-@app.get("/api/classrooms", response_model=List[ClassroomResponse])
+@app.get("/api/v1/classrooms/")
 async def get_classrooms_endpoint(
     course_id: Optional[int] = None,
     semester_id: Optional[int] = None,
@@ -2405,9 +2514,95 @@ async def get_classrooms_endpoint(
 ):
     """Get all classrooms with optional filtering by course and/or semester"""
     classrooms = await get_classrooms(db, course_id=course_id, semester_id=semester_id, skip=skip, limit=limit)
-    return classrooms
+    
+    # Convert to dict format with groups included
+    result = []
+    for classroom in classrooms:
+        print(f"DEBUG: Processing classroom {classroom.id} with {len(classroom.groups) if classroom.groups else 0} groups")
+        classroom_dict = {
+            "id": classroom.id,
+            "name": classroom.name,
+            "teacher_name": classroom.teacher_name,
+            "language": classroom.language,
+            "course_id": classroom.course_id,
+            "semester_id": classroom.semester_id,
+            "description": classroom.description,
+            "created_by": classroom.created_by,
+            "is_active": classroom.is_active,
+            "created_at": classroom.created_at,
+            "updated_at": classroom.updated_at,
+            "course": {
+                "id": classroom.course.id,
+                "name": classroom.course.name,
+                "code": classroom.course.code
+            } if classroom.course else None,
+            "semester": {
+                "id": classroom.semester.id,
+                "name": classroom.semester.name,
+                "code": classroom.semester.code
+            } if classroom.semester else None,
+            "groups": [
+                {
+                    "id": g.id,
+                    "name": g.name,
+                    "description": g.description,
+                    "members": g.members
+                } for g in classroom.groups
+            ] if classroom.groups else []
+        }
+        print(f"DEBUG: Added {len(classroom_dict['groups'])} groups to response")
+        result.append(classroom_dict)
+    
+    print(f"DEBUG: Returning {len(result)} classrooms")
+    return result
 
-@app.get("/api/classrooms/{classroom_id}")
+@app.get("/api/v1/classrooms/by-semester/{semester_id}")
+async def get_classrooms_by_semester_endpoint(
+    semester_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all classrooms for a specific semester"""
+    classrooms = await get_classrooms(db, semester_id=semester_id)
+    
+    # Convert to dict format with groups included
+    result = []
+    for classroom in classrooms:
+        classroom_dict = {
+            "id": classroom.id,
+            "name": classroom.name,
+            "teacher_name": classroom.teacher_name,
+            "language": classroom.language,
+            "course_id": classroom.course_id,
+            "semester_id": classroom.semester_id,
+            "description": classroom.description,
+            "created_by": classroom.created_by,
+            "is_active": classroom.is_active,
+            "created_at": classroom.created_at,
+            "updated_at": classroom.updated_at,
+            "course": {
+                "id": classroom.course.id,
+                "name": classroom.course.name,
+                "code": classroom.course.code
+            } if classroom.course else None,
+            "semester": {
+                "id": classroom.semester.id,
+                "name": classroom.semester.name,
+                "code": classroom.semester.code
+            } if classroom.semester else None,
+            "groups": [
+                {
+                    "id": g.id,
+                    "name": g.name,
+                    "description": g.description,
+                    "members": g.members
+                } for g in classroom.groups
+            ] if classroom.groups else []
+        }
+        result.append(classroom_dict)
+    
+    return result
+
+@app.get("/api/v1/classrooms/{classroom_id}")
 async def get_classroom_endpoint(classroom_id: int, db: AsyncSession = Depends(get_db)):
     """Get a single classroom by ID with its groups"""
     classroom = await get_classroom_with_details(db, classroom_id)
@@ -2447,7 +2642,7 @@ async def get_classroom_endpoint(classroom_id: int, db: AsyncSession = Depends(g
         ] if classroom.groups else []
     }
 
-@app.post("/api/classrooms", response_model=ClassroomResponse)
+@app.post("/api/v1/classrooms", response_model=ClassroomResponse)
 async def create_classroom_endpoint(classroom_data: dict, db: AsyncSession = Depends(get_db)):
     """Create a new classroom"""
     try:
@@ -2465,7 +2660,7 @@ async def create_classroom_endpoint(classroom_data: dict, db: AsyncSession = Dep
         logger.error(f"Error creating classroom: {e}")
         raise HTTPException(status_code=500, detail="Failed to create classroom")
 
-@app.put("/api/classrooms/{classroom_id}")
+@app.put("/api/v1/classrooms/{classroom_id}")
 async def update_classroom_endpoint(classroom_id: int, classroom_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a classroom"""
     try:
@@ -2480,7 +2675,7 @@ async def update_classroom_endpoint(classroom_id: int, classroom_data: dict, db:
         logger.error(f"Error updating classroom: {e}")
         raise HTTPException(status_code=500, detail="Failed to update classroom")
 
-@app.delete("/api/classrooms/{classroom_id}")
+@app.delete("/api/v1/classrooms/{classroom_id}")
 async def delete_classroom_endpoint(classroom_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a classroom (soft delete)"""
     success = await delete_classroom(db, classroom_id)
@@ -2493,344 +2688,7 @@ async def delete_classroom_endpoint(classroom_id: int, db: AsyncSession = Depend
 async def test_endpoint():
     return {"message": "Test endpoint works"}
 
-# AI Evaluation endpoint
-@app.post("/api/submissions/{submission_id}/ai-evaluate")
-async def ai_evaluate_submission(
-    submission_id: int,
-    request: Request,
-    db: AsyncSession = Depends(get_db)
-):
-    """AI evaluation of submission using Ollama with vision support"""
-    import tempfile
-    import base64
-    from pdf2image import convert_from_path
-    from io import BytesIO
-    
-    try:
-        # Get request data
-        data = await request.json()
-        assignment_id = data.get("assignment_id")
-        use_vision = data.get("use_vision", True)  # Enable vision by default
         
-        if not assignment_id:
-            raise HTTPException(status_code=400, detail="Missing assignment_id")
-        
-        # Get submission and assignment
-        submission = await get_submission(db, submission_id)
-        if not submission:
-            raise HTTPException(status_code=404, detail="Submission not found")
-        
-        assignment = await get_assignment(db, assignment_id)
-        if not assignment:
-            raise HTTPException(status_code=404, detail="Assignment not found")
-        
-        if not assignment.exercises:
-            raise HTTPException(status_code=400, detail="No exercises found for this assignment")
-        
-        # Get PDF file path or create temporary file from database bytes
-        temp_pdf_path = None
-        pdf_file_path = None
-        
-        try:
-            if submission.pdf_file_data:
-                # PDF is stored in database - create temporary file
-                temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-                temp_pdf.write(submission.pdf_file_data)
-                temp_pdf.close()
-                pdf_file_path = temp_pdf.name
-                temp_pdf_path = temp_pdf.name
-                logger.info(f"Created temporary PDF from database: {pdf_file_path}")
-            elif submission.pdf_file_path:
-                # PDF is stored on filesystem
-                pdf_file_path = f"uploads{submission.pdf_file_path}" if not submission.pdf_file_path.startswith('/uploads/') else f".{submission.pdf_file_path}"
-                if not os.path.exists(pdf_file_path):
-                    raise HTTPException(status_code=404, detail="PDF file not found on filesystem")
-            else:
-                raise HTTPException(status_code=404, detail="No PDF file found for this submission")
-            
-            # Extract text from PDF for context
-            try:
-                pdf_content = pymupdf4llm.to_markdown(pdf_file_path)
-                logger.info(f"Extracted PDF content length: {len(pdf_content)}")
-            except Exception as e:
-                logger.error(f"Error extracting PDF text: {e}")
-                pdf_content = ""
-            
-            # Convert PDF to images for vision model
-            image_data = []
-            if use_vision:
-                try:
-                    logger.info("Converting PDF to images for vision model...")
-                    images = convert_from_path(pdf_file_path, dpi=150, fmt='png')
-                    
-                    # Limit to first 10 pages to avoid excessive processing
-                    for page_num, img in enumerate(images[:10], 1):
-                        buffered = BytesIO()
-                        img.save(buffered, format="PNG")
-                        img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-                        image_data.append(img_base64)
-                        logger.info(f"Converted page {page_num} to image ({len(img_base64)} bytes base64)")
-                    
-                    logger.info(f"Successfully converted {len(image_data)} PDF pages to images")
-                except Exception as e:
-                    logger.error(f"Error converting PDF to images: {e}")
-                    logger.warning("Falling back to text-only evaluation")
-                    image_data = []
-                    use_vision = False
-        
-        finally:
-            # Clean up temporary file if created
-            if temp_pdf_path and os.path.exists(temp_pdf_path):
-                try:
-                    os.unlink(temp_pdf_path)
-                    logger.info(f"Cleaned up temporary PDF: {temp_pdf_path}")
-                except Exception as e:
-                    logger.warning(f"Failed to cleanup temporary PDF: {e}")
-        
-        # Prepare exercise evaluation prompt
-        exercises_info = []
-        for exercise in assignment.exercises:
-            exercises_info.append({
-                "id": exercise.id,
-                "points": exercise.points,
-                "description": exercise.description,
-                "evaluation_criteria": exercise.evaluation_criteria
-            })
-        
-        # Use the centralized prompt function from ai_prompts.py
-        prompt = get_submission_evaluation_prompt(
-            assignment_name=assignment.name,
-            assignment_description=assignment.description,
-            exercises_info=exercises_info,
-            pdf_content=pdf_content,
-            use_vision=use_vision and bool(image_data),
-            num_pages=len(image_data) if image_data else 0
-        )
-
-        # OLD CODE REMOVED - Prompt is now managed in ai_prompts.py
-        # This keeps the code clean and prompts centralized
-        """You are an expert academic evaluator analyzing a COMPLETE STUDENT SUBMISSION.
-
-{'=' * 80}
-ASSIGNMENT INFORMATION
-{'=' * 80}
-Assignment: {assignment.name}
-Description: {assignment.description}
-
-{'=' * 80}
-EXERCISES TO EVALUATE (Total: {len(exercises_info)} exercises)
-{'=' * 80}
-You must evaluate ALL {len(exercises_info)} exercises listed below.
-Each exercise may be answered in different sections/pages of the submission.
-
-"""
-        
-        for i, exercise in enumerate(exercises_info):
-            prompt += f"""
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EXERCISE {i + 1} [ID: {exercise['id']}] - Weight: {exercise['points']} points
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Task Description:
-{exercise['description']}
-
-Evaluation Criteria:
-{exercise['evaluation_criteria']}
-
-"""
-        
-        submission_context = ""
-        if pdf_content:
-            # Increase text limit to capture more content
-            max_text_length = 30000  # Increased from 10000
-            submission_context = f"""
-{'=' * 80}
-STUDENT SUBMISSION - TEXT CONTENT (First {max_text_length} characters)
-{'=' * 80}
-{pdf_content[:max_text_length]}
-{"..." if len(pdf_content) > max_text_length else ""}
-"""
-        
-        prompt += f"""{vision_note}
-{'=' * 80}
-CRITICAL EVALUATION INSTRUCTIONS
-{'=' * 80}
-
-YOUR TASK:
-1. Read through the ENTIRE submission (ALL pages/images provided)
-   - SKIP the front page/cover page/index/table of contents
-   - Focus on the actual content pages with exercise responses
-2. For EACH of the {len(exercises_info)} exercises listed above:
-   - Search for the student's response throughout the submission
-   - The response may be in ANY section or page - don't assume order
-   - Evaluate WHAT THE STUDENT ACTUALLY SUBMITTED (not the requirements)
-   - Consider text, diagrams, code snippets, screenshots, tables, charts
-   - Ignore table of contents, front pages, and index pages
-3. If an exercise is not addressed, still include it with low score (1-2 points)
-4. Be specific - cite actual content, page sections, or visual elements you evaluated
-5. Use the same language as the submission for comments
-
-{submission_context}
-
-{'=' * 80}
-REQUIRED OUTPUT FORMAT - MUST INCLUDE ALL {len(exercises_info)} EXERCISES
-{'=' * 80}
-
-Return ONLY valid JSON (no markdown blocks, no explanations, no extra text):
-
-{{
-  "exercise_grades": [
-    {{
-      "exercise_id": {exercises_info[0]['id']},
-      "description": "Brief description of what this exercise asked for",
-      "points": <number_1_to_10>,
-      "comments": "Detailed evaluation: what was good, what was missing, specific observations from submission"
-    }},"""
-        
-        # Add template for remaining exercises
-        for i in range(1, len(exercises_info)):
-            prompt += f"""
-    {{
-      "exercise_id": {exercises_info[i]['id']},
-      "description": "Brief description of what this exercise asked for",
-      "points": <number_1_to_10>,
-      "comments": "Detailed evaluation: what was good, what was missing, specific observations from submission"
-    }}{"," if i < len(exercises_info) - 1 else ""}"""
-        
-        prompt += """
-  ]
-}
-
-GRADING SCALE (1-10 points per exercise):
-- 9-10: Exceptional - Exceeds requirements, excellent quality, innovative
-- 7-8: Excellent - Fully meets requirements with high quality
-- 5-6: Good - Meets most requirements adequately
-- 3-4: Adequate - Partially complete, noticeable gaps
-- 1-2: Poor - Incomplete, major issues, or not addressed
-
-COMMENTS MUST INCLUDE:
-✓ Specific observations from the actual submission
-✓ What was done well (strengths)
-✓ What is missing or needs improvement (weaknesses)
-✓ Reference to specific pages, sections, diagrams, or code if applicable
-✓ Constructive feedback for improvement
-✓ Same language as submission
-
-RESPOND WITH ONLY THE JSON ARRAY. START WITH {{ and END WITH }}. NO MARKDOWN, NO EXTRA TEXT."""
-
-        # Call Ollama API with vision support
-        try:
-            # Select model based on whether we have images
-            model_to_use = "llava" if (use_vision and image_data) else "llama2"
-            logger.info(f"Using AI model: {model_to_use} (vision={'enabled' if use_vision and image_data else 'disabled'})")
-            
-            if use_vision and image_data:
-                # Use chat API for vision model with images
-                ollama_response = requests.post(
-                    f"{OLLAMA_BASE_URL}/api/chat",
-                    json={
-                        "model": model_to_use,
-                        "messages": [{
-                            "role": "user",
-                            "content": prompt,
-                            "images": image_data
-                        }],
-                        "stream": False,
-                        "options": {
-                            "temperature": 0.3,
-                            "top_p": 0.9,
-                            "num_predict": 2000
-                        }
-                    },
-                    timeout=300  # Longer timeout for vision processing
-                )
-            else:
-                # Use generate API for text-only model
-                ollama_response = requests.post(
-                    f"{OLLAMA_BASE_URL}/api/generate",
-                    json={
-                        "model": model_to_use,
-                        "prompt": prompt,
-                        "stream": False,
-                        "options": {
-                            "temperature": 0.3,
-                            "top_p": 0.9,
-                            "max_tokens": 2000
-                        }
-                    },
-                    timeout=120
-                )
-            
-            if ollama_response.status_code != 200:
-                logger.error(f"Ollama API error: {ollama_response.status_code} - {ollama_response.text}")
-                raise HTTPException(status_code=500, detail="AI evaluation service unavailable")
-            
-            ai_response = ollama_response.json()
-            
-            # Extract response text (different format for chat vs generate API)
-            if use_vision and image_data:
-                # Chat API response format
-                ai_text = ai_response.get("message", {}).get("content", "")
-            else:
-                # Generate API response format
-                ai_text = ai_response.get("response", "")
-            
-            logger.info(f"AI response length: {len(ai_text)}")
-            logger.info(f"AI response preview: {ai_text[:500]}")
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error calling Ollama API: {e}")
-            raise HTTPException(status_code=500, detail="Failed to connect to AI evaluation service")
-        
-        # Parse AI response
-        try:
-            # Extract JSON from AI response
-            json_start = ai_text.find('{')
-            json_end = ai_text.rfind('}') + 1
-            
-            if json_start == -1 or json_end == 0:
-                logger.error(f"No valid JSON found in AI response")
-                logger.error(f"Full AI response: {ai_text}")
-                raise ValueError("No valid JSON found in AI response")
-            
-            json_str = ai_text[json_start:json_end]
-            logger.info(f"Extracted JSON string: {json_str[:500]}...")
-            
-            ai_evaluation = json.loads(json_str)
-            
-            if "exercise_grades" not in ai_evaluation:
-                logger.error(f"Invalid AI response format - missing exercise_grades")
-                logger.error(f"AI evaluation keys: {ai_evaluation.keys()}")
-                raise ValueError("Invalid AI response format")
-            
-            logger.info(f"Successfully parsed {len(ai_evaluation['exercise_grades'])} exercise grades")
-                
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.error(f"Error parsing AI response: {e}")
-            logger.error(f"Raw AI response: {ai_text}")
-            logger.error(f"JSON start position: {json_start}, JSON end position: {json_end}")
-            if json_start != -1 and json_end > 0:
-                logger.error(f"Extracted JSON string: {json_str}")
-            raise HTTPException(status_code=500, detail=f"Failed to parse AI evaluation results: {str(e)}")
-        
-        # Return evaluation results
-        return {
-            "submission_id": submission_id,
-            "assignment_id": assignment_id,
-            "exercise_grades": ai_evaluation["exercise_grades"],
-            "ai_model": model_to_use,
-            "vision_enabled": use_vision and bool(image_data),
-            "pages_analyzed": len(image_data) if image_data else 0,
-            "evaluation_timestamp": datetime.now().isoformat()
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in AI evaluation: {e}")
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"AI evaluation failed: {str(e)}")
-
 # Placeholder for additional endpoints
 
 if __name__ == "__main__":

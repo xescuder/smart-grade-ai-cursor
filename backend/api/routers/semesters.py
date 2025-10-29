@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 
 from database import get_db
 from crud import (
@@ -16,6 +16,7 @@ from crud import (
     create_semester,
     update_semester,
     delete_semester,
+    get_semesters_by_course,
     SemesterCreate,
     SemesterUpdate,
     SemesterResponse
@@ -28,25 +29,22 @@ SEMESTER_NOT_FOUND = "Semester not found"
 
 # API request model without created_by
 class SemesterCreateRequest(BaseModel):
-    name: str
-    code: str
     year: int
     season: str
-    start_date: str
-    end_date: str
     course_id: int
     is_active: bool = True
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
-@router.get("/", response_model=List[SemesterResponse])
-async def list_semesters(
+@router.get("/by-course/{course_id}", response_model=List[SemesterResponse])
+async def get_semesters_by_course_id(
+    course_id: int,
     created_by: Optional[int] = None,
-    skip: int = 0,
-    limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all semesters, optionally filtered by creator"""
-    semesters = await get_semesters(db, created_by=created_by, skip=skip, limit=limit)
+    """Get all semesters for a specific course"""
+    semesters = await get_semesters_by_course(db, course_id=course_id, created_by=created_by)
     return semesters
 
 
@@ -62,6 +60,18 @@ async def get_semester_by_id(
     return semester
 
 
+@router.get("/", response_model=List[SemesterResponse])
+async def list_semesters(
+    created_by: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all semesters, optionally filtered by creator"""
+    semesters = await get_semesters(db, created_by=created_by, skip=skip, limit=limit)
+    return semesters
+
+
 @router.post("/", response_model=SemesterResponse)
 async def create_new_semester(
     semester_request: SemesterCreateRequest,
@@ -70,22 +80,20 @@ async def create_new_semester(
     """Create a new semester"""
     # Convert API request to SemesterCreate model with created_by
     semester = SemesterCreate(
-        name=semester_request.name,
-        code=semester_request.code,
         year=semester_request.year,
         season=semester_request.season,
-        start_date=datetime.fromisoformat(semester_request.start_date),
-        end_date=datetime.fromisoformat(semester_request.end_date),
         course_id=semester_request.course_id,
         is_active=semester_request.is_active,
+        start_date=semester_request.start_date,
+        end_date=semester_request.end_date,
         created_by=1  # For now, use a default created_by user ID (1)
     )
     try:
         db_semester = await create_semester(db, semester)
         return db_semester
     except IntegrityError as e:
-        # Most likely unique constraint on code
-        detail = "Semester code already exists"
+        # Most likely unique constraint on year and season combination
+        detail = "Semester with this year and season already exists"
         raise HTTPException(status_code=409, detail=detail)
 
 

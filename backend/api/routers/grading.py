@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from .auth import User, get_current_user
 from database import get_db
 
 router = APIRouter()
@@ -108,28 +107,14 @@ def process_grading_job(job_id: int):
 
 @router.post("/grade", response_model=GradeResponse)
 async def grade_submission(
-    grade_request: GradeRequest,
-    current_user: User = Depends(get_current_user)
+    grade_request: GradeRequest
 ):
     """Grade a single submission"""
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail="Only teachers can grade submissions")
-    
     if grade_request.use_ai:
         # Use AI grading
         return await ai_grade_submission(grade_request.submission_id)
     else:
         # Manual grading
-        # submission = next((s for s in mock_submissions if s.id == grade_request.submission_id), None)
-        # if not submission:
-        #     raise HTTPException(status_code=404, detail="Submission not found")
-
-        # submission.grade = grade_request.manual_grade
-        # submission.feedback = grade_request.manual_feedback
-        # submission.graded_at = datetime.now()
-        # submission.graded_by = current_user.id
-        # submission.status = "graded"
-
         return GradeResponse(
             submission_id=grade_request.submission_id,
             grade=grade_request.manual_grade,
@@ -143,13 +128,9 @@ async def grade_submission(
 @router.post("/batch-grade", response_model=GradingJob)
 async def batch_grade_submissions(
     submission_ids: List[int],
-    background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    background_tasks: BackgroundTasks
 ):
     """Start batch grading job"""
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail="Only teachers can grade submissions")
-    
     job = GradingJob(
         id=len(mock_grading_jobs) + 1,
         submission_ids=submission_ids,
@@ -166,23 +147,14 @@ async def batch_grade_submissions(
 
 
 @router.get("/jobs", response_model=List[GradingJob])
-async def get_grading_jobs(current_user: User = Depends(get_current_user)):
+async def get_grading_jobs():
     """Get grading jobs"""
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail="Only teachers can view grading jobs")
-    
     return mock_grading_jobs
 
 
 @router.get("/jobs/{job_id}", response_model=GradingJob)
-async def get_grading_job(
-    job_id: int,
-    current_user: User = Depends(get_current_user)
-):
+async def get_grading_job(job_id: int):
     """Get grading job by ID"""
-    if current_user.role != "teacher":
-        raise HTTPException(status_code=403, detail="Only teachers can view grading jobs")
-    
     job = next((j for j in mock_grading_jobs if j.id == job_id), None)
     if not job:
         raise HTTPException(status_code=404, detail="Grading job not found")

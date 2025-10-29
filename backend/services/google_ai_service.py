@@ -28,6 +28,24 @@ class GoogleAIService:
 
     def _params(self) -> Dict[str, str]:
         return {"key": self.api_key}
+    
+    def _fix_unescaped_quotes(self, json_str: str) -> str:
+        """
+        Fix unescaped quotes in JSON strings by escaping quotes that are inside string values.
+        This handles cases like: "comments": "Text with "quotes" inside"
+        """
+        # More robust approach: find all string values and escape quotes inside them
+        def fix_string_value(match):
+            key = match.group(1)
+            value = match.group(2)
+            # Escape quotes inside the value, but be careful not to double-escape
+            escaped_value = value.replace('\\"', '"').replace('"', '\\"')
+            return f'"{key}": "{escaped_value}"'
+        
+        # Match "key": "value" where value can contain quotes
+        # This pattern handles nested quotes better
+        pattern = r'"([^"]+)":\s*"((?:[^"\\]|\\.)*)"'
+        return re.sub(pattern, fix_string_value, json_str)
 
     def analyse_pdf(
         self,
@@ -69,9 +87,26 @@ class GoogleAIService:
         logger = getLogger()
         logger.info(f"Raw Google AI response: {text[:500]}...")  # Log first 500 chars
 
-        # Remove markdown code block markers if present
-        json_str = re.sub(r"^```json|```$", "", text.strip(), flags=re.MULTILINE).strip()
-        logger.info(f"Cleaned JSON string: {json_str[:500]}...")  # Log first 500 chars
+        # Extract JSON from response - handle various formats
+        json_str = text.strip()
+        
+        # Try to extract JSON from markdown code blocks first
+        json_match = re.search(r'```json\s*\n?(.*?)\n?```', json_str, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1).strip()
+            logger.info(f"Extracted JSON from markdown block: {json_str[:200]}...")
+        else:
+            # Try to find JSON object/array in the text
+            json_match = re.search(r'(\{[^{}]*"points"[^{}]*\})', json_str, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1).strip()
+                logger.info(f"Extracted JSON object from text: {json_str[:200]}...")
+            else:
+                # Fall back to original method
+                json_str = re.sub(r"^```json|```$", "", json_str, flags=re.MULTILINE).strip()
+                logger.info(f"Using original cleaning method: {json_str[:200]}...")
+        
+        logger.info(f"Final JSON string: {json_str[:500]}...")  # Log first 500 chars
 
         # Parse and return JSON with better error handling
         try:
@@ -84,11 +119,10 @@ class GoogleAIService:
             
             # Try multiple JSON fixing strategies
             strategies = [
-                ("Fix unescaped quotes in strings", lambda s: re.sub(r'(?<!\\)"(?![,}\]])', r'\\"', s)),
+                ("Fix unescaped quotes in strings", lambda s: self._fix_unescaped_quotes(s)),
                 ("Fix missing quotes around property names", lambda s: re.sub(r'(\w+):', r'"\1":', s)),
                 ("Fix trailing commas", lambda s: re.sub(r',(\s*[}\]])', r'\1', s)),
                 ("Fix single quotes to double quotes", lambda s: s.replace("'", '"')),
-                ("Fix unescaped quotes in criteria arrays", lambda s: re.sub(r'"([^"]*)"([^"]*)"([^"]*)"', r'"\1\\"\2\\"\3"', s)),
                 ("Fix multiline strings", lambda s: re.sub(r'"([^"]*\n[^"]*)"', lambda m: f'"{m.group(1).replace(chr(10), "\\n").replace(chr(13), "\\r")}"', s)),
             ]
             
@@ -122,16 +156,36 @@ class GoogleAIService:
                             if not clean_exercise:
                                 continue
                                 
-                            # Extract description, points, and criteria using regex
-                            desc_match = re.search(r'"description"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', clean_exercise)
-                            points_match = re.search(r'"points"\s*:\s*"([^"]*)"', clean_exercise)
-                            criteria_match = re.search(r'"criteria"\s*:\s*\[(.*?)\]', clean_exercise, re.DOTALL)
-                            
                             exercise_obj = {}
+                            
+                            # Try to extract fields for both exercise extraction and submission evaluation formats
+                            # Exercise extraction format: description, points, criteria
+                            desc_match = re.search(r'"description"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', clean_exercise)
                             if desc_match:
                                 exercise_obj["description"] = desc_match.group(1).replace('\\"', '"').replace('\\n', '\n')
+                            
+                            # Submission evaluation format: name, points, comments
+                            name_match = re.search(r'"name"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', clean_exercise)
+                            if name_match:
+                                exercise_obj["name"] = name_match.group(1).replace('\\"', '"').replace('\\n', '\n')
+                            
+                            # Points field (common to both formats)
+                            points_match = re.search(r'"points"\s*:\s*"?([^",}]*)"?', clean_exercise)
                             if points_match:
-                                exercise_obj["points"] = points_match.group(1)
+                                points_value = points_match.group(1).strip()
+                                # Try to convert to number if possible
+                                try:
+                                    exercise_obj["points"] = float(points_value) if points_value else None
+                                except ValueError:
+                                    exercise_obj["points"] = points_value
+                            
+                            # Comments field (submission evaluation format)
+                            comments_match = re.search(r'"comments"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', clean_exercise)
+                            if comments_match:
+                                exercise_obj["comments"] = comments_match.group(1).replace('\\"', '"').replace('\\n', '\n')
+                            
+                            # Criteria field (exercise extraction format)
+                            criteria_match = re.search(r'"criteria"\s*:\s*\[(.*?)\]', clean_exercise, re.DOTALL)
                             if criteria_match:
                                 criteria_content = criteria_match.group(1)
                                 # Extract individual criteria strings
@@ -140,7 +194,7 @@ class GoogleAIService:
                             
                             if exercise_obj:
                                 parsed_exercises.append(exercise_obj)
-                                logger.info(f"Parsed exercise {i+1}: {exercise_obj.get('description', 'No description')[:50]}...")
+                                logger.info(f"Parsed exercise {i+1}: {exercise_obj.get('name', exercise_obj.get('description', 'No name/description'))[:50]}...")
                                 
                         except Exception as ex_error:
                             logger.warning(f"Failed to parse exercise {i+1}: {ex_error}")
@@ -154,7 +208,7 @@ class GoogleAIService:
             except Exception as regex_error:
                 logger.error(f"Regex extraction failed: {regex_error}")
             
-            logger.error(f"All JSON fix attempts failed")
+            logger.error("All JSON fix attempts failed")
             raise ValueError(f"Invalid JSON response from Google AI: {e}")
 
 

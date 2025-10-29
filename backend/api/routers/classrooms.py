@@ -1,9 +1,9 @@
 """
 Classroom management API endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Optional
 
 from database import get_db
 from crud import (
@@ -24,9 +24,23 @@ CLASSROOM_NOT_FOUND = "Classroom not found"
 
 
 @router.get("/", response_model=List[ClassroomResponse])
-async def list_classrooms(db: AsyncSession = Depends(get_db)):
-    """Get all classrooms"""
-    classrooms = await get_classrooms(db)
+async def list_classrooms(
+    semester_id: Optional[int] = Query(None, description="Filter by semester ID"),
+    search: Optional[str] = Query(None, description="Search by course name, course code, semester season, or year"),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all classrooms with optional text search and semester filter"""
+    classrooms = await get_classrooms(db, semester_id=semester_id, search=search)
+    return classrooms
+
+
+@router.get("/by-semester/{semester_id}", response_model=List[ClassroomResponse])
+async def get_classrooms_by_semester(
+    semester_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all classrooms for a specific semester"""
+    classrooms = await get_classrooms(db, semester_id=semester_id)
     return classrooms
 
 

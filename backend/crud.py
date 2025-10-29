@@ -36,40 +36,65 @@ from schemas import (
 
 # CRUD Operations for Assignments
 async def get_assignments(db: AsyncSession) -> List[Assignment]:
-    """Get all assignments with their exercises and classrooms"""
+    """Get all assignments with their exercises, course, and semester"""
     result = await db.execute(
         select(Assignment)
-        .options(selectinload(Assignment.exercises))
-        .options(selectinload(Assignment.classrooms))
+        .options(
+            selectinload(Assignment.exercises),
+            selectinload(Assignment.course),
+            selectinload(Assignment.semester)
+        )
+        .order_by(Assignment.created_at.desc())
+    )
+    return result.scalars().all()
+
+async def get_assignments_by_semester(db: AsyncSession, semester_id: int) -> List[Assignment]:
+    """Get all assignments for a specific semester"""
+    result = await db.execute(
+        select(Assignment)
+        .options(
+            selectinload(Assignment.exercises),
+            selectinload(Assignment.course),
+            selectinload(Assignment.semester)
+        )
+        .where(Assignment.semester_id == semester_id, Assignment.is_active == True)
         .order_by(Assignment.created_at.desc())
     )
     return result.scalars().all()
 
 async def get_assignment(db: AsyncSession, assignment_id: int) -> Optional[Assignment]:
-    """Get a single assignment by ID with exercises and classrooms"""
+    """Get a single assignment by ID with exercises, course, and semester"""
     result = await db.execute(
         select(Assignment)
-        .options(selectinload(Assignment.exercises))
-        .options(selectinload(Assignment.classrooms))
+        .options(
+            selectinload(Assignment.exercises),
+            selectinload(Assignment.course),
+            selectinload(Assignment.semester)
+        )
         .where(Assignment.id == assignment_id)
     )
     return result.scalar_one_or_none()
 
 async def update_assignment(db: AsyncSession, assignment_id: int, assignment_update: AssignmentUpdate) -> Optional[Assignment]:
     """Update an assignment"""
-    result = await db.execute(select(Assignment).where(Assignment.id == assignment_id))
+    result = await db.execute(
+        select(Assignment)
+        .options(selectinload(Assignment.exercises))
+        .where(Assignment.id == assignment_id)
+    )
     db_assignment = result.scalar_one_or_none()
     
     if not db_assignment:
         return None
     
     # Update fields
-    for field, value in assignment_update.dict(exclude_unset=True).items():
+    update_data = assignment_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
         setattr(db_assignment, field, value)
     
     db_assignment.updated_at = datetime.utcnow()
     await db.commit()
-    await db.refresh(db_assignment)
+    await db.refresh(db_assignment, ['exercises'])
     return db_assignment
 
 async def delete_assignment(db: AsyncSession, assignment_id: int) -> bool:
@@ -246,8 +271,7 @@ async def get_submissions(db: AsyncSession, assignment_id: Optional[int] = None,
     """Get all submissions with optional filtering"""
     query = select(Submission).options(
         selectinload(Submission.assignment).selectinload(Assignment.exercises),
-        selectinload(Submission.classroom).selectinload(Classroom.course),
-        selectinload(Submission.classroom).selectinload(Classroom.semester),
+        selectinload(Submission.classroom).selectinload(Classroom.semester).selectinload(Semester.course),
         selectinload(Submission.group)
     )
     
@@ -270,8 +294,7 @@ async def get_submission(db: AsyncSession, submission_id: int) -> Optional[Submi
     result = await db.execute(
         select(Submission).options(
             selectinload(Submission.assignment).selectinload(Assignment.exercises),
-            selectinload(Submission.classroom).selectinload(Classroom.course),
-            selectinload(Submission.classroom).selectinload(Classroom.semester),
+            selectinload(Submission.classroom).selectinload(Classroom.semester).selectinload(Semester.course),
             selectinload(Submission.group)
         ).where(Submission.id == submission_id)
     )
@@ -281,6 +304,10 @@ async def get_submissions_by_assignment(db: AsyncSession, assignment_id: int) ->
     """Get all submissions for a specific assignment"""
     result = await db.execute(
         select(Submission)
+        .options(
+            selectinload(Submission.group),
+            selectinload(Submission.classroom)
+        )
         .where(Submission.assignment_id == assignment_id)
         .order_by(Submission.submitted_at.desc())
     )
@@ -304,7 +331,7 @@ async def create_submission(db: AsyncSession, submission: SubmissionCreate) -> S
     else:
         max_score = 100
     
-    # Get the classroom to inherit course_id and semester_id
+    # Get the classroom to inherit semester_id
     classroom_result = await db.execute(
         select(Classroom).where(Classroom.id == submission.classroom_id)
     )
@@ -316,7 +343,6 @@ async def create_submission(db: AsyncSession, submission: SubmissionCreate) -> S
     db_submission = Submission(
         assignment_id=submission.assignment_id,
         classroom_id=submission.classroom_id,
-        course_id=classroom.course_id,  # Inherit from classroom
         semester_id=classroom.semester_id,  # Inherit from classroom
         group_id=submission.group_id,
         comments=submission.comments,
@@ -327,7 +353,7 @@ async def create_submission(db: AsyncSession, submission: SubmissionCreate) -> S
         pdf_file_size=submission.pdf_file_size,
         status=submission.status,
         max_score=max_score,
-        is_late=assignment.due_date < datetime.now() if assignment else False
+        is_late=assignment.due_date < datetime.now() if assignment and assignment.due_date else False
     )
     
     db.add(db_submission)
@@ -436,7 +462,7 @@ async def get_group_by_name(db: AsyncSession, name: str, created_by: int) -> Opt
 async def create_group(db: AsyncSession, group: GroupCreate) -> Group:
     """Create a new group"""
     
-    # Get the classroom to inherit course_id and semester_id
+    # Get the classroom to inherit semester_id
     classroom = await db.get(Classroom, group.classroom_id)
     if not classroom:
         raise ValueError(f"Classroom with id {group.classroom_id} not found")
@@ -448,12 +474,10 @@ async def create_group(db: AsyncSession, group: GroupCreate) -> Group:
     
     db_group = Group(
         name=group.name,
+        nickname=group.nickname,
         description=group.description,
         classroom_id=group.classroom_id,
-        course_id=classroom.course_id,  # Inherit from classroom
-        semester_id=classroom.semester_id,  # Inherit from classroom
         members=members_dict,
-        max_members=group.max_members,
         created_by=group.created_by,
         is_active=group.is_active
     )
@@ -806,9 +830,7 @@ async def create_classroom(db: AsyncSession, classroom: ClassroomCreate, created
         name=classroom.name,
         teacher_name=classroom.teacher_name,
         language=classroom.language,
-        course_id=classroom.course_id,
         semester_id=classroom.semester_id,
-        description=classroom.description,
         created_by=created_by,
         is_active=True
     )
@@ -822,10 +844,15 @@ async def get_classrooms(
     db: AsyncSession, 
     course_id: Optional[int] = None,
     semester_id: Optional[int] = None,
+    search: Optional[str] = None,
     skip: int = 0,
     limit: int = 100
 ) -> List[Classroom]:
     """Get all classrooms with optional filtering"""
+    from sqlalchemy.orm import selectinload
+    from sqlalchemy import or_
+    from sqlalchemy.sql import func
+    
     query = select(Classroom).where(Classroom.is_active == True)
     
     if course_id:
@@ -833,7 +860,19 @@ async def get_classrooms(
     if semester_id:
         query = query.where(Classroom.semester_id == semester_id)
     
-    query = query.order_by(Classroom.created_at.desc()).offset(skip).limit(limit)
+    # Search functionality
+    if search:
+        search_filter = or_(
+            Classroom.name.ilike(f"%{search}%"),
+            Classroom.teacher_name.ilike(f"%{search}%")
+        )
+        query = query.where(search_filter)
+    
+    # Load related data including groups
+    query = query.options(
+        selectinload(Classroom.semester).selectinload(Semester.course),
+        selectinload(Classroom.groups)
+    ).order_by(Classroom.created_at.desc()).offset(skip).limit(limit)
     
     result = await db.execute(query)
     return result.scalars().all()
@@ -896,22 +935,17 @@ async def get_classroom_with_details(db: AsyncSession, classroom_id: int) -> Opt
     return result.scalar_one_or_none()
 
 async def create_assignment(db: AsyncSession, assignment: AssignmentCreate, created_by: int = 1) -> Assignment:
-    """Create a new assignment with exercises and associate with classrooms using AssignmentRepository"""
+    """Create a new assignment with exercises using AssignmentRepository"""
     db_assignment = Assignment(
         name=assignment.name,
         description=assignment.description,
         due_date=assignment.due_date,
         language=assignment.language,
+        course_id=assignment.course_id,
+        semester_id=assignment.semester_id,
         is_active=assignment.is_active,
         created_by=created_by
     )
-    # Associate with classrooms
-    if assignment.classroom_ids:
-        from crud import get_classroom  # Import here to avoid circular import
-        for classroom_id in assignment.classroom_ids:
-            classroom = await get_classroom(db, classroom_id)
-            if classroom:
-                db_assignment.classrooms.append(classroom)
     # Add exercises
     for exercise_data in assignment.exercises:
         db_exercise = Exercise(

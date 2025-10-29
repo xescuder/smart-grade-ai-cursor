@@ -30,7 +30,6 @@ class AssignmentRepository:
         result = await self.db.execute(
             select(Assignment)
             .options(selectinload(Assignment.exercises))
-            .options(selectinload(Assignment.classrooms))
             .where(Assignment.id == assignment_id)
         )
         return result.scalar_one_or_none()
@@ -45,7 +44,6 @@ class AssignmentRepository:
         result = await self.db.execute(
             select(Assignment)
             .options(selectinload(Assignment.exercises))
-            .options(selectinload(Assignment.classrooms))
         )
         return result.scalars().all()
 
@@ -67,7 +65,6 @@ class AssignmentRepository:
         result = await self.db.execute(
             select(Assignment)
             .options(selectinload(Assignment.exercises))
-            .options(selectinload(Assignment.classrooms))
             .where(Assignment.id == assignment.id)
         )
         return result.scalar_one()

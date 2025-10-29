@@ -7,8 +7,6 @@ from api.routers import (
     assignments_router,
     submissions_router,
     grading_router,
-    auth_router,
-    users_router,
     classrooms_router,
     courses_router,
     semesters_router,
@@ -30,20 +28,6 @@ def register_routes(app: FastAPI) -> None:
     # ============================================================================
     # VERSIONED ROUTES (/api/v1/*)
     # ============================================================================
-
-    # Authentication routes
-    app.include_router(
-        auth_router,
-        prefix="/api/v1/auth",
-        tags=["authentication"]
-    )
-
-    # User management routes
-    app.include_router(
-        users_router,
-        prefix="/api/v1/users",
-        tags=["users"]
-    )
 
     # Assignment management routes
     app.include_router(
@@ -104,14 +88,6 @@ ROUTER_METADATA = [
     {
         "name": "health",
         "description": "System health and status checks"
-    },
-    {
-        "name": "authentication",
-        "description": "User authentication and authorization"
-    },
-    {
-        "name": "users",
-        "description": "User management and profile operations"
     },
     {
         "name": "assignments",
