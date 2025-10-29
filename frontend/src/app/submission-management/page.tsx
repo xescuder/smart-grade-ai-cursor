@@ -107,6 +107,11 @@ interface Classroom {
     code: string
     year: number
     season: string
+    course?: {
+      id: number
+      name: string
+      code: string
+    }
   }
 }
 
