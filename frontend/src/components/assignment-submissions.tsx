@@ -764,9 +764,6 @@ export function AssignmentSubmissions({ assignmentId, assignment: propAssignment
             <p className="text-muted-foreground">
               {assignment ? "Manage submissions for this assignment" : "Manage all submissions"}
             </p>
-            {assignment?.description && (
-              <p className="text-sm text-muted-foreground">{assignment.description}</p>
-            )}
             {assignment && (
               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">

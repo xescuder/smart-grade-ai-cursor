@@ -46,7 +46,6 @@ export default function AssignmentManagementPage() {
       const transformedData: Assignment[] = data.map((assignment: Assignment) => ({
         id: assignment.id,
         name: assignment.name,
-        description: assignment.description,
         due_date: assignment.due_date,
         language: assignment.language || 'en',
         course_id: assignment.course_id,
@@ -283,7 +282,6 @@ export default function AssignmentManagementPage() {
                             {assignment.is_active ? "Active" : "Inactive"}
                           </span>
                         </div>
-                        <p className="text-gray-600 text-sm truncate">{assignment.description}</p>
                         
                         {/* Stats */}
                         <div className="flex items-center gap-4 mt-2">

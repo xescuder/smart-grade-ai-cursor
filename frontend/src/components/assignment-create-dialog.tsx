@@ -33,17 +33,16 @@ interface Course {
 
 interface Semester {
   id: number
-  name: string
-  code: string
   year: number
   season: string
   course_id: number
+  start_date?: string | null
+  end_date?: string | null
 }
 
 export function AssignmentCreateDialog({ open, onOpenChange, onSave }: AssignmentCreateDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     due_date: "",
     language: "en",
     course_id: 0,
@@ -92,11 +91,6 @@ export function AssignmentCreateDialog({ open, onOpenChange, onSave }: Assignmen
       return
     }
 
-    if (!formData.course_id) {
-      toast.error("Please select a course")
-      return
-    }
-
     if (!formData.semester_id) {
       toast.error("Please select a semester")
       return
@@ -104,42 +98,28 @@ export function AssignmentCreateDialog({ open, onOpenChange, onSave }: Assignmen
 
     setIsLoading(true)
     try {
-      const response = await fetch("/api/v1/assignments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          due_date: formData.due_date || new Date().toISOString(),
-          language: formData.language,
-          course_id: formData.course_id,
-          semester_id: formData.semester_id,
-          is_active: true,
-          exercises: []
-        }),
+      // Only send semester_id - backend will derive course_id from semester_id
+      const newAssignment = await apiClient.createAssignment({
+        name: formData.name.trim(),
+        due_date: formData.due_date || new Date().toISOString(),
+        language: formData.language,
+        semester_id: formData.semester_id,
+        is_active: true,
+        exercises: []
       })
-
-      if (response.ok) {
-        const newAssignment = await response.json()
-        toast.success("Assignment created successfully!")
-        onSave(newAssignment)
-        handleClose()
-      } else {
-        const error = await response.json()
-        toast.error(error.detail || "Failed to create assignment")
-      }
+      toast.success("Assignment created successfully!")
+      onSave(newAssignment)
+      handleClose()
     } catch (error) {
       console.error("Error creating assignment:", error)
-      toast.error("Failed to create assignment")
+      toast.error(error instanceof Error ? error.message : "Failed to create assignment")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleClose = () => {
-    setFormData({ name: "", description: "", due_date: "", language: "en", course_id: 0, semester_id: 0 })
+    setFormData({ name: "", due_date: "", language: "en", course_id: 0, semester_id: 0 })
     onOpenChange(false)
   }
 
@@ -160,7 +140,7 @@ export function AssignmentCreateDialog({ open, onOpenChange, onSave }: Assignmen
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="course">Course *</Label>
+            <Label htmlFor="course">Course (optional - helps filter semesters)</Label>
             <Select 
               value={formData.course_id ? formData.course_id.toString() : ""} 
               onValueChange={(value) => {
@@ -173,7 +153,7 @@ export function AssignmentCreateDialog({ open, onOpenChange, onSave }: Assignmen
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a course" />
+                <SelectValue placeholder="Select a course to filter semesters (optional)" />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((course) => (
@@ -190,7 +170,6 @@ export function AssignmentCreateDialog({ open, onOpenChange, onSave }: Assignmen
             <Select 
               value={formData.semester_id ? formData.semester_id.toString() : ""} 
               onValueChange={(value) => setFormData({...formData, semester_id: parseInt(value)})}
-              disabled={!formData.course_id}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a semester" />
@@ -198,7 +177,7 @@ export function AssignmentCreateDialog({ open, onOpenChange, onSave }: Assignmen
               <SelectContent>
                 {filteredSemesters.map((semester) => (
                   <SelectItem key={semester.id} value={semester.id.toString()}>
-                    {semester.name} ({semester.code})
+                    {semester.season} {semester.year}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -231,17 +210,6 @@ export function AssignmentCreateDialog({ open, onOpenChange, onSave }: Assignmen
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               placeholder="Enter assignment name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              placeholder="Enter assignment description"
-              rows={3}
             />
           </div>
 

@@ -39,14 +39,14 @@ async def list_groups(
 ):
     """Get groups with optional filters.
 
-    Note: Filtering by classroom_id/course_id/semester_id is applied in-memory for now
-    to avoid adding multiple DB functions. This is acceptable for small datasets and
-    can be optimized later if needed.
+    Uses DB-level filtering for classroom_id to avoid stale or incorrect matches.
     """
-    groups = await get_groups(db, created_by, skip, limit)
-
     if classroom_id is not None:
-        groups = [g for g in groups if getattr(g, "classroom_id", None) == classroom_id]
+        groups = await get_groups_by_classroom(db, classroom_id, created_by)
+    else:
+        groups = await get_groups(db, created_by, skip, limit)
+
+    # In-memory filters for course/semester (legacy fields; may be null)
     if course_id is not None:
         groups = [g for g in groups if getattr(g, "course_id", None) == course_id]
     if semester_id is not None:

@@ -56,7 +56,6 @@ export function AssignmentEditorDialog({
   // Form data
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     due_date: "",
   })
   
@@ -71,7 +70,6 @@ export function AssignmentEditorDialog({
       if (assignment) {
         setFormData({
           name: assignment.name,
-          description: assignment.description,
           due_date: new Date(assignment.due_date).toISOString().slice(0, 16),
         })
         setExercises(assignment.exercises || [])
@@ -79,7 +77,6 @@ export function AssignmentEditorDialog({
         // Reset for new assignment
         setFormData({
           name: "",
-          description: "",
           due_date: "",
         })
         setExercises([])
@@ -476,16 +473,6 @@ export function AssignmentEditorDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Enter assignment description"
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="due_date">Due Date</Label>
                   <Input
                     id="due_date"
@@ -568,7 +555,10 @@ export function AssignmentEditorDialog({
                                     min="1"
                                     max="100"
                                     value={exercise.points}
-                                    onChange={(e) => updateExercise(exercise.id, { points: parseInt(e.target.value) || 0 })}
+                                    onChange={(e) => {
+                                      const id = typeof exercise.id === 'number' ? exercise.id : index
+                                      updateExercise(id, { points: parseInt(e.target.value) || 0 })
+                                    }}
                                     placeholder="Points"
                                   />
                                 </div>
@@ -578,7 +568,10 @@ export function AssignmentEditorDialog({
                                 <Textarea
                                   id={`ex-desc-${exercise.id}`}
                                   value={exercise.description}
-                                  onChange={(e) => updateExercise(exercise.id, { description: e.target.value })}
+                                  onChange={(e) => {
+                                    const id = typeof exercise.id === 'number' ? exercise.id : index
+                                    updateExercise(id, { description: e.target.value })
+                                  }}
                                   placeholder="Exercise description"
                                   rows={2}
                                 />

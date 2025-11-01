@@ -37,8 +37,22 @@ export class ApiClient {
       const response = await fetch(url, config)
       
       if (!response.ok) {
-        const error: ApiError = await response.json()
-        throw new Error(error.detail || `HTTP ${response.status}`)
+        const errorData = await response.json()
+        // Handle FastAPI validation errors - detail can be a string or array of error objects
+        let errorMessage = `HTTP ${response.status}`
+        if (errorData.detail) {
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail
+          } else if (Array.isArray(errorData.detail)) {
+            // Pydantic validation errors are arrays of {type, loc, msg, input}
+            errorMessage = errorData.detail
+              .map((err: any) => err.msg || JSON.stringify(err))
+              .join(', ')
+          } else if (typeof errorData.detail === 'object') {
+            errorMessage = JSON.stringify(errorData.detail)
+          }
+        }
+        throw new Error(errorMessage)
       }
 
       return await response.json()
@@ -60,7 +74,7 @@ export class ApiClient {
   }
 
   async createAssignment(data: Partial<Assignment>) {
-    return this.request<Assignment>('/api/v1/assignments', {
+    return this.request<Assignment>('/api/v1/assignments/', {
       method: 'POST',
       body: JSON.stringify(data)
     })

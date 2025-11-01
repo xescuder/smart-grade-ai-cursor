@@ -41,10 +41,57 @@ TEACHER_ONLY_CREATE = "Only teachers can create assignments"
 TEACHER_ONLY_UPDATE = "Only teachers can update assignments"  
 TEACHER_ONLY_DELETE = "Only teachers can delete assignments"
 
-@router.get("/", response_model=List[AssignmentResponse])
+@router.get("/")
 async def get_assignments(db: AsyncSession = Depends(get_db)):
     """Get all assignments"""
-    return await crud_get_assignments(db)
+    assignments = await crud_get_assignments(db)
+    # Manually convert to handle NULL values that might exist in legacy data
+    from schemas import ExerciseResponse, CourseResponse, SemesterResponse
+    result = []
+    for assignment in assignments:
+        exercises_data = [
+            ExerciseResponse.model_validate(ex, from_attributes=True) 
+            for ex in (assignment.exercises or [])
+        ]
+        # Convert course and semester relationships if they exist
+        course_data = None
+        if assignment.course:
+            # Manually construct course data as dict to avoid lazy loading semesters
+            course_data = {
+                "id": assignment.course.id,
+                "name": assignment.course.name,
+                "code": assignment.course.code,
+                "credits": getattr(assignment.course, 'credits', None),
+                "is_active": getattr(assignment.course, 'is_active', True),
+                "created_by": assignment.course.created_by,
+                "created_at": assignment.course.created_at.isoformat() if hasattr(assignment.course.created_at, 'isoformat') else assignment.course.created_at,
+                "updated_at": assignment.course.updated_at.isoformat() if hasattr(assignment.course.updated_at, 'isoformat') else assignment.course.updated_at,
+                "semesters": []  # Empty list, we don't need semesters for assignment responses
+            }
+        semester_data = None
+        if assignment.semester:
+            semester_dict = SemesterResponse.model_validate(assignment.semester, from_attributes=True).model_dump()
+            # Add computed 'name' field for frontend compatibility: "Fall 2025"
+            semester_dict['name'] = f"{assignment.semester.season} {assignment.semester.year}"
+            semester_data = semester_dict
+        result.append(AssignmentResponse(
+            id=assignment.id,
+            name=assignment.name,
+            due_date=assignment.due_date,
+            language=assignment.language or "en",
+            course_id=getattr(assignment, 'course_id', None),
+            semester_id=getattr(assignment, 'semester_id', None),
+            is_active=getattr(assignment, 'is_active', True),
+            pdf_file_path=getattr(assignment, 'pdf_file_path', None),
+            pdf_file_name=getattr(assignment, 'pdf_file_name', None),
+            created_by=assignment.created_by,
+            created_at=assignment.created_at,
+            updated_at=assignment.updated_at,
+            exercises=exercises_data,
+            course=course_data,
+            semester=semester_data
+        ))
+    return result
 
 
 @router.get("/by-semester/{semester_id}", response_model=List[AssignmentResponse])
@@ -57,9 +104,58 @@ async def get_assignments_by_semester(
     return assignments
 
 
-@router.post("/", response_model=AssignmentResponse)
+@router.post("/")
 async def create_assignment(assignment: CrudAssignmentCreate, db: AsyncSession = Depends(get_db)):
-    return await crud_create_assignment(db, assignment)
+    """Create a new assignment"""
+    created = await crud_create_assignment(db, assignment)
+    # Fetch with relationships for proper serialization
+    assignment_with_rels = await crud_get_assignment(db, created.id)
+    if not assignment_with_rels:
+        raise HTTPException(status_code=500, detail="Failed to retrieve created assignment")
+    
+    # Serialize like list endpoint
+    from schemas import ExerciseResponse, CourseResponse, SemesterResponse
+    exercises_data = [
+        ExerciseResponse.model_validate(ex, from_attributes=True) 
+        for ex in (assignment_with_rels.exercises or [])
+    ]
+    course_data = None
+    if assignment_with_rels.course:
+        # Manually construct course data as dict to avoid lazy loading semesters
+        course_data = {
+            "id": assignment_with_rels.course.id,
+            "name": assignment_with_rels.course.name,
+            "code": assignment_with_rels.course.code,
+            "credits": getattr(assignment_with_rels.course, 'credits', None),
+            "is_active": getattr(assignment_with_rels.course, 'is_active', True),
+            "created_by": assignment_with_rels.course.created_by,
+            "created_at": assignment_with_rels.course.created_at.isoformat() if hasattr(assignment_with_rels.course.created_at, 'isoformat') else assignment_with_rels.course.created_at,
+            "updated_at": assignment_with_rels.course.updated_at.isoformat() if hasattr(assignment_with_rels.course.updated_at, 'isoformat') else assignment_with_rels.course.updated_at,
+            "semesters": []  # Empty list, we don't need semesters for assignment responses
+        }
+    semester_data = None
+    if assignment_with_rels.semester:
+        semester_dict = SemesterResponse.model_validate(assignment_with_rels.semester, from_attributes=True).model_dump()
+        semester_dict['name'] = f"{assignment_with_rels.semester.season} {assignment_with_rels.semester.year}"
+        semester_data = semester_dict
+    
+    return AssignmentResponse(
+        id=assignment_with_rels.id,
+        name=assignment_with_rels.name,
+        due_date=assignment_with_rels.due_date,
+        language=assignment_with_rels.language or "en",
+        course_id=assignment_with_rels.course_id,
+        semester_id=assignment_with_rels.semester_id,
+        is_active=getattr(assignment_with_rels, 'is_active', True),
+        pdf_file_path=assignment_with_rels.pdf_file_path,
+        pdf_file_name=assignment_with_rels.pdf_file_name,
+        created_by=assignment_with_rels.created_by,
+        created_at=assignment_with_rels.created_at,
+        updated_at=assignment_with_rels.updated_at,
+        exercises=exercises_data,
+        course=course_data,
+        semester=semester_data
+    )
 
 
 @router.get("/{assignment_id}", response_model=AssignmentResponse)
@@ -228,9 +324,10 @@ async def extract_exercises_ai(
         logger.info(f"Prompt: {prompt}")
         
         # Get api key from settings or environment
-        google_ai_service = GoogleAIService(api_key=settings.GOOGLE_API_KEY)
+        google_ai_service = GoogleAIService(api_key=settings.GOOGLE_AI_API_KEY)
         
-        result = await google_ai_service.analyse_pdf(
+        # analyse_pdf is synchronous, not async, so don't await it
+        result = google_ai_service.analyse_pdf(
             pdf_bytes=assignment.pdf_file_data,
             prompt=prompt
         )
@@ -279,7 +376,6 @@ async def export_assignment_grades_excel(
         assignment_dict = {
             'id': assignment.id,
             'name': assignment.name,
-            'description': assignment.description or '',
             'due_date': assignment.due_date,
             'language': assignment.language or 'English',
             'exercises': [

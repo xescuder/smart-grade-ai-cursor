@@ -117,7 +117,6 @@ async def list_submissions_grading_data(
             "assignment": {
                 "id": submission.assignment.id,
                 "name": submission.assignment.name,
-                "description": submission.assignment.description,
                 "exercises": [
                     {
                         "id": ex.id,
@@ -412,7 +411,6 @@ async def get_submission_grading_data(submission_id: int, db: AsyncSession = Dep
         "assignment": {
             "id": submission.assignment.id,
             "name": submission.assignment.name,
-            "description": submission.assignment.description,
             "due_date": submission.assignment.due_date,
             "language": submission.assignment.language
         } if submission.assignment else None,
@@ -480,7 +478,6 @@ async def get_submission_by_id(submission_id: int, db: AsyncSession = Depends(ge
         "assignment": {
             "id": submission.assignment.id,
             "name": submission.assignment.name,
-            "description": submission.assignment.description,
             "exercises": [
                 {
                     "id": ex.id,
@@ -1034,7 +1031,6 @@ async def generate_classroom_assignment_grades_xlsx(
         assignment_dict = {
             "id": assignment.id,
             "name": assignment.name,
-            "description": assignment.description,
             "due_date": assignment.due_date,
             "language": assignment.language,
             "exercises": [

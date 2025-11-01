@@ -112,18 +112,78 @@ class GoogleAIService:
         try:
             json_data = json.loads(json_str)
             logger.info(f"Successfully parsed JSON with {len(json_data) if isinstance(json_data, (list, dict)) else 'unknown'} items")
+            
+            # Convert "weight" (percentage) to "points" (number) for exercises
+            if isinstance(json_data, dict) and "exercises" in json_data:
+                for exercise in json_data["exercises"]:
+                    if "weight" in exercise and "points" not in exercise:
+                        weight_str = exercise["weight"]
+                        # Convert "20%" to 20
+                        if isinstance(weight_str, str) and "%" in weight_str:
+                            try:
+                                points = int(float(weight_str.replace("%", "").strip()))
+                                exercise["points"] = points
+                                logger.info(f"Converted weight '{weight_str}' to points: {points}")
+                            except (ValueError, AttributeError):
+                                logger.warning(f"Could not convert weight '{weight_str}' to points")
+                        # If weight is already a number, use it directly
+                        elif isinstance(weight_str, (int, float)):
+                            exercise["points"] = int(weight_str)
+                        # Remove weight field after conversion
+                        if "points" in exercise:
+                            exercise.pop("weight", None)
+            
             return json_data
         except json.JSONDecodeError as e:
             logger.error(f"JSON parsing failed: {e}")
-            logger.error(f"Problematic JSON string: {json_str}")
+            logger.error(f"Error position: line {e.lineno}, column {e.colno}")
+            # Show the problematic line and surrounding context
+            if hasattr(e, 'lineno') and e.lineno:
+                lines = json_str.split('\n')
+                start_line = max(0, e.lineno - 2)
+                end_line = min(len(lines), e.lineno + 2)
+                context_lines = lines[start_line:end_line]
+                logger.error(f"Context around error (lines {start_line+1}-{end_line}):")
+                for i, line in enumerate(context_lines, start=start_line+1):
+                    marker = ">>> " if i == e.lineno else "    "
+                    logger.error(f"{marker}{i}: {line}")
+                    if i == e.lineno and hasattr(e, 'colno'):
+                        # Show pointer to exact column
+                        pointer = " " * (e.colno - 1) + "^"
+                        logger.error(f"    {pointer}")
+            logger.error(f"Full JSON string (first 1000 chars): {json_str[:1000]}")
             
             # Try multiple JSON fixing strategies
+            def fix_unquoted_properties(s: str) -> str:
+                """Fix unquoted property names in JSON"""
+                # Pattern to match unquoted property names followed by colon
+                # This handles cases like: property: "value" -> "property": "value"
+                def quote_property(match):
+                    prop_name = match.group(1)
+                    # Skip if already quoted or is a number
+                    if prop_name.startswith('"') or prop_name.replace('.', '').replace('-', '').isdigit():
+                        return match.group(0)
+                    return f'"{prop_name}":'
+                
+                # Match property: value patterns
+                result = re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)\s*:', quote_property, s)
+                return result
+            
+            def fix_malformed_quotes(s: str) -> str:
+                """Fix malformed quotes around property names and values"""
+                # Fix cases like: "property: "value" -> "property": "value"
+                # Or: property: "value -> "property": "value"
+                result = re.sub(r'"([^"]+):\s*"', r'"\1": "', s)
+                result = re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*):\s*([^",}\]]+)', r'"\1": "\2"', result)
+                return result
+            
             strategies = [
+                ("Fix unquoted property names", fix_unquoted_properties),
                 ("Fix unescaped quotes in strings", lambda s: self._fix_unescaped_quotes(s)),
-                ("Fix missing quotes around property names", lambda s: re.sub(r'(\w+):', r'"\1":', s)),
                 ("Fix trailing commas", lambda s: re.sub(r',(\s*[}\]])', r'\1', s)),
                 ("Fix single quotes to double quotes", lambda s: s.replace("'", '"')),
                 ("Fix multiline strings", lambda s: re.sub(r'"([^"]*\n[^"]*)"', lambda m: f'"{m.group(1).replace(chr(10), "\\n").replace(chr(13), "\\r")}"', s)),
+                ("Fix malformed quotes", fix_malformed_quotes),
             ]
             
             for strategy_name, fix_func in strategies:
@@ -131,6 +191,20 @@ class GoogleAIService:
                     fixed_json = fix_func(json_str)
                     json_data = json.loads(fixed_json)
                     logger.info(f"Fixed JSON using strategy: {strategy_name}")
+                    # Convert weight to points if needed
+                    if isinstance(json_data, dict) and "exercises" in json_data:
+                        for exercise in json_data["exercises"]:
+                            if "weight" in exercise and "points" not in exercise:
+                                weight_str = exercise["weight"]
+                                if isinstance(weight_str, str) and "%" in weight_str:
+                                    try:
+                                        exercise["points"] = int(float(weight_str.replace("%", "").strip()))
+                                        exercise.pop("weight", None)
+                                    except (ValueError, AttributeError):
+                                        pass
+                                elif isinstance(weight_str, (int, float)):
+                                    exercise["points"] = int(weight_str)
+                                    exercise.pop("weight", None)
                     return json_data
                 except json.JSONDecodeError:
                     continue
@@ -169,15 +243,33 @@ class GoogleAIService:
                             if name_match:
                                 exercise_obj["name"] = name_match.group(1).replace('\\"', '"').replace('\\n', '\n')
                             
-                            # Points field (common to both formats)
-                            points_match = re.search(r'"points"\s*:\s*"?([^",}]*)"?', clean_exercise)
-                            if points_match:
-                                points_value = points_match.group(1).strip()
-                                # Try to convert to number if possible
-                                try:
-                                    exercise_obj["points"] = float(points_value) if points_value else None
-                                except ValueError:
-                                    exercise_obj["points"] = points_value
+                            # Weight field (from AI prompt - percentage like "20%")
+                            weight_match = re.search(r'"weight"\s*:\s*"([^"]*)"', clean_exercise)
+                            if weight_match:
+                                weight_str = weight_match.group(1).strip()
+                                # Convert "20%" to 20
+                                if "%" in weight_str:
+                                    try:
+                                        exercise_obj["points"] = int(float(weight_str.replace("%", "").strip()))
+                                        logger.info(f"Converted weight '{weight_str}' to points: {exercise_obj['points']}")
+                                    except (ValueError, AttributeError):
+                                        logger.warning(f"Could not convert weight '{weight_str}' to points")
+                                elif weight_str:
+                                    try:
+                                        exercise_obj["points"] = int(float(weight_str))
+                                    except (ValueError, AttributeError):
+                                        pass
+                            
+                            # Points field (common to both formats) - only if weight wasn't found
+                            if "points" not in exercise_obj:
+                                points_match = re.search(r'"points"\s*:\s*"?([^",}]*)"?', clean_exercise)
+                                if points_match:
+                                    points_value = points_match.group(1).strip()
+                                    # Try to convert to number if possible
+                                    try:
+                                        exercise_obj["points"] = float(points_value) if points_value else None
+                                    except ValueError:
+                                        exercise_obj["points"] = points_value
                             
                             # Comments field (submission evaluation format)
                             comments_match = re.search(r'"comments"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', clean_exercise)
@@ -202,6 +294,19 @@ class GoogleAIService:
                     
                     if parsed_exercises:
                         result = {"exercises": parsed_exercises}
+                        # Also convert weight to points in regex-extracted exercises
+                        for exercise in result["exercises"]:
+                            if "weight" in exercise and "points" not in exercise:
+                                weight_str = exercise["weight"]
+                                if isinstance(weight_str, str) and "%" in weight_str:
+                                    try:
+                                        exercise["points"] = int(float(weight_str.replace("%", "").strip()))
+                                        exercise.pop("weight", None)
+                                    except (ValueError, AttributeError):
+                                        pass
+                                elif isinstance(weight_str, (int, float)):
+                                    exercise["points"] = int(weight_str)
+                                    exercise.pop("weight", None)
                         logger.info(f"Successfully extracted {len(parsed_exercises)} exercises using regex")
                         return result
                         

@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Plus, Pencil, Trash2, Calendar, Clock, CheckCircle } from "lucide-react"
+import { OptionalDatePicker } from "@/components/optional-date-picker"
 
 interface Semester {
   id: number
@@ -210,13 +211,24 @@ export default function SemesterManagementPage() {
     }
     
     try {
-      // Use simple date format for backend (YYYY-MM-DD)
-      const submitData = {
-        ...formData,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
+      const toIsoDate = (v: string) => {
+        if (!v) return ""
+        if (v.includes('/')) {
+          const [d, m, y] = v.split('/')
+          if (d && m && y) return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+        }
+        return v
+      }
+      // Use simple date format for backend (YYYY-MM-DD) and omit if empty
+      const startIso = toIsoDate(formData.start_date)
+      const endIso = toIsoDate(formData.end_date)
+      const submitData: Record<string, unknown> = {
+        year: formData.year,
+        season: formData.season,
         course_id: editingSemester ? editingSemester.course_id : selectedCourseId
       }
+      if (startIso) submitData.start_date = startIso
+      if (endIso) submitData.end_date = endIso
 
       const url = editingSemester 
         ? `/api/v1/semesters/${editingSemester.id}`
@@ -538,24 +550,20 @@ export default function SemesterManagementPage() {
               {/* Name and Code removed: composite key is course_id + year + season */}
               <div className="grid gap-2">
                 <Label htmlFor="start_date">Start Date</Label>
-                <Input
+                <OptionalDatePicker
                   id="start_date"
                   name="start_date"
-                  type="date"
                   value={formData.start_date}
-                  onChange={handleInputChange}
-                  required={false}
+                  onChange={(v) => setFormData(prev => ({ ...prev, start_date: v }))}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="end_date">End Date</Label>
-                <Input
+                <OptionalDatePicker
                   id="end_date"
                   name="end_date"
-                  type="date"
                   value={formData.end_date}
-                  onChange={handleInputChange}
-                  required={false}
+                  onChange={(v) => setFormData(prev => ({ ...prev, end_date: v }))}
                 />
               </div>
             </div>
@@ -577,7 +585,7 @@ export default function SemesterManagementPage() {
           <DialogHeader>
             <DialogTitle>Delete Semester</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the semester &quot;{semesterToDelete?.name}&quot; ({semesterToDelete?.code})?
+              {`Are you sure you want to delete the semester "${semesterToDelete ? `${semesterToDelete.season} ${semesterToDelete.year}` : ''}" (${semesterToDelete ? (courses.find(c => c.id === semesterToDelete.course_id)?.code || semesterToDelete.course_id) : ''})?`}
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>

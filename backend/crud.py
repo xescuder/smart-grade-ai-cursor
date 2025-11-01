@@ -37,11 +37,12 @@ from schemas import (
 # CRUD Operations for Assignments
 async def get_assignments(db: AsyncSession) -> List[Assignment]:
     """Get all assignments with their exercises, course, and semester"""
+    from database import Course
     result = await db.execute(
         select(Assignment)
         .options(
             selectinload(Assignment.exercises),
-            selectinload(Assignment.course),
+            selectinload(Assignment.course).selectinload(Course.semesters),
             selectinload(Assignment.semester)
         )
         .order_by(Assignment.created_at.desc())
@@ -50,11 +51,12 @@ async def get_assignments(db: AsyncSession) -> List[Assignment]:
 
 async def get_assignments_by_semester(db: AsyncSession, semester_id: int) -> List[Assignment]:
     """Get all assignments for a specific semester"""
+    from database import Course
     result = await db.execute(
         select(Assignment)
         .options(
             selectinload(Assignment.exercises),
-            selectinload(Assignment.course),
+            selectinload(Assignment.course).selectinload(Course.semesters),
             selectinload(Assignment.semester)
         )
         .where(Assignment.semester_id == semester_id, Assignment.is_active == True)
@@ -64,11 +66,12 @@ async def get_assignments_by_semester(db: AsyncSession, semester_id: int) -> Lis
 
 async def get_assignment(db: AsyncSession, assignment_id: int) -> Optional[Assignment]:
     """Get a single assignment by ID with exercises, course, and semester"""
+    from database import Course
     result = await db.execute(
         select(Assignment)
         .options(
             selectinload(Assignment.exercises),
-            selectinload(Assignment.course),
+            selectinload(Assignment.course).selectinload(Course.semesters),
             selectinload(Assignment.semester)
         )
         .where(Assignment.id == assignment_id)
@@ -89,6 +92,17 @@ async def update_assignment(db: AsyncSession, assignment_id: int, assignment_upd
     
     # Update fields
     update_data = assignment_update.model_dump(exclude_unset=True)
+    
+    # Derive course_id from semester_id if semester_id is being updated and course_id is not provided
+    if 'semester_id' in update_data and 'course_id' not in update_data:
+        semester_id = update_data['semester_id']
+        if semester_id:
+            from database import Semester
+            semester_result = await db.execute(select(Semester).where(Semester.id == semester_id))
+            semester = semester_result.scalar_one_or_none()
+            if semester:
+                update_data['course_id'] = semester.course_id
+    
     for field, value in update_data.items():
         setattr(db_assignment, field, value)
     
@@ -601,8 +615,6 @@ async def create_course(db: AsyncSession, course: CourseCreate) -> Course:
     db_course = Course(
         name=course.name,
         code=course.code,
-        description=course.description,
-        department=course.department,
         credits=course.credits,
         created_by=course.created_by,
         is_active=course.is_active
@@ -629,8 +641,15 @@ async def update_course(db: AsyncSession, course_id: int, course_update: CourseU
     
     db_course.updated_at = datetime.utcnow()
     await db.commit()
-    await db.refresh(db_course)
-    return db_course
+    
+    # Re-query with eager loading to avoid lazy-load during response serialization
+    from sqlalchemy.orm import selectinload
+    result = await db.execute(
+        select(Course)
+        .options(selectinload(Course.semesters))
+        .where(Course.id == course_id)
+    )
+    return result.scalar_one_or_none()
 
 async def delete_course(db: AsyncSession, course_id: int) -> bool:
     """Soft delete a course (set is_active to False)"""
@@ -907,17 +926,14 @@ async def update_classroom(db: AsyncSession, classroom_id: int, classroom: Class
     return db_classroom
 
 async def delete_classroom(db: AsyncSession, classroom_id: int) -> bool:
-    """Soft delete a classroom"""
-    result = await db.execute(
-        select(Classroom).where(Classroom.id == classroom_id)
-    )
+    """Permanently delete a classroom and its dependent records"""
+    result = await db.execute(select(Classroom).where(Classroom.id == classroom_id))
     db_classroom = result.scalar_one_or_none()
-    
     if not db_classroom:
         return False
-    
-    db_classroom.is_active = False
-    db_classroom.updated_at = datetime.utcnow()
+    # Note: Classroom.groups has cascade delete configured; submissions may reference classroom_id
+    # If DB FK prevents delete due to submissions, raise error to caller
+    await db.delete(db_classroom)
     await db.commit()
     return True
 
@@ -936,14 +952,32 @@ async def get_classroom_with_details(db: AsyncSession, classroom_id: int) -> Opt
 
 async def create_assignment(db: AsyncSession, assignment: AssignmentCreate, created_by: int = 1) -> Assignment:
     """Create a new assignment with exercises using AssignmentRepository"""
+    from datetime import datetime
+    from database import Semester
+    
+    # Get assignment data as dict to safely access all fields
+    assignment_data = assignment.model_dump()
+    # Provide defaults for required database fields
+    due_date = assignment_data.get('due_date') if assignment_data.get('due_date') else datetime.utcnow()
+    language = assignment_data.get('language') or "en"
+    
+    # Derive course_id from semester_id if not provided
+    course_id = assignment_data.get('course_id')
+    semester_id = assignment_data.get('semester_id')
+    if semester_id and not course_id:
+        # Fetch semester to get its course_id
+        result = await db.execute(select(Semester).where(Semester.id == semester_id))
+        semester = result.scalar_one_or_none()
+        if semester:
+            course_id = semester.course_id
+    
     db_assignment = Assignment(
-        name=assignment.name,
-        description=assignment.description,
-        due_date=assignment.due_date,
-        language=assignment.language,
-        course_id=assignment.course_id,
-        semester_id=assignment.semester_id,
-        is_active=assignment.is_active,
+        name=assignment_data['name'],
+        due_date=due_date,
+        language=language,
+        course_id=course_id,
+        semester_id=semester_id,
+        is_active=assignment_data.get('is_active', True),
         created_by=created_by
     )
     # Add exercises

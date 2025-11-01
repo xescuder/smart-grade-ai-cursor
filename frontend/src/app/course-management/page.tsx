@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { Plus, Pencil, Trash2, BookOpen, Users, ChevronDown, ChevronRight, Calendar, Clock } from "lucide-react"
 import { apiClient } from "@/lib/api"
+import { OptionalDatePicker } from "@/components/optional-date-picker"
 
 interface Semester {
   id: number
@@ -219,11 +220,35 @@ export default function CourseManagementPage() {
     e.preventDefault()
     
     try {
+      const toIsoDate = (v: string) => {
+        if (!v) return ""
+        if (v.includes('/')) {
+          const [d, m, y] = v.split('/')
+          if (d && m && y) return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+        }
+        return v
+      }
+      const startIso = toIsoDate(semesterFormData.start_date)
+      const endIso = toIsoDate(semesterFormData.end_date)
       if (editingSemester) {
-        await apiClient.updateSemester(editingSemester.id, semesterFormData)
+        const payload: Record<string, unknown> = {
+          year: semesterFormData.year,
+          season: semesterFormData.season
+        }
+        if (startIso) payload.start_date = startIso
+        if (endIso) payload.end_date = endIso
+        await apiClient.updateSemester(editingSemester.id, payload)
         toast.success('Semester updated successfully')
       } else {
-        await apiClient.createSemester(semesterFormData)
+        const payload: Record<string, unknown> = {
+          year: semesterFormData.year,
+          season: semesterFormData.season,
+          course_id: semesterFormData.course_id,
+          created_by: 1
+        }
+        if (startIso) payload.start_date = startIso
+        if (endIso) payload.end_date = endIso
+        await apiClient.createSemester(payload as any)
         toast.success('Semester created successfully')
       }
       
@@ -633,24 +658,20 @@ export default function CourseManagementPage() {
               {/* Name and Code removed: composite key is course_id + year + season */}
               <div className="grid gap-2">
                 <Label htmlFor="start_date">Start Date</Label>
-                <Input
+                <OptionalDatePicker
                   id="start_date"
                   name="start_date"
-                  type="date"
                   value={semesterFormData.start_date}
-                  onChange={(e) => setSemesterFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                  required={false}
+                  onChange={(v) => setSemesterFormData(prev => ({ ...prev, start_date: v }))}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="end_date">End Date</Label>
-                <Input
+                <OptionalDatePicker
                   id="end_date"
                   name="end_date"
-                  type="date"
                   value={semesterFormData.end_date}
-                  onChange={(e) => setSemesterFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                  required={false}
+                  onChange={(v) => setSemesterFormData(prev => ({ ...prev, end_date: v }))}
                 />
               </div>
             </div>
