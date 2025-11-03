@@ -15,7 +15,7 @@ import {
   CardContent,
   CardHeader,
 } from "@/components/ui/card"
-import { Plus, Edit, Trash2, Calendar, BookOpen, Upload, FileText, Download, Globe } from "lucide-react"
+import { Plus, Edit, Trash2, Calendar, BookOpen, Upload, FileText, Globe } from "lucide-react"
 import { toast } from "sonner"
 import { Assignment } from "@/types/assignment"
 import { Badge } from "@/components/ui/badge"
@@ -84,50 +84,6 @@ export default function AssignmentManagementPage() {
       toast.error("Failed to delete assignment. Please try again.")
     }
   }
-
-  const handleExportSubmissions = async (assignmentId: number) => {
-    try {
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-      const response = await fetch(`${API_BASE_URL}/api/v1/assignments/${assignmentId}/export`, {
-        method: "GET",
-        headers: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (response.ok) {
-        // Get the filename from the Content-Disposition header
-        const contentDisposition = response.headers.get('Content-Disposition')
-        let filename = 'submissions.csv'
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-          if (filenameMatch) {
-            filename = filenameMatch[1]
-          }
-        }
-
-        // Create blob and download
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = filename
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-        toast.success("Submissions exported successfully")
-      } else {
-        console.error("Failed to export submissions")
-        toast.error("Failed to export submissions. Please try again.")
-      }
-    } catch (error) {
-      console.error("Error exporting submissions:", error)
-      toast.error("Error exporting submissions. Please try again.")
-    }
-  }
-
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -360,18 +316,6 @@ export default function AssignmentManagementPage() {
                         className={assignment.pdf_file_name ? "text-blue-600" : ""}
                       >
                         <Upload className="h-4 w-4" />
-                      </Button>
-                      
-                      
-                      {/* Export Submissions */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExportSubmissions(assignment.id)}
-                        className="text-green-600 hover:text-green-800"
-                        title="Export Submissions as CSV"
-                      >
-                        <Download className="h-4 w-4" />
                       </Button>
                       
                       {/* Delete */}

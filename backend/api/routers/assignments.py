@@ -62,10 +62,10 @@ async def get_assignments(db: AsyncSession = Depends(get_db)):
                 "name": assignment.course.name,
                 "code": assignment.course.code,
                 "credits": getattr(assignment.course, 'credits', None),
-                "is_active": getattr(assignment.course, 'is_active', True),
+                # Removed is_active field
                 "created_by": assignment.course.created_by,
-                "created_at": assignment.course.created_at.isoformat() if hasattr(assignment.course.created_at, 'isoformat') else assignment.course.created_at,
-                "updated_at": assignment.course.updated_at.isoformat() if hasattr(assignment.course.updated_at, 'isoformat') else assignment.course.updated_at,
+                "created_at": assignment.course.created_at.isoformat() if assignment.course.created_at else None,
+                "updated_at": assignment.course.updated_at.isoformat() if assignment.course.updated_at else None,
                 "semesters": []  # Empty list, we don't need semesters for assignment responses
             }
         semester_data = None
@@ -81,7 +81,7 @@ async def get_assignments(db: AsyncSession = Depends(get_db)):
             language=assignment.language or "en",
             course_id=getattr(assignment, 'course_id', None),
             semester_id=getattr(assignment, 'semester_id', None),
-            is_active=getattr(assignment, 'is_active', True),
+            # Removed is_active field
             pdf_file_path=getattr(assignment, 'pdf_file_path', None),
             pdf_file_name=getattr(assignment, 'pdf_file_name', None),
             created_by=assignment.created_by,
@@ -129,8 +129,8 @@ async def create_assignment(assignment: CrudAssignmentCreate, db: AsyncSession =
             "credits": getattr(assignment_with_rels.course, 'credits', None),
             "is_active": getattr(assignment_with_rels.course, 'is_active', True),
             "created_by": assignment_with_rels.course.created_by,
-            "created_at": assignment_with_rels.course.created_at.isoformat() if hasattr(assignment_with_rels.course.created_at, 'isoformat') else assignment_with_rels.course.created_at,
-            "updated_at": assignment_with_rels.course.updated_at.isoformat() if hasattr(assignment_with_rels.course.updated_at, 'isoformat') else assignment_with_rels.course.updated_at,
+            "created_at": assignment_with_rels.course.created_at.isoformat() if assignment_with_rels.course.created_at else None,
+            "updated_at": assignment_with_rels.course.updated_at.isoformat() if assignment_with_rels.course.updated_at else None,
             "semesters": []  # Empty list, we don't need semesters for assignment responses
         }
     semester_data = None
@@ -146,7 +146,7 @@ async def create_assignment(assignment: CrudAssignmentCreate, db: AsyncSession =
         language=assignment_with_rels.language or "en",
         course_id=assignment_with_rels.course_id,
         semester_id=assignment_with_rels.semester_id,
-        is_active=getattr(assignment_with_rels, 'is_active', True),
+        # Removed is_active field
         pdf_file_path=assignment_with_rels.pdf_file_path,
         pdf_file_name=assignment_with_rels.pdf_file_name,
         created_by=assignment_with_rels.created_by,
@@ -158,26 +158,134 @@ async def create_assignment(assignment: CrudAssignmentCreate, db: AsyncSession =
     )
 
 
-@router.get("/{assignment_id}", response_model=AssignmentResponse)
+@router.get("/{assignment_id}")
 async def get_assignment(assignment_id: int, db: AsyncSession = Depends(get_db)):
     """Get assignment by ID"""
     assignment = await crud_get_assignment(db, assignment_id)
     if not assignment:
         raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
-    return assignment
+    
+    # Serialize manually like other endpoints
+    from schemas import ExerciseResponse, SemesterResponse
+    exercises_data = [
+        ExerciseResponse.model_validate(ex, from_attributes=True) 
+        for ex in (assignment.exercises or [])
+    ]
+    course_data = None
+    if assignment.course:
+        # Manually construct course data as dict to avoid lazy loading semesters
+        course_data = {
+            "id": assignment.course.id,
+            "name": assignment.course.name,
+            "code": assignment.course.code,
+            "credits": getattr(assignment.course, 'credits', None),
+            # Removed is_active field
+            "created_by": assignment.course.created_by,
+            "created_at": assignment.course.created_at.isoformat() if assignment.course.created_at else None,
+            "updated_at": assignment.course.updated_at.isoformat() if assignment.course.updated_at else None,
+            "semesters": []  # Empty list, we don't need semesters for assignment responses
+        }
+    semester_data = None
+    if assignment.semester:
+        semester_dict = SemesterResponse.model_validate(assignment.semester, from_attributes=True).model_dump()
+        semester_dict['name'] = f"{assignment.semester.season} {assignment.semester.year}"
+        semester_data = semester_dict
+    
+    return AssignmentResponse(
+        id=assignment.id,
+        name=assignment.name,
+        due_date=assignment.due_date,
+        language=assignment.language or "en",
+        course_id=assignment.course_id,
+        semester_id=assignment.semester_id,
+        is_active=getattr(assignment, 'is_active', True),
+        pdf_file_path=assignment.pdf_file_path,
+        pdf_file_name=assignment.pdf_file_name,
+        created_by=assignment.created_by,
+        created_at=assignment.created_at,
+        updated_at=assignment.updated_at,
+        exercises=exercises_data,
+        course=course_data,
+        semester=semester_data
+    )
 
 
-@router.put("/{assignment_id}", response_model=AssignmentResponse)
+@router.put("/{assignment_id}")
 async def update_assignment(
     assignment_id: int,
     assignment_update: CrudAssignmentUpdate,
     db: AsyncSession = Depends(get_db)
 ):
-    assignment = await crud_update_assignment(db, assignment_id, assignment_update)
-    if not assignment:
-        raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
-    
-    return assignment
+    try:
+        updated = await crud_update_assignment(db, assignment_id, assignment_update)
+        if not updated:
+            raise HTTPException(status_code=404, detail=ASSIGNMENT_NOT_FOUND)
+        
+        # Fetch with relationships for proper serialization
+        assignment_with_rels = await crud_get_assignment(db, updated.id)
+        if not assignment_with_rels:
+            raise HTTPException(status_code=500, detail="Failed to retrieve updated assignment")
+        
+        # Serialize like create_assignment endpoint
+        from schemas import ExerciseResponse, SemesterResponse
+        exercises_data = [
+            ExerciseResponse.model_validate(ex, from_attributes=True) 
+            for ex in (assignment_with_rels.exercises or [])
+        ]
+        course_data = None
+        try:
+            if assignment_with_rels.course:
+                # Manually construct course data as dict to avoid lazy loading semesters
+                course_data = {
+                    "id": assignment_with_rels.course.id,
+                    "name": assignment_with_rels.course.name,
+                    "code": assignment_with_rels.course.code,
+                    "credits": getattr(assignment_with_rels.course, 'credits', None),
+                    # Removed is_active field
+                    "created_by": assignment_with_rels.course.created_by,
+                    "created_at": assignment_with_rels.course.created_at.isoformat() if assignment_with_rels.course.created_at else None,
+                    "updated_at": assignment_with_rels.course.updated_at.isoformat() if assignment_with_rels.course.updated_at else None,
+                    "semesters": []  # Empty list, we don't need semesters for assignment responses
+                }
+        except Exception as e:
+            from logging_config import logger
+            logger.error(f"Error serializing course data: {e}")
+            course_data = None
+        
+        semester_data = None
+        try:
+            if assignment_with_rels.semester:
+                semester_dict = SemesterResponse.model_validate(assignment_with_rels.semester, from_attributes=True).model_dump()
+                semester_dict['name'] = f"{assignment_with_rels.semester.season} {assignment_with_rels.semester.year}"
+                semester_data = semester_dict
+        except Exception as e:
+            from logging_config import logger
+            logger.error(f"Error serializing semester data: {e}")
+            semester_data = None
+        
+        return AssignmentResponse(
+            id=assignment_with_rels.id,
+            name=assignment_with_rels.name,
+            due_date=assignment_with_rels.due_date,
+            language=assignment_with_rels.language or "en",
+            course_id=assignment_with_rels.course_id,
+            semester_id=assignment_with_rels.semester_id,
+            # Removed is_active field
+            pdf_file_path=assignment_with_rels.pdf_file_path,
+            pdf_file_name=assignment_with_rels.pdf_file_name,
+            created_by=assignment_with_rels.created_by,
+            created_at=assignment_with_rels.created_at,
+            updated_at=assignment_with_rels.updated_at,
+            exercises=exercises_data,
+            course=course_data,
+            semester=semester_data
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        from logging_config import logger
+        logger.error(f"Error updating assignment {assignment_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update assignment: {str(e)}")
 
 
 @router.delete("/{assignment_id}")

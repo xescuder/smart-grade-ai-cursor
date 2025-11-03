@@ -45,7 +45,6 @@ class Assignment(Base):
     pdf_mime_type = Column(String(100), nullable=True)
     pdf_file_size = Column(Integer, nullable=True)
     created_by = Column(Integer, nullable=False)  # User ID
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -64,7 +63,6 @@ class SectionExtractionConfig(Base):
     markers = Column(Text, nullable=False)  # JSON array of search terms
     description = Column(Text)  # Human readable description
     priority = Column(Integer, default=1)  # Lower number = higher priority
-    is_active = Column(Boolean, default=True)
     extraction_strategy = Column(String(50), default='section_to_end')  # 'section_to_end', 'section_limited', 'full_document'
     max_characters = Column(Integer, default=4000)  # Max chars to extract from this section
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -92,7 +90,7 @@ class Submission(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     assignment_id = Column(Integer, ForeignKey("assignments.id"), nullable=False)
-    classroom_id = Column(Integer, ForeignKey("classrooms.id"), nullable=False)  # Foreign key to classroom
+    classroom_id = Column(Integer, ForeignKey("classrooms.id", ondelete="CASCADE"), nullable=False)  # Foreign key to classroom
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=True)  # Foreign key to group
     
     # Legacy fields for backward compatibility (can be removed later)
@@ -182,7 +180,7 @@ class Submission(Base):
     
     # Relationships
     assignment = relationship("Assignment", back_populates="submissions")
-    classroom = relationship("Classroom")
+    classroom = relationship("Classroom", passive_deletes=True)
     group = relationship("Group")
 
 class Classroom(Base):
@@ -193,17 +191,16 @@ class Classroom(Base):
     name = Column(String(255), nullable=False)  # e.g., "CS101 - Fall 2024 - Morning Section"
     teacher_name = Column(String(255), nullable=False)  # Teacher's full name
     language = Column(String(50), nullable=False)  # e.g., "en", "es", "ca", "English", "Spanish", "Catalan"
-    semester_id = Column(Integer, ForeignKey("semesters.id"), nullable=False)
+    semester_id = Column(Integer, ForeignKey("semesters.id", ondelete="CASCADE"), nullable=False)
     
     # Metadata
     created_by = Column(Integer, nullable=False)  # Teacher user ID
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    semester = relationship("Semester")
-    groups = relationship("Group", back_populates="classroom", cascade="all, delete-orphan")
+    semester = relationship("Semester", passive_deletes=True)
+    groups = relationship("Group", back_populates="classroom", cascade="all, delete-orphan", passive_deletes=True)
 
 class Group(Base):
     """Group database model for student groups"""
@@ -213,19 +210,18 @@ class Group(Base):
     name = Column(String(255), nullable=False)
     nickname = Column(String(100), nullable=True)  # Optional nickname like "Mandalorian"
     description = Column(Text, nullable=True)
-    classroom_id = Column(Integer, ForeignKey("classrooms.id"), nullable=False)  # Foreign key to classroom
+    classroom_id = Column(Integer, ForeignKey("classrooms.id", ondelete="CASCADE"), nullable=False)  # Foreign key to classroom
     
     # Group members - JSON array of student info
     members = Column(JSON, nullable=False)  # [{"name": "John", "email": "john@example.com", "student_id": "12345"}]
     
     # Metadata
     created_by = Column(Integer, nullable=False)  # Teacher user ID
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    classroom = relationship("Classroom", back_populates="groups")
+    classroom = relationship("Classroom", back_populates="groups", passive_deletes=True)
 
 class Course(Base):
     """Course database model"""
@@ -238,7 +234,6 @@ class Course(Base):
     
     # Metadata
     created_by = Column(Integer, nullable=False)  # Teacher user ID
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -258,7 +253,6 @@ class Semester(Base):
     
     # Metadata
     created_by = Column(Integer, nullable=False)  # Teacher user ID
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -379,10 +373,9 @@ async def init_db():
                 teacher_name VARCHAR(255) NOT NULL,
                 language VARCHAR(50) NOT NULL,
                 course_id INTEGER REFERENCES courses(id),
-                semester_id INTEGER REFERENCES semesters(id),
+                semester_id INTEGER REFERENCES semesters(id) ON DELETE CASCADE,
                 description TEXT,
                 created_by INTEGER NOT NULL,
-                is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
             );
@@ -392,7 +385,58 @@ async def init_db():
         await conn.execute(text(
             """
             ALTER TABLE groups
-                ADD COLUMN IF NOT EXISTS classroom_id INTEGER REFERENCES classrooms(id);
+                ADD COLUMN IF NOT EXISTS classroom_id INTEGER REFERENCES classrooms(id) ON DELETE CASCADE;
+            """
+        ))
+        # Ensure ON DELETE CASCADE constraints for existing FKs
+        await conn.execute(text(
+            """
+            DO $$
+            BEGIN
+                -- Recreate classrooms->semesters FK with ON DELETE CASCADE
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints 
+                    WHERE constraint_name = 'classrooms_semester_id_fkey'
+                ) THEN
+                    ALTER TABLE classrooms DROP CONSTRAINT classrooms_semester_id_fkey;
+                END IF;
+                ALTER TABLE classrooms
+                    ADD CONSTRAINT classrooms_semester_id_fkey
+                    FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE CASCADE;
+
+                -- Recreate groups->classrooms FK with ON DELETE CASCADE
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints 
+                    WHERE constraint_name = 'groups_classroom_id_fkey'
+                ) THEN
+                    ALTER TABLE groups DROP CONSTRAINT groups_classroom_id_fkey;
+                END IF;
+                ALTER TABLE groups
+                    ADD CONSTRAINT groups_classroom_id_fkey
+                    FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE;
+
+                -- Also ensure submissions->classrooms cascades to avoid orphan submissions
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints 
+                    WHERE constraint_name = 'submissions_classroom_id_fkey'
+                ) THEN
+                    ALTER TABLE submissions DROP CONSTRAINT submissions_classroom_id_fkey;
+                END IF;
+                ALTER TABLE submissions
+                    ADD CONSTRAINT submissions_classroom_id_fkey
+                    FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE;
+
+                -- Ensure submissions->groups cascades when group is deleted
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints 
+                    WHERE constraint_name = 'submissions_group_id_fkey'
+                ) THEN
+                    ALTER TABLE submissions DROP CONSTRAINT submissions_group_id_fkey;
+                END IF;
+                ALTER TABLE submissions
+                    ADD CONSTRAINT submissions_group_id_fkey
+                    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL;
+            END $$;
             """
         ))
         # Add language to assignments table if not exists

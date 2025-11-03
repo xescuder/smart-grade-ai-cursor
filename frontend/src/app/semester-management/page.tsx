@@ -269,7 +269,19 @@ export default function SemesterManagementPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to delete semester')
+        // Try to extract server-provided detail for better UX
+        let message = 'Failed to delete semester'
+        try {
+          const contentType = response.headers.get('content-type') || ''
+          if (contentType.includes('application/json')) {
+            const data = await response.json()
+            if (data?.detail) message = data.detail
+          } else {
+            const text = await response.text()
+            if (text) message = text
+          }
+        } catch {}
+        throw new Error(message)
       }
 
       toast.success('Semester deleted successfully')
@@ -278,7 +290,7 @@ export default function SemesterManagementPage() {
       fetchSemesters()
     } catch (error) {
       console.error('Error deleting semester:', error)
-      toast.error('Failed to delete semester')
+      toast.error(error instanceof Error ? error.message : 'Failed to delete semester')
     }
   }
 

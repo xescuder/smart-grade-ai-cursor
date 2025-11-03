@@ -64,7 +64,7 @@ async def list_groups(
             "course_id": group.course_id,
             "semester_id": group.semester_id,
             "members": group.members,
-            "is_active": group.is_active,
+            # Removed is_active field
             "created_by": group.created_by,
             "created_at": group.created_at,
             "updated_at": group.updated_at,
@@ -79,55 +79,6 @@ async def list_groups(
         result.append(group_dict)
 
     return result
-
-
-@router.get("/{group_id}", response_model=GroupResponse)
-async def get_group_by_id(
-    group_id: int,
-    db: AsyncSession = Depends(get_db),
-):
-    """Get a specific group by ID"""
-    group = await get_group(db, group_id)
-    if not group:
-        raise HTTPException(status_code=404, detail=GROUP_NOT_FOUND)
-    return group
-
-
-@router.post("/", response_model=GroupResponse)
-async def create_new_group(
-    group: GroupCreate,
-    db: AsyncSession = Depends(get_db),
-):
-    """Create a new group"""
-    db_group = await create_group(db, group)
-    return db_group
-
-
-@router.put("/{group_id}", response_model=GroupResponse)
-async def update_group_by_id(
-    group_id: int,
-    group: GroupUpdate,
-    db: AsyncSession = Depends(get_db),
-):
-    """Update a group"""
-    db_group = await get_group(db, group_id)
-    if not db_group:
-        raise HTTPException(status_code=404, detail=GROUP_NOT_FOUND)
-    updated = await update_group(db, group_id, group)
-    return updated
-
-
-@router.delete("/{group_id}")
-async def delete_group_by_id(
-    group_id: int,
-    db: AsyncSession = Depends(get_db),
-):
-    """Delete a group"""
-    group = await get_group(db, group_id)
-    if not group:
-        raise HTTPException(status_code=404, detail=GROUP_NOT_FOUND)
-    await delete_group(db, group_id)
-    return {"message": "Group deleted successfully"}
 
 
 @router.post("/import-csv/{classroom_id}")
@@ -180,7 +131,7 @@ async def import_groups_from_csv(
             for student in students:
                 group_members.append({
                     "name": student.get('name', ''),
-                    "email": student.get('email', ''),
+                    "email_address": student.get('email', ''),
                     "student_id": student.get('login', '')
                 })
             
@@ -211,5 +162,54 @@ async def import_groups_from_csv(
         # Clean up temporary file
         if os.path.exists(temp_file_path):
             os.unlink(temp_file_path)
+
+
+@router.get("/{group_id}", response_model=GroupResponse)
+async def get_group_by_id(
+    group_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a specific group by ID"""
+    group = await get_group(db, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail=GROUP_NOT_FOUND)
+    return group
+
+
+@router.post("/", response_model=GroupResponse)
+async def create_new_group(
+    group: GroupCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new group"""
+    db_group = await create_group(db, group)
+    return db_group
+
+
+@router.put("/{group_id}", response_model=GroupResponse)
+async def update_group_by_id(
+    group_id: int,
+    group: GroupUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a group"""
+    db_group = await get_group(db, group_id)
+    if not db_group:
+        raise HTTPException(status_code=404, detail=GROUP_NOT_FOUND)
+    updated = await update_group(db, group_id, group)
+    return updated
+
+
+@router.delete("/{group_id}")
+async def delete_group_by_id(
+    group_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a group"""
+    group = await get_group(db, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail=GROUP_NOT_FOUND)
+    await delete_group(db, group_id)
+    return {"message": "Group deleted successfully"}
 
 

@@ -2,6 +2,7 @@
 Classroom management API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
@@ -92,6 +93,15 @@ async def delete_classroom_by_id(
     classroom = await get_classroom(db, classroom_id)
     if not classroom:
         raise HTTPException(status_code=404, detail=CLASSROOM_NOT_FOUND)
-    
-    await delete_classroom(db, classroom_id)
-    return {"message": "Classroom deleted successfully"}
+    try:
+        await delete_classroom(db, classroom_id)
+        return {"message": "Classroom deleted successfully"}
+    except IntegrityError:
+        # FK constraint from groups -> classrooms
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Cannot delete classroom: there are groups linked to this classroom. "
+                "Delete or reassign those groups first."
+            ),
+        )

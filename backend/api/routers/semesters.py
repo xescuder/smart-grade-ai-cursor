@@ -32,7 +32,6 @@ class SemesterCreateRequest(BaseModel):
     year: int
     season: str
     course_id: int
-    is_active: bool = True
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -83,7 +82,7 @@ async def create_new_semester(
         year=semester_request.year,
         season=semester_request.season,
         course_id=semester_request.course_id,
-        is_active=semester_request.is_active,
+        # Removed is_active field
         start_date=semester_request.start_date,
         end_date=semester_request.end_date,
         created_by=1  # For now, use a default created_by user ID (1)
@@ -122,7 +121,16 @@ async def delete_semester_by_id(
     semester = await get_semester_any_status(db, semester_id)
     if not semester:
         raise HTTPException(status_code=404, detail=SEMESTER_NOT_FOUND)
-
-    await delete_semester(db, semester_id)
-    return {"message": "Semester deleted successfully"}
+    try:
+        await delete_semester(db, semester_id)
+        return {"message": "Semester deleted successfully"}
+    except IntegrityError:
+        # Foreign key constraint from classrooms -> semesters
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Cannot delete semester: there are classrooms linked to this semester. "
+                "Delete or reassign those classrooms first."
+            ),
+        )
 

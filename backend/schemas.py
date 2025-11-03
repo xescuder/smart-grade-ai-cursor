@@ -47,7 +47,6 @@ class AssignmentBase(BaseModel):
     name: str
     due_date: Optional[datetime] = None
     language: Optional[str] = "en"  # Language code: en, es, ca, etc. Default to English
-    is_active: bool = True
 
 
 class AssignmentCreate(AssignmentBase):
@@ -75,7 +74,6 @@ class AssignmentResponse(BaseModel):
     language: Optional[str] = Field(default="en")
     course_id: Optional[int] = Field(default=None)
     semester_id: Optional[int] = Field(default=None)
-    is_active: bool = Field(default=True)
     pdf_file_path: Optional[str] = Field(default=None)
     pdf_file_name: Optional[str] = Field(default=None)
     created_by: int
@@ -95,7 +93,6 @@ class SectionExtractionConfigBase(BaseModel):
     markers: str  # JSON string of array
     description: Optional[str] = None
     priority: int = 1
-    is_active: bool = True
     extraction_strategy: str = 'section_to_end'
     max_characters: int = 4000
 
@@ -161,7 +158,6 @@ class GroupBase(BaseModel):
     description: Optional[str] = None
     classroom_id: int  # Required field
     members: Optional[List[GroupMember]] = None
-    is_active: bool = True
 
 
 class GroupCreate(GroupBase):
@@ -176,7 +172,6 @@ class GroupUpdate(BaseModel):
     course_id: Optional[int] = None
     semester_id: Optional[int] = None
     members: Optional[List[GroupMember]] = None
-    is_active: Optional[bool] = None
 
 
 # ===== COURSE MODELS =====
@@ -185,7 +180,6 @@ class CourseBase(BaseModel):
     name: str
     code: str
     credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
-    is_active: bool = True
 
 
 class CourseCreate(CourseBase):
@@ -196,7 +190,6 @@ class CourseUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
     credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
-    is_active: Optional[bool] = None
 
 
 class CourseResponse(CourseBase):
@@ -216,7 +209,6 @@ class SemesterBase(BaseModel):
     year: int
     season: str
     course_id: int
-    is_active: bool = True
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -236,7 +228,6 @@ class SemesterUpdate(BaseModel):
     year: Optional[int] = None
     season: Optional[str] = None
     course_id: Optional[int] = None
-    is_active: Optional[bool] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -275,13 +266,11 @@ class ClassroomUpdate(BaseModel):
     name: Optional[str] = None
     teacher_name: Optional[str] = None
     language: Optional[str] = None
-    is_active: Optional[bool] = None
 
 
 class ClassroomResponse(ClassroomBase):
     id: int
     created_by: int
-    is_active: bool
     created_at: datetime
     updated_at: datetime
 

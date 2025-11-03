@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, Users, BookOpen, Globe, UserPlus, UserMinus, Edit, Trash, ChevronDown, ChevronRight } from "lucide-react"
+import { Plus, Pencil, Trash2, Users, BookOpen, Globe, UserPlus, UserMinus, Edit, Trash, ChevronDown, ChevronRight, Upload } from "lucide-react"
 import { apiClient } from "@/lib/api"
 
 interface GroupMember {
@@ -406,7 +406,7 @@ export default function ClassroomManagementPage() {
       fetchClassrooms()
     } catch (error) {
       console.error('Error deleting classroom:', error)
-      toast.error('Failed to delete classroom')
+    toast.error(error instanceof Error ? error.message : 'Failed to delete classroom')
     }
   }
 
@@ -549,6 +549,53 @@ export default function ClassroomManagementPage() {
         ...prev,
         members: prev.members.filter((_, i) => i !== index)
       }))
+    }
+  }
+
+  // Handle CSV import
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedClassroom) {
+      toast.error('Please select a classroom first')
+      return
+    }
+
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Please select a CSV file')
+      return
+    }
+
+    try {
+      const response = await apiClient.importGroupsFromCSV(selectedClassroom.id, file)
+      
+      toast.success(
+        `Successfully imported ${response.groups_created || 0} groups with ${response.students_imported || 0} students`
+      )
+      
+      // Refresh groups list
+      if (selectedClassroom) {
+        fetchGroupsForClassroom(selectedClassroom.id)
+        
+        // Update groups count
+        const groups = await apiClient.request<any[]>(`/api/v1/groups?classroom_id=${selectedClassroom.id}`)
+        setClassroomGroupsCount(prev => ({
+          ...prev,
+          [selectedClassroom.id]: Array.isArray(groups) ? groups.length : 0
+        }))
+      }
+      
+      // Reset file input
+      event.target.value = ''
+    } catch (error) {
+      console.error('Error importing CSV:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to import CSV file')
+      // Reset file input
+      event.target.value = ''
     }
   }
 
@@ -741,10 +788,27 @@ export default function ClassroomManagementPage() {
                                   Manage groups for {classroom.name}
                                 </p>
                               </div>
-                              <Button onClick={handleCreateGroup} className="shadow-sm">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Group
-                              </Button>
+                              <div className="flex gap-2">
+                                <input
+                                  type="file"
+                                  accept=".csv"
+                                  onChange={handleImportCSV}
+                                  className="hidden"
+                                  id="csv-import-input"
+                                />
+                                <Button
+                                  variant="outline"
+                                  onClick={() => document.getElementById('csv-import-input')?.click()}
+                                  className="shadow-sm"
+                                >
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Import CSV
+                                </Button>
+                                <Button onClick={handleCreateGroup} className="shadow-sm">
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Add Group
+                                </Button>
+                              </div>
                             </div>
                             
                             {groups.length === 0 ? (

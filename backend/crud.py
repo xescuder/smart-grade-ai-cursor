@@ -59,7 +59,7 @@ async def get_assignments_by_semester(db: AsyncSession, semester_id: int) -> Lis
             selectinload(Assignment.course).selectinload(Course.semesters),
             selectinload(Assignment.semester)
         )
-        .where(Assignment.semester_id == semester_id, Assignment.is_active == True)
+        .where(Assignment.semester_id == semester_id)
         .order_by(Assignment.created_at.desc())
     )
     return result.scalars().all()
@@ -219,7 +219,7 @@ async def get_section_extraction_configs(db: AsyncSession) -> List[SectionExtrac
     """Get all section extraction configurations"""
     result = await db.execute(
         select(SectionExtractionConfig)
-        .where(SectionExtractionConfig.is_active == True)
+        # No longer filtering by is_active
         .order_by(SectionExtractionConfig.priority)
     )
     return result.scalars().all()
@@ -239,7 +239,7 @@ async def create_section_extraction_config(db: AsyncSession, config: SectionExtr
         markers=config.markers,
         description=config.description,
         priority=config.priority,
-        is_active=config.is_active,
+        # Removed is_active field
         extraction_strategy=config.extraction_strategy,
         max_characters=config.max_characters
     )
@@ -438,7 +438,7 @@ async def get_groups(db: AsyncSession, created_by: Optional[int] = None, skip: i
     """Get all groups, optionally filtered by creator"""
     from sqlalchemy.orm import selectinload
     
-    query = select(Group).where(Group.is_active == True)
+    query = select(Group)
     
     if created_by:
         query = query.where(Group.created_by == created_by)
@@ -458,7 +458,7 @@ async def get_group(db: AsyncSession, group_id: int) -> Optional[Group]:
     result = await db.execute(
         select(Group).options(
             selectinload(Group.classroom)
-        ).where(Group.id == group_id, Group.is_active == True)
+        ).where(Group.id == group_id)
     )
     return result.scalar_one_or_none()
 
@@ -468,7 +468,6 @@ async def get_group_by_name(db: AsyncSession, name: str, created_by: int) -> Opt
         select(Group).where(
             Group.name == name, 
             Group.created_by == created_by,
-            Group.is_active == True
         )
     )
     return result.scalar_one_or_none()
@@ -493,7 +492,7 @@ async def create_group(db: AsyncSession, group: GroupCreate) -> Group:
         classroom_id=group.classroom_id,
         members=members_dict,
         created_by=group.created_by,
-        is_active=group.is_active
+        # Removed is_active field
     )
     
     db.add(db_group)
@@ -503,7 +502,7 @@ async def create_group(db: AsyncSession, group: GroupCreate) -> Group:
 
 async def update_group(db: AsyncSession, group_id: int, group_update: GroupUpdate) -> Optional[Group]:
     """Update a group"""
-    result = await db.execute(select(Group).where(Group.id == group_id, Group.is_active == True))
+    result = await db.execute(select(Group).where(Group.id == group_id))
     db_group = result.scalar_one_or_none()
     
     if not db_group:
@@ -531,15 +530,14 @@ async def update_group(db: AsyncSession, group_id: int, group_update: GroupUpdat
     return db_group
 
 async def delete_group(db: AsyncSession, group_id: int) -> bool:
-    """Soft delete a group (set is_active to False)"""
-    result = await db.execute(select(Group).where(Group.id == group_id, Group.is_active == True))
+    """Permanently delete a group"""
+    result = await db.execute(select(Group).where(Group.id == group_id))
     db_group = result.scalar_one_or_none()
     
     if not db_group:
         return False
     
-    db_group.is_active = False
-    db_group.updated_at = datetime.utcnow()
+    await db.execute(delete(Group).where(Group.id == group_id))
     await db.commit()
     return True
 
@@ -547,7 +545,7 @@ async def get_groups_by_course(db: AsyncSession, course_id: int, created_by: Opt
     """Get all groups for a specific course"""
     from sqlalchemy.orm import selectinload
     
-    query = select(Group).where(Group.course_id == course_id, Group.is_active == True)
+    query = select(Group).where(Group.course_id == course_id)
     
     if created_by:
         query = query.where(Group.created_by == created_by)
@@ -564,7 +562,7 @@ async def get_groups_by_classroom(db: AsyncSession, classroom_id: int, created_b
     """Get all groups for a specific classroom"""
     from sqlalchemy.orm import selectinload
     
-    query = select(Group).where(Group.classroom_id == classroom_id, Group.is_active == True)
+    query = select(Group).where(Group.classroom_id == classroom_id)
     
     if created_by:
         query = query.where(Group.created_by == created_by)
@@ -584,7 +582,7 @@ async def get_courses(db: AsyncSession, created_by: Optional[int] = None, skip: 
     """Get all courses, optionally filtered by creator"""
     from sqlalchemy.orm import selectinload
     
-    query = select(Course).where(Course.is_active == True)
+    query = select(Course)
     
     if created_by:
         query = query.where(Course.created_by == created_by)
@@ -598,36 +596,62 @@ async def get_courses(db: AsyncSession, created_by: Optional[int] = None, skip: 
 async def get_course(db: AsyncSession, course_id: int) -> Optional[Course]:
     """Get a single course by ID"""
     result = await db.execute(
-        select(Course).where(Course.id == course_id, Course.is_active == True)
+        select(Course).where(Course.id == course_id)
     )
     return result.scalar_one_or_none()
 
 async def get_course_by_code(db: AsyncSession, code: str) -> Optional[Course]:
     """Get a course by code (to check for duplicates)"""
+    # Alias for get_course_by_code_any_status - now they're the same since we don't filter by is_active
+    return await get_course_by_code_any_status(db, code)
+
+async def get_course_by_code_any_status(db: AsyncSession, code: str) -> Optional[Course]:
+    """Get a course by code regardless of active status (for duplicate checking)"""
     result = await db.execute(
-        select(Course).where(Course.code == code, Course.is_active == True)
+        select(Course).where(Course.code == code)
     )
     return result.scalar_one_or_none()
 
 async def create_course(db: AsyncSession, course: CourseCreate) -> Course:
     """Create a new course"""
     
+    # Check if course code already exists (any course, regardless of is_active)
+    existing_course = await get_course_by_code_any_status(db, course.code)
+    if existing_course:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=409,
+            detail=f"A course with code '{course.code}' already exists"
+        )
+    
     db_course = Course(
         name=course.name,
         code=course.code,
         credits=course.credits,
         created_by=course.created_by,
-        is_active=course.is_active
+        # Removed is_active field
     )
     
-    db.add(db_course)
-    await db.commit()
-    await db.refresh(db_course)
-    return db_course
+    try:
+        db.add(db_course)
+        await db.commit()
+        await db.refresh(db_course)
+        return db_course
+    except Exception as e:
+        await db.rollback()
+        # Check if it's a unique constraint violation on code
+        from sqlalchemy.exc import IntegrityError
+        if isinstance(e, IntegrityError) and "courses_code_key" in str(e.orig):
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=409,
+                detail=f"A course with code '{course.code}' already exists"
+            )
+        raise
 
 async def update_course(db: AsyncSession, course_id: int, course_update: CourseUpdate) -> Optional[Course]:
     """Update a course"""
-    result = await db.execute(select(Course).where(Course.id == course_id, Course.is_active == True))
+    result = await db.execute(select(Course).where(Course.id == course_id))
     db_course = result.scalar_one_or_none()
     
     if not db_course:
@@ -652,21 +676,37 @@ async def update_course(db: AsyncSession, course_id: int, course_update: CourseU
     return result.scalar_one_or_none()
 
 async def delete_course(db: AsyncSession, course_id: int) -> bool:
-    """Soft delete a course (set is_active to False)"""
-    result = await db.execute(select(Course).where(Course.id == course_id, Course.is_active == True))
+    """Permanently delete a course from the database"""
+    result = await db.execute(select(Course).where(Course.id == course_id))
     db_course = result.scalar_one_or_none()
     
     if not db_course:
         return False
     
-    db_course.is_active = False
-    db_course.updated_at = datetime.utcnow()
+    # Use SQLAlchemy delete statement for async compatibility
+    await db.execute(delete(Course).where(Course.id == course_id))
+    await db.commit()
+    return True
+
+async def permanently_delete_course(db: AsyncSession, course_id: int) -> bool:
+    """Permanently delete a course from the database"""
+    result = await db.execute(select(Course).where(Course.id == course_id))
+    db_course = result.scalar_one_or_none()
+    
+    if not db_course:
+        return False
+    
+    # Use SQLAlchemy delete statement for async compatibility
+    await db.execute(delete(Course).where(Course.id == course_id))
     await db.commit()
     return True
 
 async def get_courses_by_department(db: AsyncSession, department: str, created_by: Optional[int] = None) -> List[Course]:
     """Get all courses for a specific department"""
-    query = select(Course).where(Course.department == department, Course.is_active == True)
+    # Note: Course model doesn't have department field, but keeping for compatibility
+    from sqlalchemy.orm import selectinload
+    
+    query = select(Course).options(selectinload(Course.semesters))
     
     if created_by:
         query = query.where(Course.created_by == created_by)
@@ -681,7 +721,7 @@ async def get_courses_by_department(db: AsyncSession, department: str, created_b
 # CRUD operations for semesters
 async def get_semesters(db: AsyncSession, created_by: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Semester]:
     """Get all semesters, optionally filtered by creator"""
-    query = select(Semester).where(Semester.is_active == True)
+    query = select(Semester)
     
     if created_by:
         query = query.where(Semester.created_by == created_by)
@@ -694,7 +734,7 @@ async def get_semesters(db: AsyncSession, created_by: Optional[int] = None, skip
 async def get_semester(db: AsyncSession, semester_id: int) -> Optional[Semester]:
     """Get a single semester by ID"""
     result = await db.execute(
-        select(Semester).where(Semester.id == semester_id, Semester.is_active == True)
+        select(Semester).where(Semester.id == semester_id)
     )
     return result.scalar_one_or_none()
 
@@ -708,7 +748,7 @@ async def get_semester_any_status(db: AsyncSession, semester_id: int) -> Optiona
 async def get_semester_by_code(db: AsyncSession, code: str) -> Optional[Semester]:
     """Get a semester by code (to check for duplicates)"""
     result = await db.execute(
-        select(Semester).where(Semester.code == code, Semester.is_active == True)
+        select(Semester).where(Semester.code == code)
     )
     return result.scalar_one_or_none()
 
@@ -716,15 +756,13 @@ async def create_semester(db: AsyncSession, semester: SemesterCreate) -> Semeste
     """Create a new semester"""
     
     db_semester = Semester(
-        name=semester.name,
-        code=semester.code,
         year=semester.year,
         season=semester.season,
         start_date=semester.start_date,
         end_date=semester.end_date,
         course_id=semester.course_id,
         created_by=semester.created_by,
-        is_active=semester.is_active
+        # Removed is_active field
     )
     
     db.add(db_semester)
@@ -752,21 +790,20 @@ async def update_semester(db: AsyncSession, semester_id: int, semester_update: S
     return db_semester
 
 async def delete_semester(db: AsyncSession, semester_id: int) -> bool:
-    """Soft delete a semester (set is_active to False)"""
-    result = await db.execute(select(Semester).where(Semester.id == semester_id, Semester.is_active == True))
+    """Permanently delete a semester"""
+    result = await db.execute(select(Semester).where(Semester.id == semester_id))
     db_semester = result.scalar_one_or_none()
     
     if not db_semester:
         return False
     
-    db_semester.is_active = False
-    db_semester.updated_at = datetime.utcnow()
+    await db.execute(delete(Semester).where(Semester.id == semester_id))
     await db.commit()
     return True
 
 async def get_semesters_by_year(db: AsyncSession, year: int, created_by: Optional[int] = None) -> List[Semester]:
     """Get all semesters for a specific year"""
-    query = select(Semester).where(Semester.year == year, Semester.is_active == True)
+    query = select(Semester).where(Semester.year == year)
     
     if created_by:
         query = query.where(Semester.created_by == created_by)
@@ -784,7 +821,6 @@ async def get_current_semester(db: AsyncSession, created_by: Optional[int] = Non
     query = select(Semester).where(
         Semester.start_date <= now,
         Semester.end_date >= now,
-        Semester.is_active == True
     )
     
     if created_by:
@@ -795,7 +831,7 @@ async def get_current_semester(db: AsyncSession, created_by: Optional[int] = Non
 
 async def get_semesters_by_course(db: AsyncSession, course_id: int, created_by: Optional[int] = None) -> List[Semester]:
     """Get all semesters for a specific course"""
-    query = select(Semester).where(Semester.course_id == course_id, Semester.is_active == True)
+    query = select(Semester).where(Semester.course_id == course_id)
     
     if created_by:
         query = query.where(Semester.created_by == created_by)
@@ -806,9 +842,9 @@ async def get_semesters_by_course(db: AsyncSession, course_id: int, created_by: 
     return result.scalars().all()
 
 async def get_courses_with_semesters(db: AsyncSession, created_by: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[Course]:
-    """Get all courses with their active semesters"""
+    """Get all courses with their semesters"""
     # Use selectinload to eagerly load semesters relationship
-    query = select(Course).options(selectinload(Course.semesters)).where(Course.is_active == True)
+    query = select(Course).options(selectinload(Course.semesters))
     
     if created_by:
         query = query.where(Course.created_by == created_by)
@@ -818,24 +854,24 @@ async def get_courses_with_semesters(db: AsyncSession, created_by: Optional[int]
     result = await db.execute(query)
     courses = result.scalars().all()
     
-    # Filter semesters to only active ones for each course
+    # Filter semesters to only active ones for each course (still filter semesters by is_active)
     for course in courses:
-        course.semesters = [semester for semester in course.semesters if semester.is_active]
+        # No longer filtering by is_active - include all semesters
         # Sort semesters by year desc, then season
         course.semesters.sort(key=lambda s: (s.year, s.season), reverse=True)
     
     return courses
 
 async def get_course_with_semesters(db: AsyncSession, course_id: int) -> Optional[Course]:
-    """Get a single course by ID with its active semesters"""
+    """Get a single course by ID with its semesters"""
     result = await db.execute(
-        select(Course).options(selectinload(Course.semesters)).where(Course.id == course_id, Course.is_active == True)
+        select(Course).options(selectinload(Course.semesters)).where(Course.id == course_id)
     )
     course = result.scalar_one_or_none()
     
     if course:
-        # Filter semesters to only active ones
-        course.semesters = [semester for semester in course.semesters if semester.is_active]
+        # Filter semesters to only active ones (still filter semesters by is_active)
+        # No longer filtering by is_active - include all semesters
         # Sort semesters by year desc, then season
         course.semesters.sort(key=lambda s: (s.year, s.season), reverse=True)
     
@@ -851,7 +887,7 @@ async def create_classroom(db: AsyncSession, classroom: ClassroomCreate, created
         language=classroom.language,
         semester_id=classroom.semester_id,
         created_by=created_by,
-        is_active=True
+        # Removed is_active field
     )
     
     db.add(db_classroom)
@@ -872,7 +908,7 @@ async def get_classrooms(
     from sqlalchemy import or_
     from sqlalchemy.sql import func
     
-    query = select(Classroom).where(Classroom.is_active == True)
+    query = select(Classroom)
     
     if course_id:
         query = query.where(Classroom.course_id == course_id)
@@ -901,7 +937,7 @@ async def get_classroom(db: AsyncSession, classroom_id: int) -> Optional[Classro
     result = await db.execute(
         select(Classroom)
         .options(selectinload(Classroom.groups))
-        .where(Classroom.id == classroom_id, Classroom.is_active == True)
+        .where(Classroom.id == classroom_id)
     )
     return result.scalar_one_or_none()
 
@@ -933,7 +969,7 @@ async def delete_classroom(db: AsyncSession, classroom_id: int) -> bool:
         return False
     # Note: Classroom.groups has cascade delete configured; submissions may reference classroom_id
     # If DB FK prevents delete due to submissions, raise error to caller
-    await db.delete(db_classroom)
+    await db.execute(delete(Classroom).where(Classroom.id == classroom_id))
     await db.commit()
     return True
 
@@ -946,7 +982,7 @@ async def get_classroom_with_details(db: AsyncSession, classroom_id: int) -> Opt
             selectinload(Classroom.semester),
             selectinload(Classroom.groups)
         )
-        .where(Classroom.id == classroom_id, Classroom.is_active == True)
+        .where(Classroom.id == classroom_id)
     )
     return result.scalar_one_or_none()
 
@@ -977,7 +1013,7 @@ async def create_assignment(db: AsyncSession, assignment: AssignmentCreate, crea
         language=language,
         course_id=course_id,
         semester_id=semester_id,
-        is_active=assignment_data.get('is_active', True),
+        # Removed is_active field
         created_by=created_by
     )
     # Add exercises
