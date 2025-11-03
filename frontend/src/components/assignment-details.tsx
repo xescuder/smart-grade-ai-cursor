@@ -43,9 +43,6 @@ export function AssignmentDetails({ assignment }: AssignmentDetailsProps) {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="text-2xl">{assignment.name}</CardTitle>
-              <CardDescription className="mt-2 text-base">
-                {assignment.description}
-              </CardDescription>
             </div>
             <Badge variant={assignment.is_active ? "default" : "secondary"}>
               {assignment.is_active ? "Active" : "Inactive"}

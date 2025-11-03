@@ -474,13 +474,6 @@ export default function SubmissionManagementPage() {
           <p className="text-muted-foreground">Manage student group submissions by assignment</p>
         </div>
         
-        <Button 
-          className="flex items-center gap-2"
-          onClick={() => setIsGenerateDialogOpen(true)}
-        >
-          <Wand2 className="h-4 w-4" />
-          Generate Submissions
-        </Button>
       </div>
 
       {/* Search Filter */}

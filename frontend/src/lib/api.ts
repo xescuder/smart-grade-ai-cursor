@@ -28,21 +28,61 @@ export class ApiClient {
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
     
+    // Don't add Content-Type header for FormData - browser sets it with boundary
+    const isFormData = options.body instanceof FormData
+    const defaultHeaders = isFormData ? {} : this.getHeaders()
+    
+    // Merge headers properly - options.headers can override or extend defaults
+    const headers: Record<string, string> = {
+      ...defaultHeaders,
+      ...(options.headers as Record<string, string> || {})
+    }
+    
     const config: RequestInit = {
-      headers: this.getHeaders(),
       ...options,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
     }
 
     try {
       const response = await fetch(url, config)
       
       if (!response.ok) {
-        const error: ApiError = await response.json()
-        throw new Error(error.detail || `HTTP ${response.status}`)
+        let errorMessage = `HTTP ${response.status}`
+        try {
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json()
+            // Handle FastAPI validation errors - detail can be a string or array of error objects
+            if (errorData.detail) {
+              if (typeof errorData.detail === 'string') {
+                errorMessage = errorData.detail
+              } else if (Array.isArray(errorData.detail)) {
+                // Pydantic validation errors are arrays of {type, loc, msg, input}
+                errorMessage = errorData.detail
+                  .map((err: any) => err.msg || JSON.stringify(err))
+                  .join(', ')
+              } else if (typeof errorData.detail === 'object') {
+                errorMessage = JSON.stringify(errorData.detail)
+              }
+            }
+          } else {
+            // Try to get text response if not JSON
+            const text = await response.text()
+            errorMessage = text || response.statusText || `HTTP ${response.status}`
+          }
+        } catch (parseError) {
+          // If response is not valid JSON, use status text
+          errorMessage = response.statusText || `HTTP ${response.status}`
+        }
+        throw new Error(errorMessage)
       }
 
       return await response.json()
     } catch (error) {
+      // Handle network errors (e.g., CORS, connection refused, etc.)
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        throw new Error('Failed to connect to the server. Please check if the backend is running and CORS is configured correctly.')
+      }
       if (error instanceof Error) {
         throw error
       }
@@ -60,7 +100,7 @@ export class ApiClient {
   }
 
   async createAssignment(data: Partial<Assignment>) {
-    return this.request<Assignment>('/api/v1/assignments', {
+    return this.request<Assignment>('/api/v1/assignments/', {
       method: 'POST',
       body: JSON.stringify(data)
     })
@@ -153,7 +193,7 @@ export class ApiClient {
   }
 
   async createCourse(data: unknown) {
-    return this.request('/api/v1/courses', {
+    return this.request('/api/v1/courses/', {
       method: 'POST',
       body: JSON.stringify(data)
     })

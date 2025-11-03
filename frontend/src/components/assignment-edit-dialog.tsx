@@ -1,7 +1,5 @@
 "use client"
 
-import { getAuthHeaders } from "@/lib/utils"
-
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -36,17 +34,16 @@ interface Course {
 
 interface Semester {
   id: number
-  name: string
-  code: string
   year: number
   season: string
   course_id: number
+  start_date?: string | null
+  end_date?: string | null
 }
 
 export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }: AssignmentEditDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     due_date: "",
     language: "",
     course_id: 0,
@@ -69,7 +66,6 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
     if (assignment) {
       setFormData({
         name: assignment.name || "",
-        description: assignment.description || "",
         due_date: assignment.due_date ? assignment.due_date.slice(0, 16) : "", // Convert to datetime-local format
         language: assignment.language || "en",
         course_id: assignment.course_id || 0,
@@ -106,11 +102,6 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
       return
     }
 
-    if (!formData.course_id) {
-      toast.error("Please select a course")
-      return
-    }
-
     if (!formData.semester_id) {
       toast.error("Please select a semester")
       return
@@ -118,34 +109,19 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/assignments/${assignment.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          due_date: formData.due_date || null,
-          language: formData.language || "en",
-          course_id: formData.course_id,
-          semester_id: formData.semester_id,
-        }),
+      // Only send semester_id - backend will derive course_id from semester_id
+      const updatedAssignment = await apiClient.updateAssignment(assignment.id, {
+        name: formData.name.trim(),
+        due_date: formData.due_date || null,
+        language: formData.language || "en",
+        semester_id: formData.semester_id,
       })
-
-      if (response.ok) {
-        const updatedAssignment = await response.json()
-        toast.success("Assignment updated successfully!")
-        onSave(updatedAssignment)
-        onOpenChange(false)
-      } else {
-        const error = await response.json()
-        toast.error(error.detail || "Failed to update assignment")
-      }
+      toast.success("Assignment updated successfully!")
+      onSave(updatedAssignment)
+      onOpenChange(false)
     } catch (error) {
       console.error("Error updating assignment:", error)
-      toast.error("Failed to update assignment")
+      toast.error(error instanceof Error ? error.message : "Failed to update assignment")
     } finally {
       setIsLoading(false)
     }
@@ -174,7 +150,7 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="course">Course *</Label>
+            <Label htmlFor="course">Course (optional - helps filter semesters)</Label>
             <Select 
               value={formData.course_id ? formData.course_id.toString() : ""} 
               onValueChange={(value) => {
@@ -187,7 +163,7 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a course" />
+                <SelectValue placeholder="Select a course to filter semesters (optional)" />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((course) => (
@@ -204,7 +180,6 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
             <Select 
               value={formData.semester_id ? formData.semester_id.toString() : ""} 
               onValueChange={(value) => setFormData({...formData, semester_id: parseInt(value)})}
-              disabled={!formData.course_id}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a semester" />
@@ -212,7 +187,7 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
               <SelectContent>
                 {filteredSemesters.map((semester) => (
                   <SelectItem key={semester.id} value={semester.id.toString()}>
-                    {semester.name} ({semester.code})
+                    {semester.season} {semester.year}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -245,17 +220,6 @@ export function AssignmentEditDialog({ assignment, open, onOpenChange, onSave }:
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               placeholder="Enter assignment name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              placeholder="Enter assignment description"
-              rows={3}
             />
           </div>
 

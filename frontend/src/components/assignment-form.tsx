@@ -32,7 +32,6 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
   
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     due_date: "",
   })
   
@@ -44,7 +43,6 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
     if (assignment) {
       setFormData({
         name: assignment.name,
-        description: assignment.description,
         due_date: new Date(assignment.due_date).toISOString().slice(0, 16),
       })
     }
@@ -58,11 +56,6 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
     if (!formData.name.trim()) {
       newErrors.name = "Assignment name is required"
     }
-
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required"
-    }
-
 
     if (!formData.due_date) {
       newErrors.due_date = "Due date is required"
@@ -159,21 +152,6 @@ export function AssignmentForm({ assignment, onSuccess }: AssignmentFormProps) {
               <p className="text-red-500 text-sm mt-1">{errors.name}</p>
             )}
           </div>
-
-          <div>
-            <Label htmlFor="description" className="mb-2 block">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className={errors.description ? "border-red-500" : ""}
-              rows={3}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">{errors.description}</p>
-            )}
-          </div>
-
 
           <div>
             <Label htmlFor="due_date" className="mb-2 block">Due Date</Label>

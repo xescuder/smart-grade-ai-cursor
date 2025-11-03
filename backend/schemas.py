@@ -3,8 +3,8 @@ Domain models (Pydantic schemas) for Smart Grade AI
 These represent the API request/response models and business domain entities
 """
 
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional, Dict, Any
 from datetime import datetime, date
 
 
@@ -45,14 +45,14 @@ class ExerciseGrade(BaseModel):
 
 class AssignmentBase(BaseModel):
     name: str
-    description: str
-    due_date: datetime
+    due_date: Optional[datetime] = None
     language: Optional[str] = "en"  # Language code: en, es, ca, etc. Default to English
-    is_active: bool = True
 
 
 class AssignmentCreate(AssignmentBase):
     exercises: List[ExerciseCreate] = []
+    course_id: Optional[int] = None
+    semester_id: Optional[int] = None
 
 
 class AssignmentUpdate(AssignmentBase):
@@ -61,20 +61,29 @@ class AssignmentUpdate(AssignmentBase):
     pdf_file_data: Optional[bytes] = None
     pdf_mime_type: Optional[str] = None
     pdf_file_size: Optional[int] = None
+    course_id: Optional[int] = None
+    semester_id: Optional[int] = None
 
 
-class AssignmentResponse(AssignmentBase):
+class AssignmentResponse(BaseModel):
+    model_config = {"from_attributes": True}
+    
     id: int
-    pdf_file_path: Optional[str] = None
-    pdf_file_name: Optional[str] = None
-    # Exclude raw bytes from API response for performance/security
+    name: str
+    due_date: Optional[datetime] = Field(default=None)
+    language: Optional[str] = Field(default="en")
+    course_id: Optional[int] = Field(default=None)
+    semester_id: Optional[int] = Field(default=None)
+    pdf_file_path: Optional[str] = Field(default=None)
+    pdf_file_name: Optional[str] = Field(default=None)
     created_by: int
     created_at: datetime
     updated_at: datetime
-    exercises: List[ExerciseResponse] = []
-
-    class Config:
-        from_attributes = True
+    exercises: List[ExerciseResponse] = Field(default_factory=list)
+    # Course can be CourseResponse or dict (to avoid lazy loading semesters)
+    course: Optional[Dict[str, Any]] = Field(default=None)
+    # Semester can be SemesterResponse or dict (with computed 'name' field for frontend)
+    semester: Optional[Dict[str, Any]] = Field(default=None)
 
 
 # ===== SECTION EXTRACTION CONFIG MODELS =====
@@ -84,7 +93,6 @@ class SectionExtractionConfigBase(BaseModel):
     markers: str  # JSON string of array
     description: Optional[str] = None
     priority: int = 1
-    is_active: bool = True
     extraction_strategy: str = 'section_to_end'
     max_characters: int = 4000
 
@@ -150,7 +158,6 @@ class GroupBase(BaseModel):
     description: Optional[str] = None
     classroom_id: int  # Required field
     members: Optional[List[GroupMember]] = None
-    is_active: bool = True
 
 
 class GroupCreate(GroupBase):
@@ -165,7 +172,6 @@ class GroupUpdate(BaseModel):
     course_id: Optional[int] = None
     semester_id: Optional[int] = None
     members: Optional[List[GroupMember]] = None
-    is_active: Optional[bool] = None
 
 
 # ===== COURSE MODELS =====
@@ -174,7 +180,6 @@ class CourseBase(BaseModel):
     name: str
     code: str
     credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
-    is_active: bool = True
 
 
 class CourseCreate(CourseBase):
@@ -185,7 +190,6 @@ class CourseUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
     credits: Optional[int] = Field(None, ge=0, le=15, description="Course credits (0-15)")
-    is_active: Optional[bool] = None
 
 
 class CourseResponse(CourseBase):
@@ -205,7 +209,6 @@ class SemesterBase(BaseModel):
     year: int
     season: str
     course_id: int
-    is_active: bool = True
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -213,14 +216,27 @@ class SemesterBase(BaseModel):
 class SemesterCreate(SemesterBase):
     created_by: int
 
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def empty_string_to_none(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
+
 
 class SemesterUpdate(BaseModel):
     year: Optional[int] = None
     season: Optional[str] = None
     course_id: Optional[int] = None
-    is_active: Optional[bool] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def empty_string_to_none_update(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
 
 
 class SemesterResponse(SemesterBase):
@@ -250,13 +266,11 @@ class ClassroomUpdate(BaseModel):
     name: Optional[str] = None
     teacher_name: Optional[str] = None
     language: Optional[str] = None
-    is_active: Optional[bool] = None
 
 
 class ClassroomResponse(ClassroomBase):
     id: int
     created_by: int
-    is_active: bool
     created_at: datetime
     updated_at: datetime
 

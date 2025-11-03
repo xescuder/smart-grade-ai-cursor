@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, Users, BookOpen, Globe, UserPlus, UserMinus, Edit, Trash, ChevronDown, ChevronRight } from "lucide-react"
+import { Plus, Pencil, Trash2, Users, BookOpen, Globe, UserPlus, UserMinus, Edit, Trash, ChevronDown, ChevronRight, Upload } from "lucide-react"
+import { apiClient } from "@/lib/api"
 
 interface GroupMember {
   name: string
@@ -130,10 +131,13 @@ export default function ClassroomManagementPage() {
   // Group management state
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
+  const [groupsLoading, setGroupsLoading] = useState(false)
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
   const [groupDeleteDialogOpen, setGroupDeleteDialogOpen] = useState(false)
   const [groupToDelete, setGroupToDelete] = useState<Group | null>(null)
+  // Track the classroom currently expected to display groups to avoid stale assignments
+  const currentGroupsClassroomIdRef = React.useRef<number | null>(null)
   const [formData, setFormData] = useState<ClassroomFormData>({
     name: "",
     teacher_name: "",
@@ -146,6 +150,9 @@ export default function ClassroomManagementPage() {
     max_students: undefined,
     created_by: 1
   })
+
+  // Prevent duplicate fetches in React StrictMode and redundant param calls
+  const lastClassroomQueryRef = React.useRef<string | null>(null)
 
   // Group form data
   const [groupFormData, setGroupFormData] = useState<{
@@ -161,11 +168,7 @@ export default function ClassroomManagementPage() {
   // Fetch courses
   const fetchCourses = async () => {
     try {
-      const response = await fetch('/api/v1/courses?created_by=1')
-      if (!response.ok) {
-        throw new Error('Failed to fetch courses')
-      }
-      const data = await response.json()
+      const data = await apiClient.request<Course[]>('/api/v1/courses?created_by=1')
       setCourses(data)
     } catch (error) {
       console.error('Error fetching courses:', error)
@@ -176,11 +179,7 @@ export default function ClassroomManagementPage() {
   // Fetch semesters
   const fetchSemesters = async () => {
     try {
-      const response = await fetch('/api/v1/semesters?created_by=1')
-      if (!response.ok) {
-        throw new Error('Failed to fetch semesters')
-      }
-      const data = await response.json()
+      const data = await apiClient.request<Semester[]>('/api/v1/semesters?created_by=1')
       setSemesters(data)
     } catch (error) {
       console.error('Error fetching semesters:', error)
@@ -192,20 +191,19 @@ export default function ClassroomManagementPage() {
   const fetchClassrooms = async () => {
     try {
       setLoading(true)
-      let url = '/api/v1/classrooms'
       const params = new URLSearchParams()
       if (selectedCourseId) params.append('course_id', selectedCourseId.toString())
       if (selectedSemesterId) params.append('semester_id', selectedSemesterId.toString())
-      
-      if (params.toString()) {
-        url += '?' + params.toString()
+      const queryKey = params.toString()
+
+      // Skip if same query as last time (guards StrictMode double invoke)
+      if (lastClassroomQueryRef.current === queryKey && classrooms.length > 0) {
+        return
       }
+      lastClassroomQueryRef.current = queryKey
       
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error('Failed to fetch classrooms')
-      }
-      const data = await response.json()
+      const suffix = params.toString() ? `?${params.toString()}` : ''
+      const data = await apiClient.request<Classroom[]>(`/api/v1/classrooms/${suffix}`.replace(/\/?\?/, '?'))
       console.log('Fetched classrooms:', data) // Debug log
       setClassrooms(data)
       
@@ -229,13 +227,11 @@ export default function ClassroomManagementPage() {
       await Promise.all(
         classroomIds.map(async (id) => {
           try {
-            const response = await fetch(`/api/v1/groups?classroom_id=${id}`)
-            if (response.ok) {
-              const groups = await response.json()
-              counts[id] = Array.isArray(groups) ? groups.length : 0
-            } else {
-              counts[id] = 0
-            }
+            const groups = await apiClient.request<any[]>(`/api/v1/groups?classroom_id=${id}`)
+            const safeGroups = Array.isArray(groups)
+              ? groups.filter((g) => Number(g?.classroom_id ?? g?.classroom?.id) === id)
+              : []
+            counts[id] = safeGroups.length
           } catch {
             counts[id] = 0
           }
@@ -248,14 +244,15 @@ export default function ClassroomManagementPage() {
   }
   const fetchGroupsForClassroom = async (classroomId: number) => {
     try {
-      const response = await fetch(`/api/v1/groups?classroom_id=${classroomId}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch groups')
-      }
-      const data = await response.json()
+      setGroupsLoading(true)
+      const data = await apiClient.request<any[]>(`/api/v1/groups?classroom_id=${classroomId}`)
+      // Strictly filter to this classroom id only
+      const onlyThisClassroom = Array.isArray(data)
+        ? data.filter(g => Number(g?.classroom_id ?? g?.classroom?.id) === classroomId)
+        : []
       // Sort groups by name (case-insensitive)
-      const sorted = Array.isArray(data)
-        ? [...data].sort((a, b) => {
+      const sorted = onlyThisClassroom.length > 0
+        ? [...onlyThisClassroom].sort((a, b) => {
             const an = (a?.name || '').toString().toLowerCase()
             const bn = (b?.name || '').toString().toLowerCase()
             if (an < bn) return -1
@@ -263,25 +260,29 @@ export default function ClassroomManagementPage() {
             return 0
           })
         : []
-      setGroups(sorted)
+      // Concurrency guard: only apply if still viewing the same classroom
+      if (currentGroupsClassroomIdRef.current === classroomId) {
+        setGroups(sorted)
+      }
     } catch (error) {
       console.error('Error fetching groups:', error)
       toast.error('Failed to fetch groups')
       setGroups([])
+    } finally {
+      setGroupsLoading(false)
     }
   }
 
-  // Load initial data
+  // Load initial data once (classrooms will be fetched by the filter effect)
   useEffect(() => {
     fetchCourses()
     fetchSemesters()
-    fetchClassrooms()
-  })
+  }, [])
 
   // Refetch classrooms when filters change
   useEffect(() => {
     fetchClassrooms()
-  })
+  }, [selectedCourseId, selectedSemesterId])
 
   // Filter semesters by selected course
   useEffect(() => {
@@ -323,7 +324,7 @@ export default function ClassroomManagementPage() {
       name: "",
       teacher_name: "",
       language: "en",
-      course_id: 0,
+      course_id: selectedCourseId || 0,
       semester_id: 0,
       description: "",
       created_by: 1
@@ -355,25 +356,28 @@ export default function ClassroomManagementPage() {
     }
 
     try {
-      const url = editingClassroom 
-        ? `/api/v1/classrooms/${editingClassroom.id}`
-        : '/api/v1/classrooms'
-      
-      const method = editingClassroom ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Failed to save classroom')
+      if (editingClassroom) {
+        const updated = await apiClient.updateClassroom(editingClassroom.id, formData)
+        // Optimistically update in list
+        setClassrooms(prev => prev.map(c => c.id === editingClassroom.id ? { ...c, ...updated } : c))
+      } else {
+        const created = await apiClient.createClassroom(formData)
+        // Optimistically add to top of list
+        setClassrooms(prev => [created as any, ...prev])
+        // Ensure groups count starts at 0 for the new classroom
+        if ((created as any)?.id) {
+          setClassroomGroupsCount(prev => ({ ...prev, [(created as any).id]: 0 }))
+        }
       }
 
       toast.success(editingClassroom ? 'Classroom updated successfully' : 'Classroom created successfully')
       setDialogOpen(false)
+      currentGroupsClassroomIdRef.current = null
+      // Collapse any open classroom and clear groups to avoid stale carry-over
+      setSelectedClassroom(null)
+      setGroups([])
+      // Force refetch to ensure server state is reflected
+      lastClassroomQueryRef.current = null
       fetchClassrooms()
     } catch (error) {
       console.error('Error saving classroom:', error)
@@ -386,34 +390,37 @@ export default function ClassroomManagementPage() {
     if (!classroomToDelete) return
 
     try {
-      const response = await fetch(`/api/v1/classrooms/${classroomToDelete.id}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete classroom')
-      }
+      await apiClient.deleteClassroom(classroomToDelete.id)
 
       toast.success('Classroom deleted successfully')
       setDeleteDialogOpen(false)
       setClassroomToDelete(null)
+      // Optimistically update UI
+      setClassrooms(prev => prev.filter(c => c.id !== classroomToDelete.id))
+      setClassroomGroupsCount(prev => {
+        const { [classroomToDelete.id]: _removed, ...rest } = prev
+        return rest
+      })
+      // Force refetch to avoid memoized query skip
+      lastClassroomQueryRef.current = null
       fetchClassrooms()
     } catch (error) {
       console.error('Error deleting classroom:', error)
-      toast.error('Failed to delete classroom')
+    toast.error(error instanceof Error ? error.message : 'Failed to delete classroom')
     }
   }
 
-  // Get course name by ID
-  const getCourseName = (courseId: number) => {
-    const course = courses.find(c => c.id === courseId)
+  // Get course label for a classroom using semester -> course linkage
+  const getCourseLabelForClassroom = (classroom: Classroom) => {
+    const semester = semesters.find(s => s.id === classroom.semester_id)
+    const course = semester ? courses.find(c => c.id === semester.course_id) : undefined
     return course ? `${course.code} - ${course.name}` : 'Unknown'
   }
 
-  // Get semester name by ID
-  const getSemesterName = (semesterId: number) => {
+  // Get semester label by ID
+  const getSemesterLabel = (semesterId: number) => {
     const semester = semesters.find(s => s.id === semesterId)
-    return semester ? semester.name : 'Unknown'
+    return semester ? `${semester.season} ${semester.year}` : 'Unknown'
   }
 
   // Get language label
@@ -431,6 +438,9 @@ export default function ClassroomManagementPage() {
     } else {
       // If clicking on a different classroom, expand it
       setSelectedClassroom(classroom)
+      currentGroupsClassroomIdRef.current = classroom.id
+      setGroups([])
+      setGroupsLoading(true)
       fetchGroupsForClassroom(classroom.id)
     }
   }
@@ -477,21 +487,10 @@ export default function ClassroomManagementPage() {
 
       console.log('Sending group data:', groupData) // Debug log
 
-      const url = editingGroup 
-        ? `/api/v1/groups/${editingGroup.id}`
-        : '/api/v1/groups'
-      
-      const method = editingGroup ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(groupData)
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Failed to save group')
+      if (editingGroup) {
+        await apiClient.updateGroup(editingGroup.id, groupData)
+      } else {
+        await apiClient.createGroup(groupData)
       }
 
       toast.success(editingGroup ? 'Group updated successfully' : 'Group created successfully')
@@ -500,14 +499,11 @@ export default function ClassroomManagementPage() {
       
       // Update groups count for the classroom
       if (selectedClassroom) {
-        const response = await fetch(`/api/v1/groups?classroom_id=${selectedClassroom.id}`)
-        if (response.ok) {
-          const groups = await response.json()
-          setClassroomGroupsCount(prev => ({
-            ...prev,
-            [selectedClassroom.id]: Array.isArray(groups) ? groups.length : 0
-          }))
-        }
+        const groups = await apiClient.request<any[]>(`/api/v1/groups?classroom_id=${selectedClassroom.id}`)
+        setClassroomGroupsCount(prev => ({
+          ...prev,
+          [selectedClassroom.id]: Array.isArray(groups) ? groups.length : 0
+        }))
       }
     } catch (error) {
       console.error('Error saving group:', error)
@@ -519,13 +515,7 @@ export default function ClassroomManagementPage() {
     if (!groupToDelete) return
 
     try {
-      const response = await fetch(`/api/v1/groups/${groupToDelete.id}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete group')
-      }
+      await apiClient.deleteGroup(groupToDelete.id)
 
       toast.success('Group deleted successfully')
       setGroupDeleteDialogOpen(false)
@@ -534,14 +524,11 @@ export default function ClassroomManagementPage() {
         fetchGroupsForClassroom(selectedClassroom.id)
         
         // Update groups count for the classroom
-        const response = await fetch(`/api/v1/groups?classroom_id=${selectedClassroom.id}`)
-        if (response.ok) {
-          const groups = await response.json()
-          setClassroomGroupsCount(prev => ({
-            ...prev,
-            [selectedClassroom.id]: Array.isArray(groups) ? groups.length : 0
-          }))
-        }
+        const groups = await apiClient.request<any[]>(`/api/v1/groups?classroom_id=${selectedClassroom.id}`)
+        setClassroomGroupsCount(prev => ({
+          ...prev,
+          [selectedClassroom.id]: Array.isArray(groups) ? groups.length : 0
+        }))
       }
     } catch (error) {
       console.error('Error deleting group:', error)
@@ -562,6 +549,53 @@ export default function ClassroomManagementPage() {
         ...prev,
         members: prev.members.filter((_, i) => i !== index)
       }))
+    }
+  }
+
+  // Handle CSV import
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedClassroom) {
+      toast.error('Please select a classroom first')
+      return
+    }
+
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Please select a CSV file')
+      return
+    }
+
+    try {
+      const response = await apiClient.importGroupsFromCSV(selectedClassroom.id, file)
+      
+      toast.success(
+        `Successfully imported ${response.groups_created || 0} groups with ${response.students_imported || 0} students`
+      )
+      
+      // Refresh groups list
+      if (selectedClassroom) {
+        fetchGroupsForClassroom(selectedClassroom.id)
+        
+        // Update groups count
+        const groups = await apiClient.request<any[]>(`/api/v1/groups?classroom_id=${selectedClassroom.id}`)
+        setClassroomGroupsCount(prev => ({
+          ...prev,
+          [selectedClassroom.id]: Array.isArray(groups) ? groups.length : 0
+        }))
+      }
+      
+      // Reset file input
+      event.target.value = ''
+    } catch (error) {
+      console.error('Error importing CSV:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to import CSV file')
+      // Reset file input
+      event.target.value = ''
     }
   }
 
@@ -621,7 +655,7 @@ export default function ClassroomManagementPage() {
                   <SelectItem value="all">All Semesters</SelectItem>
                   {filteredSemesters.map((semester) => (
                     <SelectItem key={semester.id} value={semester.id.toString()}>
-                      {semester.name}
+                      {`${semester.season} ${semester.year}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -700,16 +734,16 @@ export default function ClassroomManagementPage() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <BookOpen className="h-3 w-3" />
-                          {classroom.course?.code || getCourseName(classroom.course_id)}
+                          {getCourseLabelForClassroom(classroom)}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {classroom.semester?.name || getSemesterName(classroom.semester_id)}
+                        {getSemesterLabel(classroom.semester_id)}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">
                           <Users className="h-3 w-3 mr-1" />
-                          {classroomGroupsCount[classroom.id] ?? classroom.groups?.length ?? 0}
+                          {classroomGroupsCount[classroom.id] ?? 0}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -754,10 +788,27 @@ export default function ClassroomManagementPage() {
                                   Manage groups for {classroom.name}
                                 </p>
                               </div>
-                              <Button onClick={handleCreateGroup} className="shadow-sm">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Group
-                              </Button>
+                              <div className="flex gap-2">
+                                <input
+                                  type="file"
+                                  accept=".csv"
+                                  onChange={handleImportCSV}
+                                  className="hidden"
+                                  id="csv-import-input"
+                                />
+                                <Button
+                                  variant="outline"
+                                  onClick={() => document.getElementById('csv-import-input')?.click()}
+                                  className="shadow-sm"
+                                >
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Import CSV
+                                </Button>
+                                <Button onClick={handleCreateGroup} className="shadow-sm">
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Add Group
+                                </Button>
+                              </div>
                             </div>
                             
                             {groups.length === 0 ? (
@@ -937,7 +988,7 @@ export default function ClassroomManagementPage() {
                 <SelectContent>
                   {filteredSemesters.map((semester) => (
                     <SelectItem key={semester.id} value={semester.id.toString()}>
-                      {semester.name}
+                      {`${semester.season} ${semester.year}`}
                     </SelectItem>
                   ))}
                 </SelectContent>

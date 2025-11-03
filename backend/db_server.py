@@ -14,6 +14,7 @@ import io
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
 from pydantic import ValidationError, BaseModel
 from datetime import datetime
 import os
@@ -58,7 +59,7 @@ from crud import (
     SectionExtractionConfigCreate, SectionExtractionConfigUpdate, SectionExtractionConfigResponse,
     get_submissions, get_submission, get_submissions_by_assignment, create_submission, update_submission, delete_submission,
     SubmissionCreate, SubmissionUpdate, SubmissionResponse, SubmissionFile, ExerciseGrade,
-    get_groups, get_group, get_group_by_name, create_group, update_group, delete_group, get_groups_by_course,
+    get_groups, get_group, get_group_by_name, create_group, update_group, delete_group, get_groups_by_course, get_groups_by_classroom,
     GroupCreate, GroupUpdate, GroupResponse, GroupMember,
     get_courses, get_course, get_course_by_code, create_course, update_course, delete_course, get_courses_by_department,
     get_courses_with_semesters, get_course_with_semesters,
@@ -75,6 +76,7 @@ from api.routers.courses import router as courses_router
 from api.routers.semesters import router as semesters_router
 from api.routers.classrooms import router as classrooms_router
 from api.routers.assignments import router as assignments_router
+from services.groups_importer import import_students_csv_with_mapping
 
 # FastAPI app with comprehensive OpenAPI/Swagger configuration
 app = FastAPI(
@@ -2479,6 +2481,88 @@ async def create_group_endpoint(group_data: dict, db: AsyncSession = Depends(get
         logger.error(f"Error creating group: {e}")
         raise HTTPException(status_code=500, detail="Failed to create group")
 
+@app.post("/api/v1/groups/import-csv/{classroom_id}")
+async def import_groups_from_csv(
+    classroom_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Import groups and students from a CSV file for a specific classroom"""
+    
+    # Validate file type
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="File must be a CSV file")
+    
+    # Create temporary file to store uploaded content
+    content = await file.read()
+    temp_file_path = tempfile.mktemp(suffix='.csv')
+    with open(temp_file_path, 'wb') as temp_file:
+        temp_file.write(content)
+    
+    try:
+        # Import students from CSV using the groups importer
+        students_data = import_students_csv_with_mapping(temp_file_path)
+        
+        if not students_data:
+            raise HTTPException(status_code=400, detail="No valid student data found in CSV file")
+        
+        # Remove existing groups for this classroom before importing new ones
+        existing_groups = await get_groups_by_classroom(db, classroom_id)
+        for group in existing_groups:
+            await delete_group(db, group.id)
+        
+        # Group students by group name
+        groups_dict = {}
+        for student in students_data:
+            group_name = student.get('group', '')
+            if group_name not in groups_dict:
+                groups_dict[group_name] = []
+            groups_dict[group_name].append(student)
+        
+        created_groups = []
+        
+        # Create groups and add students
+        for group_name, students in groups_dict.items():
+            if not group_name.strip():
+                continue
+                
+            # Convert students to the expected format
+            group_members = []
+            for student in students:
+                group_members.append({
+                    "name": student.get('name', ''),
+                    "email_address": student.get('email', ''),
+                    "student_id": student.get('login', '')
+                })
+            
+            # Create group data
+            group_data = GroupCreate(
+                name=group_name,
+                description=f"Imported from CSV - {len(students)} students",
+                classroom_id=classroom_id,
+                members=group_members,
+                created_by=1  # Default user ID
+            )
+            
+            # Create the group
+            created_group = await create_group(db, group_data)
+            created_groups.append(created_group)
+        
+        return {
+            "message": f"Successfully imported {len(created_groups)} groups with {len(students_data)} students",
+            "groups_created": len(created_groups),
+            "students_imported": len(students_data),
+            "groups": created_groups
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error importing CSV: {str(e)}")
+    
+    finally:
+        # Clean up temporary file
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+
 @app.put("/api/v1/groups/{group_id}")
 async def update_group_endpoint(group_id: int, group_data: dict, db: AsyncSession = Depends(get_db)):
     """Update a group"""
@@ -2678,10 +2762,19 @@ async def update_classroom_endpoint(classroom_id: int, classroom_data: dict, db:
 @app.delete("/api/v1/classrooms/{classroom_id}")
 async def delete_classroom_endpoint(classroom_id: int, db: AsyncSession = Depends(get_db)):
     """Delete a classroom (soft delete)"""
-    success = await delete_classroom(db, classroom_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Classroom not found")
-    return {"message": "Classroom deleted successfully"}
+    try:
+        success = await delete_classroom(db, classroom_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Classroom not found")
+        return {"message": "Classroom deleted successfully"}
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Cannot delete classroom: there are groups linked to this classroom. "
+                "Delete or reassign those groups first."
+            ),
+        )
 
 # Test endpoint
 @app.get("/api/test")

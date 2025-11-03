@@ -286,8 +286,25 @@ export function SubmissionReviewDialog({
       setHasPrivatePdf(Boolean(submission?.has_private_pdf))
       setHasPublicPdf(Boolean(submission?.has_public_pdf))
       setHasMeetingNotes(Boolean(submission?.meeting_notes))
+      
+      // Initialize public report grade from ai_feedback
+      if (submission?.ai_feedback) {
+        try {
+          const aiFeedback = typeof submission.ai_feedback === 'string' 
+            ? JSON.parse(submission.ai_feedback) 
+            : submission.ai_feedback
+          
+          const publicReport = aiFeedback?.public_report
+          if (publicReport) {
+            setPublicReportPoints(publicReport.points?.toString() || '')
+            setPublicReportComments(publicReport.comments || '')
+          }
+        } catch (e) {
+          console.warn('Failed to parse ai_feedback for public report:', e)
+        }
+      }
     }
-  }, [open, assignment, submission?.grade_breakdown, submission?.meeting_notes, submission?.has_submission_pdf, submission?.has_private_pdf, submission?.has_public_pdf])
+  }, [open, assignment, submission?.grade_breakdown, submission?.meeting_notes, submission?.has_submission_pdf, submission?.has_private_pdf, submission?.has_public_pdf, submission?.ai_feedback])
 
 
 
@@ -1319,7 +1336,8 @@ export function SubmissionReviewDialog({
                               console.log(`Points: ${pointsNum}`)
                               console.log(`Comments: ${publicReportComments}`)
                               
-                              const res = await fetch(`/api/v1/submissions/${submission.id}/public-report-grade`, {
+                              const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+                              const res = await fetch(`${API_BASE_URL}/api/v1/submissions/${submission.id}/public-report-grade`, {
                                 method: 'POST',
                                 headers: {
                                   'Content-Type': 'application/json',
@@ -1331,6 +1349,37 @@ export function SubmissionReviewDialog({
                                 const err = await res.json().catch(() => ({}))
                                 throw new Error(err.detail || 'Failed to save')
                               }
+                              
+                              // Update local submission state with saved data
+                              if (onSubmissionUpdate && submission) {
+                                try {
+                                  // Parse existing ai_feedback or create new object
+                                  let aiFeedback = {}
+                                  if (submission.ai_feedback) {
+                                    aiFeedback = typeof submission.ai_feedback === 'string'
+                                      ? JSON.parse(submission.ai_feedback)
+                                      : submission.ai_feedback
+                                  }
+                                  
+                                  // Update public_report in ai_feedback
+                                  aiFeedback.public_report = {
+                                    points: pointsNum,
+                                    comments: publicReportComments
+                                  }
+                                  
+                                  // Update the submission prop
+                                  const updatedSubmission = {
+                                    ...submission,
+                                    ai_feedback: typeof submission.ai_feedback === 'string'
+                                      ? JSON.stringify(aiFeedback)
+                                      : aiFeedback
+                                  }
+                                  onSubmissionUpdate(updatedSubmission)
+                                } catch (e) {
+                                  console.warn('Failed to update local submission state:', e)
+                                }
+                              }
+                              
                               toast.success('Public report grade saved')
                             } catch (err: any) {
                               console.error(err)
