@@ -2,6 +2,8 @@
 
 **⚠️ WARNING:** This operation rewrites git history and requires force-push. Coordinate with all team members before proceeding.
 
+**🔴 IMPORTANT:** The API key `AIzaSyDDWEU3VnoGadZI5lNiBOrviAoUY4NGyJ8` shown in this document is the **REVOKED/COMPROMISED** key that needs to be removed from history. This key has been exposed and must be considered compromised. It is included in this document only as a reference for the cleanup procedure.
+
 ## Overview
 
 Even after removing an API key from current files, it remains in the repository's git history. Anyone with access to the repository can still retrieve the exposed key from historical commits.
@@ -44,11 +46,13 @@ cd smart-grade-ai-cursor.git
 
 ### Step 3: Create Replacements File
 
-Create a file named `passwords.txt` with the exposed key:
+Create a file named `passwords.txt` with the exposed key to be removed:
 
 ```text
 AIzaSyDDWEU3VnoGadZI5lNiBOrviAoUY4NGyJ8
 ```
+
+**Note:** This is the compromised key that will be removed from all commits in the repository history.
 
 ### Step 4: Run BFG to Remove the Key
 
@@ -85,11 +89,13 @@ apt-get install git-filter-repo
 
 ### Step 2: Create Replacements File
 
-Create a file named `replacements.txt`:
+Create a file named `replacements.txt` with the pattern:
 
 ```text
 AIzaSyDDWEU3VnoGadZI5lNiBOrviAoUY4NGyJ8==>YOUR_GOOGLE_AI_API_KEY_HERE
 ```
+
+**Note:** Replace the compromised key (left side) with a safe placeholder (right side) in all commits.
 
 ### Step 3: Run git-filter-repo
 
@@ -119,6 +125,8 @@ git push --force --tags
 
 Only use this if BFG and git-filter-repo are not available.
 
+**Note:** The command below replaces the compromised key with a placeholder throughout history.
+
 ```bash
 git filter-branch --tree-filter '
   find . -type f -exec sed -i "s/AIzaSyDDWEU3VnoGadZI5lNiBOrviAoUY4NGyJ8/YOUR_GOOGLE_AI_API_KEY_HERE/g" {} +
@@ -134,12 +142,16 @@ After successfully cleaning the git history:
 
 ### 1. Verify the Key is Removed
 
+Search the entire git history for the compromised key:
+
 ```bash
 # Search for the exposed key in git history
 git log -S "AIzaSyDDWEU3VnoGadZI5lNiBOrviAoUY4NGyJ8" --all
 
-# This should return no results
+# This should return no results if cleanup was successful
 ```
+
+**Note:** This searches for the revoked key that was removed from history. No results = successful cleanup.
 
 ### 2. Notify All Collaborators
 
