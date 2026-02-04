@@ -320,7 +320,7 @@ class GoogleAIService:
 if __name__ == "__main__":
     pdf_path = "/Users/escuderx/Desktop/PAC1/PAC1_PDP_Enunciat.pdf"
     prompt = CATALAN_EXERCISE_EXTRACTION_PROMPT
-    api_key_example = "AIzaSyDDWEU3VnoGadZI5lNiBOrviAoUY4NGyJ8"  # Replace with your actual API key
+    api_key_example = "YOUR_GOOGLE_AI_API_KEY_HERE"  # Replace with your actual API key
     generator = GoogleAIService(api_key=api_key_example)
     with open(pdf_path, "rb") as f:
         pdf_bytes = f.read()

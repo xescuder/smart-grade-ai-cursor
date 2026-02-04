@@ -11,7 +11,7 @@ Successfully migrated the `extract_exercises_from_pdf` method to use Google AI S
 - Added `GOOGLE_AI_MODEL` setting (default: `gemini-2.0-flash-exp`)
 
 ### 2. Environment Variables (`backend/.env`)
-- Added `GOOGLE_AI_API_KEY=AIzaSyDDWEU3VnoGadZI5lNiBOrviAoUY4NGyJ8`
+- Added `GOOGLE_AI_API_KEY=your_google_ai_api_key_here`
 - Added `GOOGLE_AI_MODEL=gemini-2.0-flash-exp`
 
 ### 3. AI Service (`backend/services/ai_service.py`)
